@@ -1,0 +1,73 @@
+ The core idea is a feature-based ("vertical slice") architecture: each domain owns its UI, hooks, API calls, and state in one folder, while truly cross-cutting concerns live in shared top-level folders.
+
+
+app/          → routes only (thin pages)
+features/     → self-contained domain modules (the bulk of the app)
+components/   → app-wide UI (shadcn ui/, providers/, shared/)
+lib/          → app-wide non-UI helpers (axios, socket, services, utils)
+stores/       → global client state (auth)
+hooks/        → app-wide hooks
+types/        → cross-cutting types
+constants/    → app-wide constants
+proxy.ts      → route auth guard (Next middleware)
+The 4 architectural layers
+1. app/ — routing only (thin)
+Pages do almost nothing. They import one entry component from a feature and render it. See chat/page.tsx — the whole page is <Chat />.
+
+Routes are organized with route groups (folders in parens that don't affect the URL):
+
+(public) — landing, pricing
+(auth) — login, signup, otp
+(platform) — the authenticated app (chat, home, quiz, flashcards, videos)
+Each group's layout.tsx owns chrome specific to that section (e.g. the platform sidebar). The root app/layout.tsx wraps everything in ThemeProvider → AppProviders, loads the font and global CSS.
+
+2. features/ — vertical slices (where the real work lives)
+Every domain is a folder mirroring the same internal shape:
+
+
+features/<area>/
+  index.tsx        ← barrel entry: the ONE component a route imports
+  components/      ← domain UI
+  hooks/           ← domain logic (TanStack Query, socket bindings)
+  api/             ← request functions + query-keys.ts
+  stores/          ← feature-local Zustand (only when needed)
+  static/          ← constants/dummy data
+  types.ts         ← domain types
+  schemas.ts       ← zod schemas (forms)
+features/platform/* nests platform sub-domains (chat, sidebar, home, quizzes, etc.). The rule: feature-specific code never leaks out; only the index.tsx barrel is consumed by a route.
+
+3. components/ — app-wide UI
+ui/ — shadcn/ui primitives (new-york style, Radix-backed)
+providers/ — AppProviders.tsx (QueryClient + Google OAuth), ThemeProvider, ToastProvider
+shared/ — widgets reused across features (ArtifactCards, CtaButton, etc.)
+4. lib/ + stores/ — the plumbing
+This is the part most worth copying verbatim into another app:
+
+Single Axios client — lib/axios.ts: one axios.create instance. A request interceptor pulls the JWT straight from the Zustand store (useAuthStore.getState().token) and sets the Bearer header; a response interceptor auto-logs-out on 401 and normalizes errors. No feature ever creates its own axios or calls fetch for this backend.
+
+Centralized API paths — lib/services.ts: a single SERVICES map of path prefixes (AUTH, CHAT, MEDIA, ARTIFACTS). Feature API functions build URLs like `${SERVICES.AUTH}/login` instead of scattering /api/v1/... strings. See the pattern in features/auth/api/index.ts.
+
+Global state via Zustand — stores/auth-store.ts: the auth store persists to a cookie (via js-cookie + zustand persist), not localStorage — deliberately, so middleware can read it server-side.
+
+Socket.IO singleton — lib/socket.ts: one shared connection (connectSocket/getSocket/disconnectSocket). The auth callback re-reads the token on every reconnect so it stays fresh. Feature-specific listeners live in features/<x>/sockets/, not here.
+
+Route auth guard — proxy.ts (Next middleware): reads the auth cookie, decodes the JWT exp, and redirects unauthenticated users to /login. PUBLIC_ROUTES is the allowlist. This is why auth is stored in a cookie — the middleware needs it before any JS runs.
+
+How a request flows (end to end)
+
+Route page (app/)            → renders feature barrel (features/x/index.tsx)
+  → component calls a hook   (features/x/hooks/ — TanStack Query)
+    → hook calls api fn      (features/x/api/ uses SERVICES path)
+      → shared axios client  (lib/axios.ts attaches JWT from store)
+        → backend
+  401? → interceptor calls authStore.logout()
+State split: TanStack Query owns server state (caching/loading), Zustand owns client/global state (auth, feature-local UI state). Forms use react-hook-form + zod.
+
+To reuse this in another app
+The reusable skeleton, in order of value:
+
+lib/axios.ts + lib/services.ts + stores/auth-store.ts + proxy.ts — the auth/HTTP backbone. This quartet works together (cookie-persisted token → interceptor reads it → middleware guards routes) and is largely app-agnostic.
+The features/<area>/{index,components,hooks,api,static,types} convention — adopt the folder shape and the "routes are thin, import one barrel" rule.
+Provider nesting in root layout: ThemeProvider → AppProviders(Query + OAuth) → children.
+lib/socket.ts singleton if you need real-time.
+The governing principles (from AGENTS.md): one shared HTTP client, centralized path prefixes, feature-local code stays local, @/ import alias → project root, and TypeScript strict mode throughout

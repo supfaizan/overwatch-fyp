@@ -643,7 +643,7 @@ export function Landing() {
 						<span className="ow-label !text-[12px] text-text-hi">
 							OVERWATCH
 						</span>
-						<span className="ow-mono-micro text-text-dim">// OPINT</span>
+						<span className="ow-mono-micro text-text-dim">{"// OPINT"}</span>
 					</div>
 					<p className="ow-mono-micro text-text-dim">
 						FYP · UMT LAHORE 2026

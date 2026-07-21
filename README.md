@@ -19,6 +19,18 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Git hooks
+
+Enable the tracked pre-push hook once after cloning:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Every push runs ESLint, TypeScript checking, and a production build. A failure
+blocks the push. Use `git push --no-verify` only for exceptional, intentional
+bypasses.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

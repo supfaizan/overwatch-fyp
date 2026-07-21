@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pre-push: pnpm is required but was not found on PATH" >&2
+  exit 1
+fi
+
+echo "pre-push: running frontend lint"
+pnpm lint
+
+echo "pre-push: running frontend type checking"
+pnpm exec tsc --noEmit
+
+echo "pre-push: running frontend production build"
+pnpm build
+
+echo "pre-push: frontend checks passed"

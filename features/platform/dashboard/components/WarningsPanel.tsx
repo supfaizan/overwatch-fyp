@@ -100,7 +100,7 @@ export function WarningsPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-line-1 px-4 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-line-1 px-4 py-3">
         <span className="ow-mono-micro text-text-mid">
           CONTRACT WARNINGS
         </span>
@@ -111,7 +111,7 @@ export function WarningsPanel() {
         ) : null}
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-3 p-4">
           {isLoading ? (
             <div className="flex items-center gap-2 ow-mono-micro text-text-dim">

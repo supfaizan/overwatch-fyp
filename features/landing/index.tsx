@@ -12,7 +12,7 @@ const FEATURES = [
 		idx: "01",
 		title: "Deterministic Architecture Diagram",
 		tech: "Tree-sitter · React Flow",
-		body: "Tree-sitter parses your repo into an AST and resolves every import, call and HTTP edge. The diagram is always architecturally correct — the AI only labels what is already confirmed.",
+		body: "Every import, call and HTTP edge resolved from the AST. Never guessed.",
 		state: "signal",
 		tag: "STRUCTURE",
 	},
@@ -20,7 +20,7 @@ const FEATURES = [
 		idx: "02",
 		title: "Conversational Explorer",
 		tech: "RAG over Neo4j",
-		body: "Ask “What depends on PaymentService?” in plain English. Answers are grounded in the confirmed graph — relevant nodes highlight live. No hallucinated structure, ever.",
+		body: "“What depends on PaymentService?” — answered from the confirmed graph.",
 		state: "signal",
 		tag: "QUERY",
 	},
@@ -28,7 +28,7 @@ const FEATURES = [
 		idx: "03",
 		title: "Ticket Intelligence",
 		tech: "Sentence-BERT",
-		body: "Jira and ClickUp tickets map to the services they touch via semantic embeddings, fine-tuned on your own ticket-to-PR history. Self-improving with every sprint.",
+		body: "Jira and ClickUp tickets mapped to the services they actually touch.",
 		state: "signal",
 		tag: "CONTEXT",
 	},
@@ -36,7 +36,7 @@ const FEATURES = [
 		idx: "04",
 		title: "Animated Flow Walkthrough",
 		tech: "LLM flow reconstruction",
-		body: "“Show me the login flow.” Overwatch reconstructs the execution path from the static graph and narrates the payload at every node — bounded to the relevant subgraph.",
+		body: "“Show me the login flow.” Replayed node by node, payload included.",
 		state: "signal",
 		tag: "REPLAY",
 	},
@@ -44,7 +44,7 @@ const FEATURES = [
 		idx: "05",
 		title: "Logical Contract Checker",
 		tech: "T-GNN + LLM reasoning",
-		body: "A background daemon that fires on every merge to main. The T-GNN flags historically coupled files; the LLM checks for broken interface assumptions before they become incidents.",
+		body: "Broken interface assumptions, caught on every merge to main.",
 		state: "critical",
 		tag: "FLAGSHIP",
 	},
@@ -52,7 +52,7 @@ const FEATURES = [
 		idx: "06",
 		title: "Real-Time Incremental Updates",
 		tech: "Webhooks · WebSocket",
-		body: "Push fires a webhook, only changed files re-parse, and the diagram updates within seconds. Tickets re-map on creation. The view is always live, never stale.",
+		body: "Push fires a webhook. The diagram updates within seconds.",
 		state: "warn",
 		tag: "LIVE",
 	},
@@ -250,14 +250,11 @@ export function Landing() {
 
 			{/* ---- Top status bar ---- */}
 			<header className="sticky top-0 z-30 border-b border-line-1 bg-ink-900/85 backdrop-blur-md">
-				<div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+				<div className="relative mx-auto max-w-[1500px] flex h-14 items-center justify-between px-12">
 					<div className="flex items-center gap-2.5">
 						<span className="ow-live-dot" aria-hidden />
 						<span className="ow-label text-text-hi !text-[13px]">
 							OVERWATCH
-						</span>
-						<span className="ml-2 hidden ow-mono-micro text-text-dim sm:inline">
-							// OPERATIONAL INTELLIGENCE
 						</span>
 					</div>
 					<nav className="hidden items-center gap-7 md:flex">
@@ -289,8 +286,8 @@ export function Landing() {
 			</header>
 
 			{/* ---- Hero ---- */}
-			<section className="relative mx-auto max-w-6xl px-6 pb-10 pt-8 md:pt-12">
-				<div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
+			<section className="relative mx-auto max-w-[1500px] px-12 pb-20 pt-16 md:pt-24">
+				<div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-24">
 					{/* left: copy */}
 					<div>
 						<div className="ow-rise inline-flex items-center gap-2 rounded-pill border border-line-2 bg-surface-1 px-3 py-1.5">
@@ -313,10 +310,8 @@ export function Landing() {
 							className="ow-rise ow-body mt-6 max-w-xl text-text-mid"
 							style={{ animationDelay: "0.16s" }}
 						>
-							Overwatch is a living system-intelligence platform. It connects to
-							your repos and tickets, renders a deterministic architecture
-							diagram that updates within seconds of a push, and runs AI risk
-							analysis that flags broken contracts{" "}
+							A deterministic architecture diagram that updates seconds after a
+							push — and AI that flags broken contracts{" "}
 							<span className="text-text-hi">before they become incidents</span>
 							.
 						</p>
@@ -370,7 +365,7 @@ export function Landing() {
 			{/* ---- Problem marquee ---- */}
 			<section className="border-y border-line-1 bg-ink-900 py-4">
 				<div className="flex items-center gap-3 overflow-hidden">
-					<span className="ml-6 shrink-0 ow-mono-micro text-text-dim">
+					<span className="ml-3 shrink-0 ow-mono-micro text-text-dim">
 						THE GAP NOBODY FILLED //
 					</span>
 					<div className="relative flex-1 overflow-hidden">
@@ -383,10 +378,8 @@ export function Landing() {
 									{[
 										"Static diagrams · no live updates",
 										"Issue trackers · no code structure",
-										"Observability · needs instrumentation",
 										"Copilot · no system awareness",
 										"Confluence · nobody maintains it",
-										"Slack threads · scroll away forever",
 									].map((t) => (
 										<span key={t} className="ow-mono-data text-text-lo">
 											<span className="text-critical">✕</span> {t}
@@ -400,16 +393,11 @@ export function Landing() {
 			</section>
 
 			{/* ---- Features ---- */}
-			<section id="diagram" className="mx-auto max-w-6xl px-6 py-12">
+			<section id="diagram" className="mx-auto max-w-[1500px] px-12 py-24">
 				<SectionLabel>CAPABILITIES // 06</SectionLabel>
 				<h2 className="ow-heading mt-5 max-w-2xl text-text-hi">
 					One operational view. Confirmed structure, intelligent prediction.
 				</h2>
-				<p className="ow-body mt-3 max-w-2xl text-text-mid">
-					Deterministic static analysis handles structure. AI handles
-					prediction, explanation and reasoning — always grounded in the
-					confirmed graph.
-				</p>
 
 				<div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line-1 bg-line-1 md:grid-cols-2 lg:grid-cols-3">
 					{FEATURES.map((f) => {
@@ -457,19 +445,16 @@ export function Landing() {
 
 			{/* ---- Flagship: Contract Checker terminal ---- */}
 			<section id="contracts" className="border-t border-line-1 bg-ink-900">
-				<div className="mx-auto grid max-w-6xl gap-12 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+				<div className="mx-auto max-w-[1500px] grid gap-12 px-12 py-24 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-24">
 					<div>
 						<SectionLabel>FLAGSHIP // CONTRACT CHECKER</SectionLabel>
 						<h2 className="ow-heading mt-5 text-text-hi">
 							The “how did it catch that” moment.
 						</h2>
 						<p className="ow-body mt-4 max-w-lg text-text-mid">
-							On every merge to{" "}
-							<span className="text-text-hi font-mono text-[13px]">main</span>,
-							a T-GNN trained on your commit history identifies files that
-							historically break together — even with no import between them.
-							The LLM then reads only the diff plus those flagged files and
-							checks for logical mismatches.
+							A T-GNN trained on your commit history finds files that break
+							together — even with no import between them. The LLM then reads
+							the diff and checks for logical mismatches.
 						</p>
 						<ul className="mt-6 space-y-3">
 							{[
@@ -547,7 +532,7 @@ export function Landing() {
 			</section>
 
 			{/* ---- Pipeline / Architecture ---- */}
-			<section id="architecture" className="mx-auto max-w-6xl px-6 py-12">
+			<section id="architecture" className="mx-auto max-w-[1500px] px-12 py-24">
 				<SectionLabel>SYSTEM // INGEST → RENDER</SectionLabel>
 				<h2 className="ow-heading mt-5 max-w-2xl text-text-hi">
 					Five deterministic stages. The AI layers sit on top of confirmed
@@ -616,18 +601,12 @@ export function Landing() {
 					<span className="flex items-center gap-2 ow-mono-micro text-critical">
 						<span className="h-2 w-2 rounded-sm bg-critical" /> CRITICAL
 					</span>
-					<span className="flex items-center gap-2 ow-mono-micro text-warn">
-						<span className="h-2 w-2 rounded-sm bg-warn" /> WARNING
-					</span>
-					<span className="flex items-center gap-2 ow-mono-micro text-text-lo">
-						<span className="h-2 w-2 rounded-sm bg-idle" /> INFORMATIONAL
-					</span>
 				</div>
 			</section>
 
 			{/* ---- CTA ---- */}
 			<section id="connect" className="border-t border-line-1 bg-ink-900">
-				<div className="relative mx-auto max-w-6xl px-6 py-12">
+				<div className="relative mx-auto max-w-[1500px] px-12 py-24">
 					<div className="ow-scanline" aria-hidden />
 					<div className="relative mx-auto max-w-2xl text-center">
 						<h2 className="ow-display mt-6 text-text-hi !text-[40px] leading-[1.05] sm:!text-[52px]">
@@ -636,8 +615,7 @@ export function Landing() {
 							Watch the system <span className="text-signal">come alive</span>.
 						</h2>
 						<p className="ow-body mt-5 text-text-mid">
-							Full index on first connect, incremental on every push.
-							Plain-English queries grounded in your real architecture.
+							Full index on connect. Incremental on every push.
 						</p>
 						<div className="mt-9 flex flex-wrap items-center justify-center gap-3">
 							<Link
@@ -659,7 +637,7 @@ export function Landing() {
 
 			{/* ---- Footer ---- */}
 			<footer className="border-t border-line-1 bg-ink-850">
-				<div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-4 sm:flex-row sm:items-center">
+				<div className="mx-auto max-w-[1500px] flex flex-col items-start justify-between gap-4 px-12 py-8 sm:flex-row sm:items-center">
 					<div className="flex items-center gap-2.5">
 						<span className="ow-live-dot" aria-hidden />
 						<span className="ow-label !text-[12px] text-text-hi">
@@ -668,11 +646,7 @@ export function Landing() {
 						<span className="ow-mono-micro text-text-dim">// OPINT</span>
 					</div>
 					<p className="ow-mono-micro text-text-dim">
-						OPERATIONAL INTELLIGENCE FOR ENGINEERING TEAMS · FYP · UMT LAHORE
-						2026
-					</p>
-					<p className="ow-mono-micro text-text-lo">
-						DETERMINISTIC STRUCTURE · GROUNDED AI
+						FYP · UMT LAHORE 2026
 					</p>
 				</div>
 			</footer>

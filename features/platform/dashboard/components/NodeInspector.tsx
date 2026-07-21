@@ -42,7 +42,7 @@ export function NodeInspector() {
         <span className="ow-mono-micro text-text-mid">NODE INSPECTOR</span>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
         <div>
           <p className="ow-mono-data !text-[16px] text-text-hi">{node.data.label}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">

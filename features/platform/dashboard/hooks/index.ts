@@ -2,18 +2,14 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRepoStore } from "@/stores/repo-store";
+import { useActiveRepoId } from "@/stores/repo-store";
 import { getGraph, getWarnings, sendQuery } from "../api";
 import { dashboardKeys } from "../api/query-keys";
 import { useDashboardStore } from "../stores/dashboard-store";
 import type { ChatMessage } from "../types";
 
-function useRepoId() {
-  return useRepoStore((s) => s.activeRepo?.id ?? "payments-core");
-}
-
 export function useGraph() {
-  const repoId = useRepoId();
+  const repoId = useActiveRepoId();
   return useQuery({
     queryKey: dashboardKeys.graph(repoId),
     queryFn: () => getGraph(repoId),
@@ -21,7 +17,7 @@ export function useGraph() {
 }
 
 export function useWarnings() {
-  const repoId = useRepoId();
+  const repoId = useActiveRepoId();
   return useQuery({
     queryKey: dashboardKeys.warnings(repoId),
     queryFn: () => getWarnings(repoId),

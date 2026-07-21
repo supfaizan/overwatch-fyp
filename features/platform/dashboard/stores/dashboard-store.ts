@@ -3,7 +3,7 @@
 
 import { create } from "zustand";
 
-export type DashboardPanel = "warnings" | "explorer" | "inspector";
+export type DashboardPanel = "warnings" | "chat" | "inspector";
 
 interface DashboardState {
   selectedNodeId: string | null;

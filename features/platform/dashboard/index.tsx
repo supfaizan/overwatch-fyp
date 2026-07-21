@@ -11,7 +11,7 @@ import { NodeInspector } from "./components/NodeInspector";
 const TABS: { id: DashboardPanel; label: string; icon: typeof AlertTriangle }[] =
   [
     { id: "warnings", label: "WARNINGS", icon: AlertTriangle },
-    { id: "explorer", label: "EXPLORER", icon: MessageSquare },
+    { id: "chat", label: "CHAT", icon: MessageSquare },
     { id: "inspector", label: "INSPECT", icon: Boxes },
   ];
 
@@ -20,15 +20,15 @@ export function Dashboard() {
   const setPanel = useDashboardStore((s) => s.setPanel);
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden">
       {/* graph canvas */}
       <section className="relative min-w-0 flex-1 border-r border-line-1">
         <DiagramCanvas />
       </section>
 
       {/* side console */}
-      <aside className="flex w-[380px] shrink-0 flex-col bg-ink-900">
-        <div className="flex border-b border-line-1">
+      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden bg-ink-900">
+        <div className="flex shrink-0 border-b border-line-1">
           {TABS.map((t) => {
             const active = panel === t.id;
             const Icon = t.icon;
@@ -52,7 +52,7 @@ export function Dashboard() {
 
         <div className="min-h-0 flex-1">
           {panel === "warnings" && <WarningsPanel />}
-          {panel === "explorer" && <ChatPanel />}
+          {panel === "chat" && <ChatPanel />}
           {panel === "inspector" && <NodeInspector />}
         </div>
       </aside>

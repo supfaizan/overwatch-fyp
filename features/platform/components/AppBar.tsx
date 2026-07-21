@@ -8,6 +8,7 @@ import { UserMenu } from "./UserMenu";
 
 const LINKS = [
   { href: "/dashboard", label: "DASHBOARD" },
+  { href: "/tickets", label: "TICKETS" },
   { href: "/connect", label: "REPOSITORIES" },
 ];
 
@@ -15,7 +16,7 @@ export function AppBar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line-1 bg-ink-900/90 px-5 backdrop-blur-md">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line-1 bg-ink-900/90 px-2.5 backdrop-blur-md">
       <div className="flex items-center gap-6">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <span className="ow-live-dot" aria-hidden />

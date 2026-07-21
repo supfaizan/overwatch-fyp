@@ -33,12 +33,10 @@ export function ChatPanel() {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-line-1 px-4 py-3">
         <Sparkles className="size-3.5 text-signal" />
-        <span className="ow-mono-micro text-text-mid">
-          CONVERSATIONAL EXPLORER
-        </span>
+        <span className="ow-mono-micro text-text-mid">CHAT</span>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-3 p-4">
           {messages.map((m) => (
             <div

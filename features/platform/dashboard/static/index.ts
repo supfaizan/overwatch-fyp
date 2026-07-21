@@ -74,7 +74,7 @@ export const WARNINGS: ContractWarning[] = [
   },
 ];
 
-/** Canned grounded answers for the conversational explorer (mock). */
+/** Canned grounded answers for the chat panel (mock). */
 export const QUERY_RESPONSES: {
   match: RegExp;
   answer: string;

@@ -19,7 +19,7 @@ export function Training() {
     : TRAINING_STAGES[stageIndex]?.label ?? "Starting";
 
   return (
-    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col justify-center px-6 py-6">
+    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col justify-center px-3 py-12">
       <OnboardSteps current={done ? 3 : 2} />
 
       <div className="mt-10 overflow-hidden rounded-lg border border-line-1 bg-surface-1 shadow-[var(--ow-shadow-card)]">
@@ -75,9 +75,6 @@ export function Training() {
         </div>
       </div>
 
-      <p className="mt-6 text-center ow-mono-micro text-text-dim">
-        DETERMINISTIC STRUCTURE FIRST · THEN THE INTELLIGENCE LAYERS ATTACH
-      </p>
     </div>
   );
 }

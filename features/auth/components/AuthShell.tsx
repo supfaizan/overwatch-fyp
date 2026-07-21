@@ -19,7 +19,7 @@ export function AuthShell({
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* brand / console side */}
-      <aside className="relative hidden overflow-hidden border-r border-line-1 bg-ink-900 lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <aside className="relative hidden overflow-hidden border-r border-line-1 bg-ink-900 lg:flex lg:flex-col lg:justify-between lg:px-6 lg:py-12">
         <div className="ow-grid pointer-events-none absolute inset-0 opacity-60" aria-hidden />
         <div className="ow-scanline" aria-hidden />
 
@@ -37,9 +37,7 @@ export function AuthShell({
             <span className="text-signal">no longer tribal.</span>
           </h2>
           <p className="ow-body mt-5 text-text-mid">
-            Connect a repository and watch a deterministic architecture diagram
-            come alive — with grounded AI reasoning and contract checks on every
-            push.
+            Connect a repository and watch the architecture come alive.
           </p>
 
           <div className="mt-8 space-y-2">
@@ -61,7 +59,7 @@ export function AuthShell({
       </aside>
 
       {/* form side */}
-      <main className="relative flex items-center justify-center px-6 py-6">
+      <main className="relative flex items-center justify-center px-3 py-12">
         <div className="ow-grid pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40 lg:hidden" aria-hidden />
         <div className="relative w-full max-w-sm">
           <Link

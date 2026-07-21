@@ -4,7 +4,7 @@ import { SampleRepos } from "./components/SampleRepos";
 
 export function Ingestion() {
   return (
-    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-xl flex-col justify-center px-6 py-6">
+    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-xl flex-col justify-center px-3 py-12">
       <OnboardSteps current={1} />
 
       <div className="mt-10">
@@ -13,9 +13,7 @@ export function Ingestion() {
           Connect a repository to watch
         </h1>
         <p className="ow-body mt-2 text-text-mid">
-          Overwatch clones and parses your repo with Tree-sitter, resolves every
-          dependency edge, and writes the structure to the graph. Then the
-          intelligence layers begin.
+          Tree-sitter parses the repo and writes the structure to the graph.
         </p>
       </div>
 

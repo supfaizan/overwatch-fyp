@@ -12,6 +12,9 @@ interface RepoState {
   clearActiveRepo: () => void;
 }
 
+/** Stand-in while no repo is connected (mock/demo mode). */
+export const DEFAULT_REPO_ID = "payments-core";
+
 export const useRepoStore = create<RepoState>()(
   persist(
     (set) => ({
@@ -25,3 +28,7 @@ export const useRepoStore = create<RepoState>()(
     },
   ),
 );
+
+/** The repo id every feature keys its queries off. */
+export const useActiveRepoId = () =>
+  useRepoStore((s) => s.activeRepo?.id ?? DEFAULT_REPO_ID);

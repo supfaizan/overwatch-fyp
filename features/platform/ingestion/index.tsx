@@ -4,7 +4,7 @@ import { SampleRepos } from "./components/SampleRepos";
 
 export function Ingestion() {
   return (
-    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-xl flex-col justify-center px-6 py-12">
+    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-xl flex-col justify-center px-6 py-6">
       <OnboardSteps current={1} />
 
       <div className="mt-10">

@@ -289,7 +289,7 @@ export function Landing() {
 			</header>
 
 			{/* ---- Hero ---- */}
-			<section className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 md:pt-24">
+			<section className="relative mx-auto max-w-6xl px-6 pb-10 pt-8 md:pt-12">
 				<div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
 					{/* left: copy */}
 					<div>
@@ -400,7 +400,7 @@ export function Landing() {
 			</section>
 
 			{/* ---- Features ---- */}
-			<section id="diagram" className="mx-auto max-w-6xl px-6 py-24">
+			<section id="diagram" className="mx-auto max-w-6xl px-6 py-12">
 				<SectionLabel>CAPABILITIES // 06</SectionLabel>
 				<h2 className="ow-heading mt-5 max-w-2xl text-text-hi">
 					One operational view. Confirmed structure, intelligent prediction.
@@ -457,7 +457,7 @@ export function Landing() {
 
 			{/* ---- Flagship: Contract Checker terminal ---- */}
 			<section id="contracts" className="border-t border-line-1 bg-ink-900">
-				<div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+				<div className="mx-auto grid max-w-6xl gap-12 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
 					<div>
 						<SectionLabel>FLAGSHIP // CONTRACT CHECKER</SectionLabel>
 						<h2 className="ow-heading mt-5 text-text-hi">
@@ -547,7 +547,7 @@ export function Landing() {
 			</section>
 
 			{/* ---- Pipeline / Architecture ---- */}
-			<section id="architecture" className="mx-auto max-w-6xl px-6 py-24">
+			<section id="architecture" className="mx-auto max-w-6xl px-6 py-12">
 				<SectionLabel>SYSTEM // INGEST → RENDER</SectionLabel>
 				<h2 className="ow-heading mt-5 max-w-2xl text-text-hi">
 					Five deterministic stages. The AI layers sit on top of confirmed
@@ -627,7 +627,7 @@ export function Landing() {
 
 			{/* ---- CTA ---- */}
 			<section id="connect" className="border-t border-line-1 bg-ink-900">
-				<div className="relative mx-auto max-w-6xl px-6 py-24">
+				<div className="relative mx-auto max-w-6xl px-6 py-12">
 					<div className="ow-scanline" aria-hidden />
 					<div className="relative mx-auto max-w-2xl text-center">
 						<h2 className="ow-display mt-6 text-text-hi !text-[40px] leading-[1.05] sm:!text-[52px]">
@@ -659,7 +659,7 @@ export function Landing() {
 
 			{/* ---- Footer ---- */}
 			<footer className="border-t border-line-1 bg-ink-850">
-				<div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-8 sm:flex-row sm:items-center">
+				<div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-4 sm:flex-row sm:items-center">
 					<div className="flex items-center gap-2.5">
 						<span className="ow-live-dot" aria-hidden />
 						<span className="ow-label !text-[12px] text-text-hi">

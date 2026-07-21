@@ -61,7 +61,7 @@ export function AuthShell({
       </aside>
 
       {/* form side */}
-      <main className="relative flex items-center justify-center px-6 py-12">
+      <main className="relative flex items-center justify-center px-6 py-6">
         <div className="ow-grid pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40 lg:hidden" aria-hidden />
         <div className="relative w-full max-w-sm">
           <Link

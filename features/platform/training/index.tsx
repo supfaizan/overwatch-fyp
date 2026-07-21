@@ -19,7 +19,7 @@ export function Training() {
     : TRAINING_STAGES[stageIndex]?.label ?? "Starting";
 
   return (
-    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col justify-center px-6 py-12">
+    <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col justify-center px-6 py-6">
       <OnboardSteps current={done ? 3 : 2} />
 
       <div className="mt-10 overflow-hidden rounded-lg border border-line-1 bg-surface-1 shadow-[var(--ow-shadow-card)]">

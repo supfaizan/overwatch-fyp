@@ -1,82 +1,98 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Link2 } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { connectRepoSchema, type ConnectRepoInput } from "../schemas";
-import { useConnectRepo } from "../hooks";
-import { PROVIDERS } from "../static";
+import { GithubRepoStep } from "./GithubRepoStep";
+import { JiraProjectStep } from "./JiraProjectStep";
+import { useOnboardingStatus } from "../hooks";
 
 export function ConnectForm() {
-  const connect = useConnectRepo();
-  const form = useForm<ConnectRepoInput>({
-    resolver: zodResolver(connectRepoSchema),
-    defaultValues: { url: "" },
-  });
+  const router = useRouter();
+  const status = useOnboardingStatus();
+
+  useEffect(() => {
+    const jiraResult = new URLSearchParams(window.location.search).get("jira");
+    if (!jiraResult) return;
+
+    if (jiraResult === "connected") {
+      toast.success("Jira authorized. Select a project to finish connecting it.");
+    } else if (jiraResult === "denied") {
+      toast.error("Jira authorization was cancelled.");
+    }
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
+  if (status.isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-3 py-12 text-text-mid">
+        <Loader2 className="size-5 animate-spin text-signal" />
+        <span className="ow-mono-data">Loading your integrations…</span>
+      </div>
+    );
+  }
+
+  if (status.isError || !status.data) {
+    return (
+      <div className="space-y-4 py-8 text-center">
+        <AlertCircle className="mx-auto size-7 text-critical" />
+        <p className="ow-body text-text-mid">
+          {status.error?.message ?? "Unable to load onboarding status."}
+        </p>
+        <Button variant="outline" onClick={() => status.refetch()}>
+          RETRY
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <Tabs defaultValue="github">
-        <TabsList className="w-full bg-surface-1">
-          {PROVIDERS.map((p) => (
-            <TabsTrigger
-              key={p.id}
-              value={p.id}
-              className="flex-1 font-mono text-[11px] tracking-wide data-[state=active]:bg-surface-3"
-            >
-              {p.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+    <div className="space-y-8">
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="grid size-6 place-items-center rounded-full bg-signal font-mono text-[11px] font-bold text-signal-ink">
+            1
+          </span>
+          <div>
+            <h2 className="ow-mono-data text-text-hi">Select a GitHub repository</h2>
+            <p className="ow-mono-micro text-text-dim">REQUIRED</p>
+          </div>
+        </div>
+        <GithubRepoStep status={status.data.github} />
+      </section>
 
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((v) => connect.mutate(v))}
-          className="space-y-3"
-        >
-          <FormField
-            control={form.control}
-            name="url"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="relative">
-                    <Link2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-lo" />
-                    <Input
-                      placeholder="https://github.com/your-org/your-repo"
-                      className="pl-9 font-mono text-[13px]"
-                      {...field}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            disabled={connect.isPending}
-            className="w-full font-mono text-[12px] tracking-wide"
-          >
-            {connect.isPending && <Loader2 className="size-4 animate-spin" />}
-            CONNECT & INDEX REPOSITORY
-          </Button>
-        </form>
-      </Form>
+      <div className="h-px bg-line-1" />
 
-      <p className="ow-mono-micro text-text-dim">
-        FULL INDEX ON FIRST CONNECT · INCREMENTAL ON EVERY PUSH
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="grid size-6 place-items-center rounded-full border border-line-2 bg-surface-2 font-mono text-[11px] text-text-mid">
+            2
+          </span>
+          <div>
+            <h2 className="ow-mono-data text-text-hi">Select a Jira project</h2>
+            <p className="ow-mono-micro text-text-dim">OPTIONAL</p>
+          </div>
+        </div>
+        <JiraProjectStep status={status.data.jira} />
+      </section>
+
+      <div className="h-px bg-line-1" />
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full font-mono text-[12px] tracking-wide"
+        disabled={!status.data.github.repoConnected}
+        onClick={() => router.push("/dashboard")}
+      >
+        {status.data.jira.projectConnected ? "CONTINUE TO DASHBOARD" : "SKIP JIRA & CONTINUE"}
+        <ArrowRight className="size-4" />
+      </Button>
+
+      <p className="ow-mono-micro text-center text-text-dim">
+        PARSING AND TICKET SYNC CONTINUE SECURELY IN THE BACKGROUND
       </p>
     </div>
   );

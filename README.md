@@ -2,16 +2,19 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Configure the FastAPI backend URL in `.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+The backend must use this frontend origin for `FRONTEND_ORIGIN`, and its GitHub
+OAuth app callback must be `http://localhost:8000/auth/github/callback`.
+
+Then run the development server:
+
+```bash
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

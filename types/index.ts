@@ -4,9 +4,8 @@
 export interface User {
   id: string;
   name: string;
-  email: string;
   avatarUrl?: string;
-  githubHandle?: string;
+  githubHandle: string;
 }
 
 export interface AuthResponse {

@@ -2,6 +2,7 @@
 
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
+import { useLogout } from "@/features/auth/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,7 +15,7 @@ import {
 
 export function UserMenu() {
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const logout = useLogout();
 
   const initials = (user?.name ?? "OW")
     .split(" ")
@@ -36,14 +37,17 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <p className="ow-mono-data text-text-hi">{user?.name ?? "Signed in"}</p>
-          <p className="ow-mono-micro text-text-dim">{user?.email}</p>
+          <p className="ow-mono-micro text-text-dim">
+            {user?.githubHandle ? `@${user.githubHandle}` : "GitHub account"}
+          </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="font-mono text-[12px]">
           <UserIcon className="size-4" /> Account
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={logout}
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
           className="font-mono text-[12px] text-critical focus:text-critical"
         >
           <LogOut className="size-4" /> Sign out

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OnboardingStatusBadge } from "./OnboardingStatusBadge";
 import { UserMenu } from "./UserMenu";
 
 const LINKS = [
@@ -45,11 +45,7 @@ export function AppBar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="hidden items-center gap-2 rounded-sm border border-line-1 bg-surface-1 px-3 py-1.5 sm:flex">
-          <GitBranch className="size-3.5 text-text-lo" />
-          <span className="ow-mono-micro text-text-mid">payments-core</span>
-          <span className="ow-live-dot" aria-hidden />
-        </div>
+        <OnboardingStatusBadge />
         <UserMenu />
       </div>
     </header>

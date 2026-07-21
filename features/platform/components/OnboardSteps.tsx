@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STEPS = ["CONNECT", "TRAIN", "WATCH"] as const;
+const STEPS = ["CONNECT", "PROCESS", "WATCH"] as const;
 
 export function OnboardSteps({ current }: { current: 1 | 2 | 3 }) {
   return (

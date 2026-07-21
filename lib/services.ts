@@ -3,7 +3,7 @@
    Mirrors the NestJS endpoints documented in guide.md §8. */
 
 export const SERVICES = {
-  AUTH: "/api/auth",
+  AUTH: "/auth",
   REPOS: "/api/repos",
   GRAPH: "/api/graph",
   TICKETS: "/api/tickets",

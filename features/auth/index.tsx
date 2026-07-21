@@ -3,6 +3,8 @@ import { AuthShell } from "./components/AuthShell";
 import { LoginForm } from "./components/LoginForm";
 import { RegisterForm } from "./components/RegisterForm";
 
+export { AuthComplete } from "./components/AuthComplete";
+
 export function Login() {
   return (
     <AuthShell

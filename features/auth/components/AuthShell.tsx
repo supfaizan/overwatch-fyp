@@ -26,7 +26,7 @@ export function AuthShell({
         <Link href="/" className="relative flex items-center gap-2.5">
           <span className="ow-live-dot" aria-hidden />
           <span className="ow-label !text-[14px] text-text-hi">OVERWATCH</span>
-          <span className="ow-mono-micro text-text-dim">// OPINT</span>
+          <span className="ow-mono-micro text-text-dim">{"// OPINT"}</span>
         </Link>
 
         <div className="relative max-w-md">

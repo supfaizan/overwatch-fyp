@@ -1,38 +1,33 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
-import { AFTER_LOGIN, AFTER_REGISTER } from "@/constants";
-import { login, register } from "../api";
+import {
+  logout,
+  startGithubAuth,
+  type AuthIntent,
+} from "../api";
 
-export function useLogin() {
-  const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+export function useGithubAuth(intent: AuthIntent) {
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: login,
-    onSuccess: (data) => {
-      setAuth(data);
-      toast.success(`Welcome back, ${data.user.name}`);
-      router.push(AFTER_LOGIN);
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
+  const start = useCallback(() => {
+    setIsPending(true);
+    startGithubAuth(intent);
+  }, [intent]);
+
+  return { start, isPending };
 }
 
-export function useRegister() {
-  const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+export function useLogout() {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   return useMutation({
-    mutationFn: register,
-    onSuccess: (data) => {
-      setAuth(data);
-      toast.success("Account created — let's connect a repository");
-      router.push(AFTER_REGISTER);
+    mutationFn: logout,
+    onSettled: () => {
+      clearAuth();
+      window.location.assign("/login");
     },
-    onError: (error: Error) => toast.error(error.message),
   });
 }

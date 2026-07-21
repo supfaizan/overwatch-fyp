@@ -6,6 +6,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthBootstrap } from "./AuthBootstrap";
 
 /** App-wide client providers: TanStack Query (server-state cache) + Tooltip.
  *  (The reference app also nests Google OAuth here; Overwatch authenticates via
@@ -26,6 +27,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthBootstrap />
       <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
     </QueryClientProvider>
   );

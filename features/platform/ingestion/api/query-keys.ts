@@ -1,5 +1,6 @@
-export const repoKeys = {
-  all: ["repos"] as const,
-  list: () => [...repoKeys.all, "list"] as const,
-  status: (id: string) => [...repoKeys.all, "status", id] as const,
+export const onboardingKeys = {
+  all: ["onboarding"] as const,
+  status: () => [...onboardingKeys.all, "status"] as const,
+  githubRepos: () => [...onboardingKeys.all, "github-repos"] as const,
+  jiraProjects: () => [...onboardingKeys.all, "jira-projects"] as const,
 };

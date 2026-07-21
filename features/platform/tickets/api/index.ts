@@ -1,27 +1,55 @@
 import { api } from "@/lib/axios";
-import { SERVICES } from "@/lib/services";
-import { USE_MOCK } from "@/constants";
-import { delay } from "@/lib/mock";
-import { TICKETS } from "../static";
+import type { Priority } from "@/types";
 import type { Ticket, TicketStatus } from "../types";
 
-export async function getTickets(repoId: string): Promise<Ticket[]> {
-  if (USE_MOCK) {
-    await delay(450);
-    return TICKETS;
-  }
-  const { data } = await api.get<Ticket[]>(`${SERVICES.TICKETS}/${repoId}`);
-  return data;
+interface BackendTicket {
+  ticket_key: string;
+  project_key: string;
+  summary: string | null;
+  status: string | null;
+  assignee: string | null;
+  priority: string | null;
+  updated_at: string | null;
 }
 
-/** Persist a board drag. The optimistic move already happened in the store. */
-export async function updateTicketStatus(
-  ticketId: string,
-  status: TicketStatus,
-): Promise<void> {
-  if (USE_MOCK) {
-    await delay(200);
-    return;
-  }
-  await api.patch(`${SERVICES.TICKETS}/${ticketId}`, { status });
+interface TicketsResponse {
+  tickets: BackendTicket[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+function mapStatus(status: string | null): TicketStatus {
+  const value = status?.toLowerCase() ?? "";
+  if (/done|closed|resolved|complete/.test(value)) return "done";
+  if (/review|testing|quality|\bqa\b/.test(value)) return "in_review";
+  if (/progress|doing|development|implement/.test(value)) return "in_progress";
+  return "backlog";
+}
+
+function mapPriority(priority: string | null): Priority {
+  const value = priority?.toLowerCase() ?? "";
+  if (/highest|high|critical|blocker/.test(value)) return "critical";
+  if (/medium|moderate/.test(value)) return "warning";
+  return "informational";
+}
+
+function mapTicket(ticket: BackendTicket): Ticket {
+  return {
+    id: ticket.ticket_key,
+    externalId: ticket.ticket_key,
+    projectKey: ticket.project_key,
+    title: ticket.summary ?? "Untitled Jira issue",
+    status: mapStatus(ticket.status),
+    priority: mapPriority(ticket.priority),
+    assignee: ticket.assignee ?? undefined,
+    updatedAt: ticket.updated_at ?? undefined,
+  };
+}
+
+export async function getTickets(): Promise<Ticket[]> {
+  const { data } = await api.get<TicketsResponse>("/tickets", {
+    params: { page_size: 100 },
+  });
+  return data.tickets.map(mapTicket);
 }

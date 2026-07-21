@@ -4,22 +4,13 @@
    This runs before any JS — which is why the token is stored in a cookie. */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { decodeJwt } from "jose";
 import { COOKIE_TOKEN, PUBLIC_ROUTES, GUEST_REDIRECT } from "@/constants";
-
-function isValidToken(token: string): boolean {
-  try {
-    const { exp } = decodeJwt(token);
-    return !exp || exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
+import { isValidAccessToken } from "@/lib/auth-token";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_TOKEN)?.value;
-  const authed = Boolean(token && isValidToken(token));
+  const authed = Boolean(token && isValidAccessToken(token));
   const isPublic = PUBLIC_ROUTES.includes(pathname);
   const isAuthPage = pathname === "/login" || pathname === "/register";
 

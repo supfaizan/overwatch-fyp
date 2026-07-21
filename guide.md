@@ -9,7 +9,6 @@
 ---
 
 ## 1. Problem Statement
-
 Every engineering team above ~10 people suffers from the same invisible failure: **system knowledge is tribal**. It lives in the heads of senior engineers, in Slack threads that scroll away, and in Confluence pages nobody maintains.
 
 When something breaks in production, engineers are simultaneously:

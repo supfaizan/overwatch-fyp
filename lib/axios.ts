@@ -62,11 +62,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiError>) => {
     const request = error.config as RetryableRequest | undefined;
+    // `missing_token` counts too: the in-memory token can be absent after a
+    // cold start while the refresh cookie is still valid, and treating that as
+    // "logged out" would send a recoverable session to /login.
+    const recoverable =
+      error.response?.data?.error_code === "invalid_token" ||
+      error.response?.data?.error_code === "missing_token";
     const shouldRefresh =
-      error.response?.status === 401 &&
-      error.response.data?.error_code === "invalid_token" &&
-      request &&
-      !request._retry;
+      error.response?.status === 401 && recoverable && request && !request._retry;
 
     if (shouldRefresh) {
       request._retry = true;

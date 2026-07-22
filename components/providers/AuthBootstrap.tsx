@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AFTER_LOGIN } from "@/constants";
 import { getCurrentUser } from "@/features/auth/api";
@@ -19,9 +19,35 @@ export function AuthBootstrap() {
   const pathname = usePathname();
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
+  // The cold-start recovery below must run at most once per mount, or every
+  // client navigation while logged out would fire another /auth/refresh.
+  const coldStartAttempted = useRef(false);
 
   useEffect(() => {
-    if (!token || pathname === "/auth/complete") return;
+    if (pathname === "/auth/complete") return;
+
+    // No access token at all, but the httpOnly refresh cookie may still be
+    // alive — in production it lives on the API's domain, so clearing site
+    // data for the frontend leaves it intact. Try to recover before giving up.
+    if (!token) {
+      if (coldStartAttempted.current) return;
+      coldStartAttempted.current = true;
+
+      let active = true;
+      refreshAccessToken()
+        .then(async (accessToken) => {
+          const user = await getCurrentUser(accessToken);
+          if (!active) return;
+          useAuthStore.getState().setAuth({ token: accessToken, user });
+          if (pathname === "/login" || pathname === "/register") {
+            router.replace(postRestoreDestination());
+          }
+        })
+        .catch(() => undefined); // genuinely logged out — stay put
+      return () => {
+        active = false;
+      };
+    }
 
     let active = true;
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;

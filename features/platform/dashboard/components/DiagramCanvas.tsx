@@ -13,7 +13,7 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Loader2 } from "lucide-react";
+import { Loader2, GitBranch, TriangleAlert } from "lucide-react";
 import { ServiceNode } from "./nodes/ServiceNode";
 import { useGraph } from "../hooks";
 import { useDashboardStore } from "../stores/dashboard-store";
@@ -21,17 +21,31 @@ import type { GraphEdge, GraphNodeData, ServiceNode as ServiceNodeT } from "../t
 
 const nodeTypes = { service: ServiceNode };
 
-function styleEdges(edges: GraphEdge[], highlighted: string[]): Edge[] {
+function styleEdges(
+  edges: GraphEdge[],
+  highlighted: string[],
+  flowStepIds: string[],
+): Edge[] {
   const hi = new Set(highlighted);
+  // Consecutive pairs in the walkthrough — these get the travelling animation.
+  const flowPairs = new Set(
+    flowStepIds.slice(0, -1).map((id, i) => `${id}->${flowStepIds[i + 1]}`),
+  );
+
   return edges.map((e) => {
-    const probabilistic = e.data?.confidence === "probabilistic";
-    const active = hi.size > 0 && hi.has(e.source) && hi.has(e.target);
+    const external = e.data?.kind === "EXTERNAL_DEPENDENCY";
+    const onFlow =
+      flowPairs.has(`${e.source}->${e.target}`) ||
+      flowPairs.has(`${e.target}->${e.source}`);
+    const active = onFlow || (hi.size > 0 && hi.has(e.source) && hi.has(e.target));
     const dim = hi.size > 0 && !active;
+
     return {
       ...e,
       type: "default",
-      animated: active || probabilistic,
-      label: e.data?.note,
+      animated: active,
+      // Weight is the number of resolved imports collapsed into this edge.
+      label: e.data && e.data.weight > 1 ? `×${e.data.weight}` : undefined,
       labelStyle: {
         fill: "var(--ow-stale)",
         fontFamily: "var(--ow-font-mono)",
@@ -43,26 +57,40 @@ function styleEdges(edges: GraphEdge[], highlighted: string[]): Edge[] {
       style: {
         stroke: active
           ? "var(--ow-signal)"
-          : probabilistic
+          : external
             ? "var(--ow-stale)"
             : "var(--ow-line-2)",
         strokeWidth: active ? 2 : 1.5,
-        strokeDasharray: probabilistic ? "5 5" : undefined,
+        strokeDasharray: external ? "5 5" : undefined,
         opacity: dim ? 0.18 : 1,
       },
     };
   });
 }
 
-function riskHex(risk: number) {
-  if (risk >= 0.7) return "#E5564F";
-  if (risk >= 0.4) return "#F5A524";
-  return "#4ADE80";
+function CanvasNotice({
+  icon: Icon,
+  spin,
+  children,
+}: {
+  icon: typeof Loader2;
+  spin?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid h-full place-items-center bg-ink-850 px-6">
+      <div className="flex max-w-sm flex-col items-center gap-2 text-center">
+        <Icon className={`size-4 text-signal ${spin ? "animate-spin" : ""}`} />
+        <p className="ow-mono-micro text-text-dim">{children}</p>
+      </div>
+    </div>
+  );
 }
 
 export function DiagramCanvas() {
-  const { data, isLoading } = useGraph();
+  const { data, isLoading, isError } = useGraph();
   const highlighted = useDashboardStore((s) => s.highlightedNodeIds);
+  const flowStepIds = useDashboardStore((s) => s.flowStepIds);
   const selectNode = useDashboardStore((s) => s.selectNode);
   const setHighlighted = useDashboardStore((s) => s.setHighlighted);
 
@@ -73,25 +101,50 @@ export function DiagramCanvas() {
   useEffect(() => {
     if (!data) return;
     setNodes(data.nodes);
-    setEdges(styleEdges(data.edges, highlighted));
+    setEdges(styleEdges(data.edges, highlighted, flowStepIds));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  // Restyle edges when the spotlight changes.
+  // Restyle edges when the spotlight or walkthrough changes.
   useEffect(() => {
     if (!data) return;
-    setEdges(styleEdges(data.edges, highlighted));
+    setEdges(styleEdges(data.edges, highlighted, flowStepIds));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlighted, data]);
+  }, [highlighted, flowStepIds, data]);
 
   if (isLoading) {
     return (
-      <div className="grid h-full place-items-center bg-ink-850">
-        <div className="flex items-center gap-2 ow-mono-micro text-text-dim">
-          <Loader2 className="size-4 animate-spin text-signal" />
-          RENDERING ARCHITECTURE GRAPH…
-        </div>
-      </div>
+      <CanvasNotice icon={Loader2} spin>
+        RENDERING ARCHITECTURE GRAPH…
+      </CanvasNotice>
+    );
+  }
+
+  if (isError) {
+    return (
+      <CanvasNotice icon={TriangleAlert}>
+        COULD NOT LOAD THE GRAPH. CHECK THAT THE REPOSITORY IS STILL CONNECTED.
+      </CanvasNotice>
+    );
+  }
+
+  if (!data) {
+    return (
+      <CanvasNotice icon={GitBranch}>
+        CONNECT A REPOSITORY TO BUILD ITS ARCHITECTURE GRAPH.
+      </CanvasNotice>
+    );
+  }
+
+  if (data.nodes.length === 0) {
+    const parsing =
+      data.parseStatus === "pending" || data.parseStatus === "in_progress";
+    return (
+      <CanvasNotice icon={parsing ? Loader2 : TriangleAlert} spin={parsing}>
+        {parsing
+          ? "PARSING REPOSITORY — THE GRAPH APPEARS AS SOON AS THE FIRST PASS COMPLETES."
+          : "NO GRAPH WAS PRODUCED FOR THIS REPOSITORY. THE PARSE MAY HAVE FAILED — CHECK THE REPOSITORIES SCREEN."}
+      </CanvasNotice>
     );
   }
 
@@ -133,25 +186,27 @@ export function DiagramCanvas() {
           zoomable
           maskColor="rgba(7,9,13,0.7)"
           className="!bg-ink-900 !border !border-line-1"
-          nodeColor={(n) => riskHex((n.data as GraphNodeData)?.risk ?? 0)}
+          nodeColor={(n) =>
+            (n.data as GraphNodeData)?.kind === "external" ? "#6B7280" : "#4ADE80"
+          }
           nodeStrokeWidth={0}
         />
       </ReactFlow>
 
-      {/* layer legend */}
+      {/* legend — states the eval-1 grouping simplification openly */}
       <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-1 rounded-md border border-line-1 bg-ink-900/80 px-3 py-2 backdrop-blur-sm">
-        <span className="ow-mono-micro text-text-dim">RISK HEATMAP · T-GNN</span>
+        <span className="ow-mono-micro text-text-dim">
+          ONE NODE PER TOP-LEVEL DIRECTORY
+        </span>
         <div className="mt-1 flex items-center gap-3">
-          {[
-            { c: "bg-signal", l: "LOW" },
-            { c: "bg-warn", l: "MED" },
-            { c: "bg-critical", l: "HIGH" },
-          ].map((x) => (
-            <span key={x.l} className="flex items-center gap-1.5">
-              <span className={`size-1.5 rounded-full ${x.c}`} />
-              <span className="ow-mono-micro text-text-lo">{x.l}</span>
-            </span>
-          ))}
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-signal" />
+            <span className="ow-mono-micro text-text-lo">MODULE</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-stale" />
+            <span className="ow-mono-micro text-text-lo">EXTERNAL</span>
+          </span>
         </div>
       </div>
     </div>

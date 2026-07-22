@@ -1,15 +1,14 @@
 "use client";
 
-import { MousePointerClick, ArrowUpRight } from "lucide-react";
+import { MousePointerClick, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGraph, useWarnings } from "../hooks";
+import { useGraph } from "../hooks";
 import { useDashboardStore } from "../stores/dashboard-store";
 
 export function NodeInspector() {
   const selectedId = useDashboardStore((s) => s.selectedNodeId);
   const focusNodes = useDashboardStore((s) => s.focusNodes);
   const { data: graph } = useGraph();
-  const { data: warnings } = useWarnings();
 
   const node = graph?.nodes.find((n) => n.id === selectedId);
 
@@ -24,17 +23,24 @@ export function NodeInspector() {
     );
   }
 
-  const neighbors = graph.edges
-    .filter((e) => e.source === node.id || e.target === node.id)
-    .map((e) => {
-      const otherId = e.source === node.id ? e.target : e.source;
-      return {
-        node: graph.nodes.find((n) => n.id === otherId)!,
-        probabilistic: e.data?.confidence === "probabilistic",
-      };
-    });
+  // Direction matters here: what this module imports vs what imports it.
+  const dependencies = graph.edges
+    .filter((e) => e.source === node.id)
+    .map((e) => ({
+      node: graph.nodes.find((n) => n.id === e.target),
+      weight: e.data?.weight ?? 0,
+    }))
+    .filter((n) => n.node);
 
-  const related = warnings?.filter((w) => w.nodeIds.includes(node.id)) ?? [];
+  const dependents = graph.edges
+    .filter((e) => e.target === node.id)
+    .map((e) => ({
+      node: graph.nodes.find((n) => n.id === e.source),
+      weight: e.data?.weight ?? 0,
+    }))
+    .filter((n) => n.node);
+
+  const external = node.data.kind === "external";
 
   return (
     <div className="flex h-full flex-col">
@@ -44,87 +50,90 @@ export function NodeInspector() {
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
         <div>
-          <p className="ow-mono-data !text-[16px] text-text-hi">{node.data.label}</p>
+          <p className="ow-mono-data !text-[16px] text-text-hi">
+            {node.data.label}
+          </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-mono-micro text-text-mid uppercase">
-              {node.data.layer}
+              {node.data.kind}
             </span>
-            <span className="rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-mono-micro text-text-mid">
-              {node.data.language}
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-md border border-line-1 bg-surface-1 p-3">
-          <div className="flex items-center justify-between ow-mono-micro text-text-dim">
-            <span>T-GNN RISK SCORE</span>
-            <span
-              className={cn(
-                node.data.risk >= 0.7
-                  ? "text-critical"
-                  : node.data.risk >= 0.4
-                    ? "text-warn"
-                    : "text-signal",
-              )}
-            >
-              {Math.round(node.data.risk * 100)}%
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <p className="ow-mono-micro text-text-dim">
-            CONNECTIONS · {neighbors.length}
-          </p>
-          <div className="mt-2 space-y-1.5">
-            {neighbors.map(({ node: nb, probabilistic }) => (
-              <button
-                key={nb.id}
-                onClick={() => focusNodes([node.id, nb.id])}
-                className="ow-panel flex w-full items-center justify-between p-2 text-left"
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "size-1.5 rounded-full",
-                      probabilistic ? "bg-stale" : "bg-signal",
-                    )}
-                  />
-                  <span className="ow-mono-data !text-[11px] text-text-hi">
-                    {nb.data.label}
-                  </span>
+            {!external && (
+              <>
+                <span className="rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-mono-micro text-text-mid">
+                  {node.data.fileCount} FILES
                 </span>
-                <span className="ow-mono-micro text-text-dim">
-                  {probabilistic ? "CO-CHANGE" : "DIRECT"}
+                <span className="rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-mono-micro text-text-mid">
+                  {node.data.definitionCount} DEFINITIONS
                 </span>
-              </button>
-            ))}
+              </>
+            )}
           </div>
-        </div>
-
-        {related.length > 0 && (
-          <div>
-            <p className="ow-mono-micro text-critical">
-              WARNINGS ON THIS NODE · {related.length}
+          {external && (
+            <p className="mt-2 ow-body !text-[12px] text-text-dim">
+              Every third-party package import is collapsed into this single
+              node — external packages are not modelled individually.
             </p>
-            <div className="mt-2 space-y-1.5">
-              {related.map((w) => (
-                <div
-                  key={w.id}
-                  className="rounded-sm border border-critical-border bg-critical-soft p-2"
-                >
-                  <p className="ow-mono-data !text-[11px] text-text-hi">
-                    {w.title}
-                  </p>
-                  <p className="mt-0.5 flex items-center gap-1 ow-mono-micro text-text-mid">
-                    <ArrowUpRight className="size-3" /> {w.suggestion}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        <NeighbourList
+          title="DEPENDS ON"
+          icon={ArrowDownRight}
+          entries={dependencies}
+          onSelect={(id) => focusNodes([node.id, id])}
+        />
+
+        <NeighbourList
+          title="DEPENDED ON BY"
+          icon={ArrowUpRight}
+          entries={dependents}
+          onSelect={(id) => focusNodes([node.id, id])}
+        />
       </div>
+    </div>
+  );
+}
+
+function NeighbourList({
+  title,
+  icon: Icon,
+  entries,
+  onSelect,
+}: {
+  title: string;
+  icon: typeof ArrowUpRight;
+  entries: Array<{ node?: { id: string; data: { label: string } }; weight: number }>;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div>
+      <p className="flex items-center gap-1.5 ow-mono-micro text-text-dim">
+        <Icon className="size-3" />
+        {title} · {entries.length}
+      </p>
+      {entries.length === 0 ? (
+        <p className="mt-2 ow-mono-micro text-text-dim opacity-60">NONE</p>
+      ) : (
+        <div className="mt-2 space-y-1.5">
+          {entries.map(({ node: nb, weight }) => (
+            <button
+              key={nb!.id}
+              onClick={() => onSelect(nb!.id)}
+              className="ow-panel flex w-full items-center justify-between p-2 text-left"
+            >
+              <span className="flex items-center gap-2">
+                <span className={cn("size-1.5 rounded-full bg-signal")} />
+                <span className="ow-mono-data !text-[11px] text-text-hi">
+                  {nb!.data.label}
+                </span>
+              </span>
+              <span className="ow-mono-micro text-text-dim">
+                {weight} IMPORT{weight === 1 ? "" : "S"}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

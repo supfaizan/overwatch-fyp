@@ -1,17 +1,19 @@
 "use client";
 
-import { AlertTriangle, MessageSquare, Boxes } from "lucide-react";
+import { MessageSquare, Boxes, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore, type DashboardPanel } from "./stores/dashboard-store";
 import { DiagramCanvas } from "./components/DiagramCanvas";
-import { WarningsPanel } from "./components/WarningsPanel";
 import { ChatPanel } from "./components/ChatPanel";
+import { FlowPanel } from "./components/FlowPanel";
 import { NodeInspector } from "./components/NodeInspector";
 
-const TABS: { id: DashboardPanel; label: string; icon: typeof AlertTriangle }[] =
+// The contract-checker (WarningsPanel) tab is deliberately absent — it is out
+// of eval-1 scope. The component stays in the tree for a later eval.
+const TABS: { id: DashboardPanel; label: string; icon: typeof MessageSquare }[] =
   [
-    { id: "warnings", label: "WARNINGS", icon: AlertTriangle },
     { id: "chat", label: "CHAT", icon: MessageSquare },
+    { id: "flow", label: "FLOW", icon: Route },
     { id: "inspector", label: "INSPECT", icon: Boxes },
   ];
 
@@ -51,8 +53,8 @@ export function Dashboard() {
         </div>
 
         <div className="min-h-0 flex-1">
-          {panel === "warnings" && <WarningsPanel />}
           {panel === "chat" && <ChatPanel />}
+          {panel === "flow" && <FlowPanel />}
           {panel === "inspector" && <NodeInspector />}
         </div>
       </aside>

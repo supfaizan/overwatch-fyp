@@ -14,14 +14,14 @@ export function useTraining() {
   const setActiveRepo = useRepoStore((s) => s.setActiveRepo);
   const repoId = activeRepo?.id ?? "unknown";
 
-  // Fresh run each mount (mock only — no-op against a real backend).
+  // Fresh run each mount.
   useEffect(() => {
     resetTrainingMock();
   }, []);
 
   const query = useQuery({
     queryKey: trainingKeys.status(repoId),
-    queryFn: () => getTrainingStatus(repoId),
+    queryFn: getTrainingStatus,
     refetchInterval: (q) => (q.state.data?.done ? false : 600),
   });
 

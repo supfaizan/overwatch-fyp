@@ -3,10 +3,6 @@
 export const APP_NAME = "Overwatch";
 export const APP_TAGLINE = "Operational Intelligence for Engineering Teams";
 
-/** Flip to false once the NestJS backend is live; the feature `api/` layer
- *  branches on this to return mock data so the app is demoable standalone. */
-export const USE_MOCK = true;
-
 /** Access-token cookie used by the optimistic route guard. */
 export const COOKIE_TOKEN = "ow_token";
 

@@ -10,17 +10,25 @@ import { isValidAccessToken } from "@/lib/auth-token";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_TOKEN)?.value;
-  const authed = Boolean(token && isValidAccessToken(token));
+  const hasSession = Boolean(token);
+  const isFresh = Boolean(token && isValidAccessToken(token));
   const isPublic = PUBLIC_ROUTES.includes(pathname);
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
-  // Signed-in users should not see the auth pages.
-  if (authed && isAuthPage) {
+  // Only bounce away from the auth pages on a token that is actually still
+  // valid. Doing this on a stale token would ping-pong a genuinely expired
+  // session between /login and /dashboard.
+  if (isFresh && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Guests cannot reach protected routes.
-  if (!authed && !isPublic) {
+  // Guests cannot reach protected routes. Note this checks for the *presence*
+  // of a session, not a live access token: the access token lasts 15 minutes
+  // while the refresh cookie lasts 30 days, so demanding a fresh one here sent
+  // every returning user to /login even though their session was recoverable.
+  // The page loads optimistically and AuthBootstrap silently refreshes; the
+  // real enforcement is the backend rejecting any request without a valid JWT.
+  if (!hasSession && !isPublic) {
     const url = new URL(GUEST_REDIRECT, request.url);
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);

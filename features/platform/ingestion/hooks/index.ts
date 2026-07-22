@@ -8,6 +8,7 @@ import {
   connectJiraProject,
   connectRepo,
   disconnectJira,
+  getConnectedRepos,
   getGithubRepos,
   getJiraProjects,
   getOnboardingStatus,
@@ -33,6 +34,20 @@ export function useOnboardingStatus() {
     queryFn: getOnboardingStatus,
     refetchInterval: (query) =>
       hasPendingOnboarding(query.state.data) ? 3_000 : false,
+  });
+}
+
+/** Repositories already connected to this account — the backend allows many
+ *  per user, so this is what the app bar switcher lists. */
+export function useConnectedRepos() {
+  return useQuery({
+    queryKey: onboardingKeys.connectedRepos(),
+    queryFn: getConnectedRepos,
+    // Keep pace with a parse finishing so the switcher's status dot is honest.
+    refetchInterval: (query) =>
+      query.state.data?.some((r) => RUNNING_STATUSES.has(r.parseStatus))
+        ? 5_000
+        : false,
   });
 }
 

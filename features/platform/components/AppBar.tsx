@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { OnboardingStatusBadge } from "./OnboardingStatusBadge";
+import { RepoSwitcher } from "./RepoSwitcher";
 import { UserMenu } from "./UserMenu";
 
 const LINKS = [
@@ -45,6 +46,7 @@ export function AppBar() {
       </div>
 
       <div className="flex items-center gap-4">
+        <RepoSwitcher />
         <OnboardingStatusBadge />
         <UserMenu />
       </div>

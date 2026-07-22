@@ -79,6 +79,30 @@ export async function connectRepo(
   };
 }
 
+interface ConnectedReposResponse {
+  repos: Array<{
+    repo_full_name: string;
+    default_branch: string;
+    webhook_status: ConnectedRepository["webhookStatus"];
+    webhook_error?: string;
+    parse_status: ConnectedRepository["parseStatus"];
+    parse_error?: string;
+  }>;
+}
+
+export async function getConnectedRepos(): Promise<ConnectedRepository[]> {
+  const { data } = await api.get<ConnectedReposResponse>(
+    "/github/repos/connected",
+  );
+  return data.repos.map((repo) => ({
+    repoFullName: repo.repo_full_name,
+    defaultBranch: repo.default_branch,
+    webhookStatus: repo.webhook_status,
+    webhookError: repo.webhook_error,
+    parseStatus: repo.parse_status,
+  }));
+}
+
 export async function retryGithubWebhook(repoFullName: string): Promise<void> {
   await api.post("/github/repos/webhook/retry", { repo_full_name: repoFullName });
 }

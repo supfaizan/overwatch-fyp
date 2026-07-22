@@ -1,15 +1,15 @@
 /* Centralized API path prefixes. Feature api functions build URLs from these
-   instead of scattering literal /api/... strings across the codebase.
-   Mirrors the NestJS endpoints documented in guide.md §8. */
+   instead of scattering literal path strings across the codebase.
+   Mirrors the FastAPI routers in the backend's `app/api/routes/`. */
 
 export const SERVICES = {
   AUTH: "/auth",
-  REPOS: "/api/repos",
-  GRAPH: "/api/graph",
-  TICKETS: "/api/tickets",
-  CONTRACTS: "/api/contracts",
-  TGNN: "/api/tgnn",
-  WEBHOOKS: "/api/webhooks",
+  GITHUB: "/github",
+  JIRA: "/jira",
+  ONBOARDING: "/onboarding",
+  GRAPH: "/graph",
+  TICKETS: "/tickets",
+  QUERY: "/query",
 } as const;
 
 export type Service = (typeof SERVICES)[keyof typeof SERVICES];

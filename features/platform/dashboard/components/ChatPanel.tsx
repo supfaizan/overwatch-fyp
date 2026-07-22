@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useChat } from "../hooks";
 
 const SUGGESTIONS = [
-  "What depends on PaymentService?",
-  "Explain the auth flow",
-  "Show the infrastructure layer",
+  "Which modules have the most dependents?",
+  "What does the entry point import?",
+  "Which modules pull in third-party packages?",
 ];
 
 export function ChatPanel() {
-  const { messages, send, isPending } = useChat();
+  const { messages, send, isPending, disabled } = useChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +66,7 @@ export function ChatPanel() {
             <button
               key={s}
               onClick={() => submit(s)}
-              disabled={isPending}
+              disabled={isPending || disabled}
               className="rounded-pill border border-line-1 bg-surface-1 px-2.5 py-1 ow-mono-micro text-text-lo transition-colors hover:border-signal-border hover:text-signal disabled:opacity-50"
             >
               {s}
@@ -83,13 +83,16 @@ export function ChatPanel() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about the system…"
+            disabled={disabled}
+            placeholder={
+              disabled ? "Connect a repository first…" : "Ask about the system…"
+            }
             className="h-9 flex-1 rounded-md border border-line-2 bg-ink-850 px-3 font-mono text-[13px] text-text-hi outline-none placeholder:text-text-dim focus:border-signal-border"
           />
           <Button
             type="submit"
             size="icon"
-            disabled={isPending || !input.trim()}
+            disabled={isPending || disabled || !input.trim()}
             className="size-9 shrink-0"
           >
             <Send className="size-4" />

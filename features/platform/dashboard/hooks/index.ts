@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useActiveRepoFullName } from "@/stores/repo-store";
 import { getWarnings, requestFlow, sendQuery } from "../api";
 import { useGraphView } from "../graph/hooks";
+import { nodeLabel } from "../graph/lib/nodes";
 import { dashboardKeys } from "../api/query-keys";
 import { useDashboardStore } from "../stores/dashboard-store";
 import type { ChatMessage } from "../types";
@@ -110,10 +111,10 @@ export function useFlow() {
     return () => clearTimeout(timer);
   }, [playing, atEnd, cursor, setFlowCursor]);
 
-  const steps = stepIds.map((id) => ({
-    id,
-    label: view?.nodes.find((node) => node.id === id)?.data.label ?? id,
-  }));
+  const steps = stepIds.map((id) => {
+    const node = view?.nodes.find((candidate) => candidate.id === id);
+    return { id, label: node ? nodeLabel(node) : id };
+  });
 
   return {
     steps,

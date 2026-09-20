@@ -12,6 +12,7 @@ import type {
   GraphView,
   Granularity,
   OpenContainer,
+  OverflowFlowNode,
   ViewEdgeType,
   ViewFlowEdge,
   ViewFlowNode,
@@ -44,12 +45,21 @@ interface ViewEdgeResponse {
   collapsed: boolean;
 }
 
+interface OverflowResponse {
+  id: string;
+  container_id: string;
+  container_name: string;
+  shown: number;
+  hidden: number;
+}
+
 interface ViewResponse {
   repo_full_name: string;
   parse_status: JobStatus;
   graph_version: string | null;
   nodes: ViewNodeResponse[];
   edges: ViewEdgeResponse[];
+  overflows: OverflowResponse[];
   expanded: {
     id: string;
     name: string;
@@ -65,6 +75,8 @@ interface OptionsResponse {
   node_labels: ViewNodeLabel[];
   edge_types: ViewEdgeType[];
   granularities: Granularity[];
+  page_size: number;
+  max_nodes: number;
 }
 
 /** Fields are omitted rather than sent as null, so the server's own defaults
@@ -72,7 +84,9 @@ interface OptionsResponse {
 function toBody(query: ViewQuery): Record<string, unknown> {
   return {
     expand: query.expanded,
+    reveal: query.revealed,
     ...(query.expandTo ? { expand_to: query.expandTo } : {}),
+    ...(query.expandFrom ? { expand_from: query.expandFrom } : {}),
     ...(query.nodeLabels ? { node_labels: query.nodeLabels } : {}),
     ...(query.edgeTypes ? { edge_types: query.edgeTypes } : {}),
   };
@@ -90,8 +104,15 @@ export async function getGraphView(
 
   const nodes = data.nodes ?? [];
   const edges = data.edges ?? [];
+  const overflows = data.overflows ?? [];
+
+  // Markers are laid out with everything else: they carry real edges, so
+  // placing them separately would put them somewhere the edges do not go.
   const positions = layoutPositions(
-    nodes.map((node) => ({ id: node.id, kind: node.kind ?? node.label })),
+    [
+      ...nodes.map((node) => ({ id: node.id, kind: node.kind ?? node.label })),
+      ...overflows.map((overflow) => ({ id: overflow.id, kind: "overflow" })),
+    ],
     edges.map((edge) => ({ source: edge.source, target: edge.target })),
   );
 
@@ -99,7 +120,10 @@ export async function getGraphView(
     repoFullName: data.repo_full_name,
     parseStatus: data.parse_status,
     graphVersion: data.graph_version,
-    nodes: nodes.map(toFlowNode(positions)),
+    nodes: [
+      ...nodes.map(toFlowNode(positions)),
+      ...overflows.map(toOverflowNode(positions)),
+    ],
     edges: edges.map(toFlowEdge),
     expanded: (data.expanded ?? []).map(toOpenContainer),
     truncated: data.truncated ?? false,
@@ -122,6 +146,20 @@ const toFlowNode =
       childCount: node.child_count,
       parentId: node.parent_id,
       expandable: node.expandable,
+    },
+  });
+
+const toOverflowNode =
+  (positions: Record<string, { x: number; y: number }>) =>
+  (overflow: OverflowResponse): OverflowFlowNode => ({
+    id: overflow.id,
+    type: "overflow",
+    position: positions[overflow.id] ?? { x: 0, y: 0 },
+    data: {
+      containerId: overflow.container_id,
+      containerName: overflow.container_name,
+      shown: overflow.shown,
+      hidden: overflow.hidden,
     },
   });
 
@@ -149,5 +187,7 @@ export async function getViewOptions(): Promise<ViewOptions> {
     nodeLabels: data.node_labels ?? [],
     edgeTypes: data.edge_types ?? [],
     granularities: data.granularities ?? [],
+    pageSize: data.page_size,
+    maxNodes: data.max_nodes,
   };
 }

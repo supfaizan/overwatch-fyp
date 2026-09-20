@@ -52,20 +52,28 @@ export function useGraphView() {
   return result;
 }
 
-/** Open every container down to a level, in one step.
+/** Open one folder down to a level, in one step.
+ *
+ * Scoped on purpose. Applied to the whole repository this opens every folder
+ * at once — hundreds of boxes, a stalled browser, and no question answered.
+ * Applied to the folder you picked it is the useful version of the same idea.
  *
  * A one-shot request rather than a stored setting: it resolves to a concrete
- * set of open containers, which is then what the trail lists and what can be
+ * set of open folders, which is then what the trail lists and what can be
  * closed again one at a time. */
 export function useExpandTo() {
   const repoFullName = useActiveRepoFullName();
   const adopt = useViewStore((state) => state.adopt);
+  const expanded = useViewStore((state) => state.expanded);
 
   const mutation = useMutation({
-    mutationFn: (expandTo: Granularity) =>
+    mutationFn: ({ level, from }: { level: Granularity; from: string }) =>
       getGraphView(repoFullName!, {
-        expanded: [],
-        expandTo,
+        // Whatever is already open stays open; this adds one subtree to it.
+        expanded,
+        revealed: [],
+        expandTo: level,
+        expandFrom: from,
         nodeLabels: null,
         edgeTypes: null,
       }),
@@ -74,8 +82,8 @@ export function useExpandTo() {
   });
 
   return {
-    expandTo: (level: Granularity) => {
-      if (repoFullName && !mutation.isPending) mutation.mutate(level);
+    expandTo: (level: Granularity, from: string) => {
+      if (repoFullName && !mutation.isPending) mutation.mutate({ level, from });
     },
     isPending: mutation.isPending,
     disabled: !repoFullName,

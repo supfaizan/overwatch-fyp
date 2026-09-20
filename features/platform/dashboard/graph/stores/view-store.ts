@@ -14,6 +14,8 @@ import type { ViewEdgeType, ViewNodeLabel, ViewQuery } from "../types";
 
 interface ViewState {
   expanded: string[];
+  /** Folders drawn in full rather than paged — what "+6 more" adds to. */
+  revealed: string[];
   /** null means no filter — whatever the server allows. */
   nodeLabels: ViewNodeLabel[] | null;
   edgeTypes: ViewEdgeType[] | null;
@@ -21,6 +23,7 @@ interface ViewState {
   open: (nodeId: string) => void;
   close: (nodeId: string) => void;
   closeAll: () => void;
+  reveal: (containerId: string) => void;
   /** Adopt the set the server says is actually open, dropping any id whose
    *  parent turned out to be shut. */
   adopt: (nodeIds: string[]) => void;
@@ -52,6 +55,7 @@ const sameIds = (left: string[], right: string[]) =>
 
 export const useViewStore = create<ViewState>((set) => ({
   expanded: [],
+  revealed: [],
   nodeLabels: null,
   edgeTypes: null,
 
@@ -62,17 +66,23 @@ export const useViewStore = create<ViewState>((set) => ({
         : { expanded: [...state.expanded, nodeId] },
     ),
 
-  // Closing a container also closes everything that was open inside it —
-  // otherwise those ids linger and silently reopen the next time its parent
-  // is opened.
+  // Closing a container also closes — and un-reveals — everything that was
+  // open inside it. Otherwise those ids linger and silently take effect the
+  // next time its parent is opened.
   close: (nodeId) =>
     set((state) => ({
-      expanded: state.expanded.filter(
-        (id) => id !== nodeId && !isInside(id, nodeId),
-      ),
+      expanded: state.expanded.filter((id) => !isInside(id, nodeId)),
+      revealed: state.revealed.filter((id) => !isInside(id, nodeId)),
     })),
 
-  closeAll: () => set({ expanded: [] }),
+  closeAll: () => set({ expanded: [], revealed: [] }),
+
+  reveal: (containerId) =>
+    set((state) =>
+      state.revealed.includes(containerId)
+        ? state
+        : { revealed: [...state.revealed, containerId] },
+    ),
 
   adopt: (nodeIds) =>
     set((state) =>
@@ -92,13 +102,14 @@ export const useViewStore = create<ViewState>((set) => ({
   clearFilters: () => set({ nodeLabels: null, edgeTypes: null }),
 }));
 
-/** Whether one node id lies inside another's subtree.
+/** Whether one node id is a container or lies inside it.
  *
  * Ids are path-derived, so this is a prefix test — but only at a separator,
  * or `repo:apiary` would count as being inside `repo:api`. The server is the
  * authority on containment; this only prunes ids the server would drop
  * anyway, which saves a round trip. */
 function isInside(nodeId: string, containerId: string): boolean {
+  if (nodeId === containerId) return true;
   if (!nodeId.startsWith(containerId)) return false;
   const next = nodeId.charAt(containerId.length);
   return next === "/" || next === "#";
@@ -106,10 +117,21 @@ function isInside(nodeId: string, containerId: string): boolean {
 
 export { isInside };
 
-/** The selection, as the query layer wants it. */
+/** The selection, as the query layer wants it.
+ *
+ * `expandTo` / `expandFrom` are absent: opening to a level is an action that
+ * resolves to concrete open folders, not a setting that is re-sent. */
 export function useViewQuery(): ViewQuery {
   const expanded = useViewStore((state) => state.expanded);
+  const revealed = useViewStore((state) => state.revealed);
   const nodeLabels = useViewStore((state) => state.nodeLabels);
   const edgeTypes = useViewStore((state) => state.edgeTypes);
-  return { expanded, expandTo: null, nodeLabels, edgeTypes };
+  return {
+    expanded,
+    revealed,
+    expandTo: null,
+    expandFrom: null,
+    nodeLabels,
+    edgeTypes,
+  };
 }

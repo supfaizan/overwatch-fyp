@@ -48,6 +48,21 @@ export type ViewNodeData = {
 
 export type ViewFlowNode = Node<ViewNodeData, "graphNode">;
 
+/** Stands for the children of an open folder that there was no room to draw.
+ *  It behaves like a shut folder — the relationships of everything it holds
+ *  are drawn against it — and opening it reveals the rest. */
+export type OverflowNodeData = {
+  containerId: string;
+  containerName: string;
+  shown: number;
+  hidden: number;
+};
+
+export type OverflowFlowNode = Node<OverflowNodeData, "overflow">;
+
+/** Everything the canvas draws: real graph nodes and overflow markers. */
+export type CanvasNode = ViewFlowNode | OverflowFlowNode;
+
 export type ViewEdgeData = {
   kind: ViewEdgeType;
   /** How many underlying relationships this line stands for. */
@@ -74,7 +89,7 @@ export interface GraphView {
   repoFullName: string;
   parseStatus: JobStatus;
   graphVersion: string | null;
-  nodes: ViewFlowNode[];
+  nodes: CanvasNode[];
   edges: ViewFlowEdge[];
   expanded: OpenContainer[];
   /** A cap cut the result short — said out loud rather than shown quietly. */
@@ -87,12 +102,20 @@ export interface ViewOptions {
   nodeLabels: ViewNodeLabel[];
   edgeTypes: ViewEdgeType[];
   granularities: Granularity[];
+  /** How many children one folder contributes before the rest are gathered.
+   *  Server-owned, so the UI can warn ahead of a click without repeating it. */
+  pageSize: number;
+  maxNodes: number;
 }
 
 /** The request: what is open, and what may be drawn. */
 export interface ViewQuery {
   expanded: string[];
+  /** Folders whose children are drawn in full — what a "+6 more" click adds. */
+  revealed: string[];
   expandTo: Granularity | null;
+  /** Confines `expandTo` to one folder's subtree. */
+  expandFrom: string | null;
   /** null means "no filter" — every label / type the server allows. */
   nodeLabels: ViewNodeLabel[] | null;
   edgeTypes: ViewEdgeType[] | null;

@@ -17,20 +17,27 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Loader2, GitBranch, TriangleAlert } from "lucide-react";
 import { GraphNodeCard } from "../graph/components/GraphNodeCard";
+import { OverflowNode } from "../graph/components/OverflowNode";
 import { ViewControls } from "../graph/components/ViewControls";
 import { useGraphView } from "../graph/hooks";
 import { edgeStyle, spotlight } from "../graph/lib/appearance";
+import { isGraphNode } from "../graph/lib/nodes";
 import { useViewStore } from "../graph/stores/view-store";
 import type {
+  CanvasNode,
   ViewEdgeType,
   ViewFlowEdge,
-  ViewFlowNode,
 } from "../graph/types";
 import { useDashboardStore } from "../stores/dashboard-store";
 
-const nodeTypes = { graphNode: GraphNodeCard };
+const nodeTypes = { graphNode: GraphNodeCard, overflow: OverflowNode };
 
 const FIT_PADDING = 0.22;
+
+/** Past this many boxes the canvas stops being a diagram and starts being a
+ *  cost. Edge labels, the refit animation and off-screen nodes are the three
+ *  things that make the difference between "big" and "frozen tab". */
+const DENSE = 60;
 
 /** Refits the viewport whenever the set of nodes changes.
  *
@@ -38,13 +45,14 @@ const FIT_PADDING = 0.22;
  * fits on mount — without this, half the graph lands off-screen. It waits for
  * the new nodes to be measured, or it would fit to stale sizes. Rendered
  * inside `<ReactFlow>`, which is what puts it in the flow's context. */
-function FitToContent({ signature }: { signature: string }) {
+function FitToContent({ signature, dense }: { signature: string; dense: boolean }) {
   const { fitView } = useReactFlow();
   const measured = useNodesInitialized();
 
   useEffect(() => {
-    if (measured) void fitView({ padding: FIT_PADDING, duration: 220 });
-  }, [signature, measured, fitView]);
+    if (!measured) return;
+    void fitView({ padding: FIT_PADDING, duration: dense ? 0 : 220 });
+  }, [signature, measured, dense, fitView]);
 
   return null;
 }
@@ -53,6 +61,7 @@ function styleEdges(
   edges: ViewFlowEdge[],
   lit: Set<string>,
   flowStepIds: string[],
+  dense: boolean,
 ): Edge[] {
   // Consecutive pairs in the walkthrough — these get the travelling animation.
   const flowPairs = new Set(
@@ -73,7 +82,8 @@ function styleEdges(
       type: "default",
       animated: active,
       // Weight is how many underlying relationships this one line stands for.
-      label: weight > 1 ? `×${weight}` : undefined,
+      // Unreadable at a dense zoom, and each label is a rendered element.
+      label: !dense && weight > 1 ? `×${weight}` : undefined,
       labelStyle: {
         fill: "var(--ow-stale)",
         fontFamily: "var(--ow-font-mono)",
@@ -117,10 +127,21 @@ export function DiagramCanvas() {
   const flowStepIds = useDashboardStore((state) => state.flowStepIds);
   const selectNode = useDashboardStore((state) => state.selectNode);
   const setHighlighted = useDashboardStore((state) => state.setHighlighted);
+  const selectedNodeId = useDashboardStore((state) => state.selectedNodeId);
   const open = useViewStore((state) => state.open);
+  const reveal = useViewStore((state) => state.reveal);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<ViewFlowNode>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<CanvasNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  const dense = (data?.nodes.length ?? 0) > DENSE;
+
+  // What "open this to files" applies to. Only a real graph node can be a
+  // scope; an overflow marker stands for several and is opened by clicking it.
+  const selected = useMemo(() => {
+    const node = data?.nodes.find((candidate) => candidate.id === selectedNodeId);
+    return node && isGraphNode(node) ? { id: node.id, name: node.data.label } : null;
+  }, [data, selectedNodeId]);
 
   // A chat answer names modules. Once a module is opened it is no longer on
   // the canvas, so its children carry the spotlight in its place.
@@ -139,8 +160,8 @@ export function DiagramCanvas() {
   useEffect(() => {
     if (!data) return;
     setNodes(data.nodes);
-    setEdges(styleEdges(data.edges, lit, flowStepIds));
-  }, [data, lit, flowStepIds, setNodes, setEdges]);
+    setEdges(styleEdges(data.edges, lit, flowStepIds, dense));
+  }, [data, lit, flowStepIds, dense, setNodes, setEdges]);
 
   if (isLoading) {
     return (
@@ -180,7 +201,7 @@ export function DiagramCanvas() {
 
   return (
     <div className="relative h-full">
-      <ReactFlow<ViewFlowNode, Edge>
+      <ReactFlow<CanvasNode, Edge>
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -191,7 +212,12 @@ export function DiagramCanvas() {
           setHighlighted([node.id]);
         }}
         onNodeDoubleClick={(_, node: Node) => {
-          if ((node as ViewFlowNode).data?.expandable) open(node.id);
+          const canvasNode = node as CanvasNode;
+          if (isGraphNode(canvasNode)) {
+            if (canvasNode.data.expandable) open(canvasNode.id);
+          } else {
+            reveal(canvasNode.data.containerId);
+          }
         }}
         onPaneClick={() => {
           selectNode(null);
@@ -199,12 +225,15 @@ export function DiagramCanvas() {
         }}
         fitView
         fitViewOptions={{ padding: FIT_PADDING }}
+        // Off-screen boxes cost nothing to not draw, and a dense view is
+        // exactly when that matters.
+        onlyRenderVisibleElements={dense}
         proOptions={{ hideAttribution: true }}
         minZoom={0.2}
         maxZoom={1.6}
         colorMode="dark"
       >
-        <FitToContent signature={signature} />
+        <FitToContent signature={signature} dense={dense} />
         <Background
           variant={BackgroundVariant.Dots}
           gap={22}
@@ -221,7 +250,7 @@ export function DiagramCanvas() {
           maskColor="rgba(7,9,13,0.7)"
           className="!bg-ink-900 !border !border-line-1"
           nodeColor={(node) =>
-            (node.data as ViewFlowNode["data"])?.kind === "external"
+            node.type === "overflow" || node.data?.kind === "external"
               ? "#6B7280"
               : "#4ADE80"
           }
@@ -229,7 +258,7 @@ export function DiagramCanvas() {
         />
       </ReactFlow>
 
-      <ViewControls expanded={data.expanded} />
+      <ViewControls expanded={data.expanded} selected={selected} />
       <EdgeLegend edges={data.edges} truncated={data.truncated} />
     </div>
   );

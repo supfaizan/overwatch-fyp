@@ -4,6 +4,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "../../stores/dashboard-store";
+import { useViewOptions } from "../hooks";
 import { describeContents, describeNode, isWithin } from "../lib/appearance";
 import { useViewStore } from "../stores/view-store";
 import type { ViewFlowNode } from "../types";
@@ -20,6 +21,7 @@ const isClosable = (parentId: string | null) =>
 export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
   const open = useViewStore((state) => state.open);
   const close = useViewStore((state) => state.close);
+  const { data: options } = useViewOptions();
 
   const selected = useDashboardStore((state) => state.selectedNodeId === id);
   const highlighted = useDashboardStore((state) =>
@@ -35,6 +37,9 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
 
   const outside = data.kind === "external";
   const contents = describeContents(data);
+  // Say what a click costs before it is made. Past one page the rest arrives
+  // behind a marker rather than all at once, and the control says so.
+  const overflows = Boolean(options && data.childCount > options.pageSize);
 
   return (
     <div
@@ -107,10 +112,16 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         )}
         {data.expandable && (
           <LevelButton
-            title={`Open — ${data.childCount} inside`}
+            title={
+              overflows
+                ? `Open — ${data.childCount} inside, ${options!.pageSize} drawn first`
+                : `Open — ${data.childCount} inside`
+            }
             onClick={() => open(id)}
+            emphasis={overflows ? "heavy" : "normal"}
           >
             <ChevronDown className="size-3" aria-hidden />
+            <span className="ow-mono-micro">{data.childCount}</span>
           </LevelButton>
         )}
       </div>
@@ -128,10 +139,13 @@ function LevelButton({
   title,
   onClick,
   children,
+  emphasis = "normal",
 }: {
   title: string;
   onClick: () => void;
   children: React.ReactNode;
+  /** "heavy" warns that the click costs more than one page. */
+  emphasis?: "normal" | "heavy";
 }) {
   return (
     <button
@@ -144,9 +158,11 @@ function LevelButton({
         onClick();
       }}
       className={cn(
-        "flex size-5 items-center justify-center rounded-sm border border-line-2",
-        "bg-surface-3 text-text-mid transition-colors hover:border-signal hover:text-signal",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex h-5 items-center gap-0.5 rounded-sm border px-1",
+        "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        emphasis === "heavy"
+          ? "border-warn-border bg-warn-soft text-warn hover:border-warn"
+          : "border-line-2 bg-surface-3 text-text-mid hover:border-signal hover:text-signal",
       )}
     >
       {children}

@@ -9,15 +9,31 @@ import { useViewStore } from "../stores/view-store";
 import type { Granularity, OpenContainer } from "../types";
 import { FilterChip } from "./FilterChip";
 
+/** Levels you can jump a folder to. "Folders" is not here: collapsing back
+ *  to the top is `RESET`, and it is the one action that is global. */
 const LEVELS: { id: Granularity; label: string }[] = [
-  { id: "module", label: "FOLDERS" },
   { id: "file", label: "FILES" },
   { id: "symbol", label: "SYMBOLS" },
 ];
 
-/** The controls that sit over the canvas: what level to show, what to draw,
- *  and what is currently open. */
-export function ViewControls({ expanded }: { expanded: OpenContainer[] }) {
+interface Selection {
+  id: string;
+  name: string;
+}
+
+/** The controls that sit over the canvas: what to open, what to draw, and
+ *  what is currently open.
+ *
+ * Opening to a level is deliberately tied to the selected node. Applied to
+ * the whole repository it opens every folder at once, which answers no
+ * question and stalls the browser. */
+export function ViewControls({
+  expanded,
+  selected,
+}: {
+  expanded: OpenContainer[];
+  selected: Selection | null;
+}) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { data: options } = useViewOptions();
   const { expandTo, isPending, disabled } = useExpandTo();
@@ -26,27 +42,53 @@ export function ViewControls({ expanded }: { expanded: OpenContainer[] }) {
   const nodeLabels = useViewStore((state) => state.nodeLabels);
   const edgeTypes = useViewStore((state) => state.edgeTypes);
   const filtered = nodeLabels !== null || edgeTypes !== null;
+  const canJump = Boolean(selected) && !disabled && !isPending;
 
   return (
     <div className="pointer-events-none absolute left-3 top-3 flex max-w-[min(30rem,calc(100%-1.5rem))] flex-col gap-2">
       <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-line-1 bg-ink-900/85 p-1 backdrop-blur-sm">
         <Layers className="ml-1 size-3 shrink-0 text-text-dim" aria-hidden />
-        <span className="ow-mono-micro mr-1 text-text-dim">OPEN TO</span>
+        <span className="ow-mono-micro mr-1 max-w-[10rem] truncate text-text-dim">
+          {selected ? `OPEN ${selected.name} TO` : "PICK A NODE TO OPEN"}
+        </span>
         {LEVELS.map((level) => (
           <button
             key={level.id}
             type="button"
-            disabled={disabled || isPending}
-            onClick={() => (level.id === "module" ? closeAll() : expandTo(level.id))}
+            disabled={!canJump}
+            title={
+              selected
+                ? `Open ${selected.name} down to ${level.label.toLowerCase()}`
+                : "Select a node on the canvas first"
+            }
+            onClick={() => selected && expandTo(level.id, selected.id)}
             className={cn(
               "rounded-sm px-1.5 py-1 ow-mono-micro text-text-lo transition-colors",
-              "hover:bg-surface-2 hover:text-text-hi disabled:opacity-40",
+              "hover:bg-surface-2 hover:text-text-hi",
+              "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
           >
             {level.label}
           </button>
         ))}
+
+        <span className="mx-1 h-4 w-px bg-line-1" aria-hidden />
+
+        <button
+          type="button"
+          onClick={closeAll}
+          disabled={expanded.length === 0}
+          title="Close every folder"
+          className={cn(
+            "rounded-sm px-1.5 py-1 ow-mono-micro text-text-lo transition-colors",
+            "hover:bg-surface-2 hover:text-text-hi",
+            "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          )}
+        >
+          RESET
+        </button>
 
         <span className="mx-1 h-4 w-px bg-line-1" aria-hidden />
 

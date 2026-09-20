@@ -15,7 +15,9 @@ export const graphViewKeys = {
       repoId,
       // Sorted so two selections that differ only in order share one entry.
       [...query.expanded].sort().join("|"),
+      [...query.revealed].sort().join("|"),
       query.expandTo ?? "none",
+      query.expandFrom ?? "root",
       query.nodeLabels ? [...query.nodeLabels].sort().join("|") : "all",
       query.edgeTypes ? [...query.edgeTypes].sort().join("|") : "all",
     ] as const,

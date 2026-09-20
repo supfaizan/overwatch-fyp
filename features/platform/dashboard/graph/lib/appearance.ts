@@ -28,6 +28,19 @@ export const EDGE_STYLES: Record<ViewEdgeType, EdgeStyle> = {
 
 const FALLBACK_EDGE: EdgeStyle = { stroke: "var(--ow-line-2)", label: "relates to" };
 
+/** With a node in focus, its two kinds of connection are coloured apart.
+ *  "What this uses" and "what uses this" are the two questions a dependency
+ *  graph gets asked, and one undifferentiated line answers neither. */
+export const FOCUS_STROKE = {
+  outgoing: "var(--ow-signal)",
+  incoming: "var(--ow-warn)",
+} as const;
+
+/** How far everything unrelated to the focused node recedes. Far enough that
+ *  the neighbourhood reads on its own, near enough to keep the shape of the
+ *  graph as context. */
+export const RECEDED = { node: 0.18, edge: 0.07 } as const;
+
 export function edgeStyle(type: ViewEdgeType): EdgeStyle {
   return EDGE_STYLES[type] ?? FALLBACK_EDGE;
 }

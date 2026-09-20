@@ -9,6 +9,7 @@
  * camelCase throughout; the snake_case mapping lives in ./api. */
 
 import type { Edge, Node } from "@xyflow/react";
+import type { Point } from "../layout";
 import type { JobStatus } from "@/features/platform/ingestion/types";
 
 /** Node labels a view may draw. The repository is the frame, never a box. */
@@ -63,13 +64,22 @@ export type OverflowFlowNode = Node<OverflowNodeData, "overflow">;
 /** Everything the canvas draws: real graph nodes and overflow markers. */
 export type CanvasNode = ViewFlowNode | OverflowFlowNode;
 
+/** One drawn line. Several relationships between the same two nodes land on
+ *  identical coordinates, so they are merged into one line that names all of
+ *  them — otherwise the extras are invisible and cost only clutter. */
 export type ViewEdgeData = {
+  /** What names the line: colour, dash and legend all follow from this. */
   kind: ViewEdgeType;
+  /** Every relationship behind it, most specific first. */
+  types: ViewEdgeType[];
   /** How many underlying relationships this line stands for. */
   weight: number;
   /** True when either end was rolled up into a shut container, so the line
    *  represents relationships between things you cannot currently see. */
   collapsed: boolean;
+  /** Bends the line follows to get around the nodes it travels past. Empty
+   *  when it runs between neighbouring rows with nothing in the way. */
+  points: Point[];
 };
 
 export type ViewFlowEdge = Edge<ViewEdgeData>;

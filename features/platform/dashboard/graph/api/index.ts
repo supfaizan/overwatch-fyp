@@ -7,7 +7,9 @@
 
 import { api } from "@/lib/axios";
 import { SERVICES } from "@/lib/services";
-import { layoutPositions } from "../../layout";
+import { layoutGraph, routeKey } from "../../layout";
+import { mergeByPair, type MergedEdge } from "../lib/edges";
+import type { Point } from "../../layout";
 import type {
   GraphView,
   Granularity,
@@ -103,17 +105,20 @@ export async function getGraphView(
   );
 
   const nodes = data.nodes ?? [];
-  const edges = data.edges ?? [];
   const overflows = data.overflows ?? [];
+
+  // Merge before laying out, so the layout routes exactly the lines that get
+  // drawn — one per pair of nodes, not one per relationship type.
+  const merged = mergeByPair(data.edges ?? []);
 
   // Markers are laid out with everything else: they carry real edges, so
   // placing them separately would put them somewhere the edges do not go.
-  const positions = layoutPositions(
+  const { positions, routes } = layoutGraph(
     [
       ...nodes.map((node) => ({ id: node.id, kind: node.kind ?? node.label })),
       ...overflows.map((overflow) => ({ id: overflow.id, kind: "overflow" })),
     ],
-    edges.map((edge) => ({ source: edge.source, target: edge.target })),
+    merged,
   );
 
   return {
@@ -124,7 +129,7 @@ export async function getGraphView(
       ...nodes.map(toFlowNode(positions)),
       ...overflows.map(toOverflowNode(positions)),
     ],
-    edges: edges.map(toFlowEdge),
+    edges: merged.map(toFlowEdge(routes)),
     expanded: (data.expanded ?? []).map(toOpenContainer),
     truncated: data.truncated ?? false,
   };
@@ -163,14 +168,23 @@ const toOverflowNode =
     },
   });
 
-const toFlowEdge = (edge: ViewEdgeResponse): ViewFlowEdge => ({
-  // The backend keys an edge by (source, target, type) — mirror that, so React
-  // Flow ids stay stable as the view opens and closes.
-  id: `${edge.source}->${edge.target}:${edge.type}`,
-  source: edge.source,
-  target: edge.target,
-  data: { kind: edge.type, weight: edge.weight, collapsed: edge.collapsed },
-});
+const toFlowEdge =
+  (routes: Record<string, Point[]>) =>
+  (edge: MergedEdge): ViewFlowEdge => ({
+    // Keyed by the pair, so React Flow ids stay stable as the view opens and
+    // closes and a line keeps its identity across a refresh.
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    type: "routed",
+    data: {
+      kind: edge.dominant,
+      types: edge.types,
+      weight: edge.weight,
+      collapsed: edge.collapsed,
+      points: routes[routeKey(edge.source, edge.target)] ?? [],
+    },
+  });
 
 const toOpenContainer = (row: ViewResponse["expanded"][number]): OpenContainer => ({
   id: row.id,

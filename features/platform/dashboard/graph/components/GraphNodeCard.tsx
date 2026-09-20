@@ -27,9 +27,10 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
   const highlighted = useDashboardStore((state) =>
     state.highlightedNodeIds.some((target) => isWithin(id, target)),
   );
-  const dimmed = useDashboardStore(
-    (state) => state.highlightedNodeIds.length > 0 && !highlighted,
-  );
+  // How far a node recedes is decided on the canvas, which is the only place
+  // that knows what the focused node is connected to. The card only styles
+  // itself.
+  const focused = useViewStore((state) => state.hovered === id);
   const stepIndex = useDashboardStore((state) => state.flowStepIds.indexOf(id));
   const isActiveStep = useDashboardStore(
     (state) => state.flowStepIds[state.flowCursor] === id,
@@ -47,9 +48,8 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         "group relative w-[184px] rounded-md border bg-surface-2 px-3 py-2.5 transition-all",
         "border-line-2",
         outside && "border-dashed",
-        (selected || highlighted || isActiveStep) && "border-signal",
-        (selected || isActiveStep) && "shadow-[var(--ow-focus-halo)]",
-        dimmed && "opacity-35",
+        (selected || highlighted || isActiveStep || focused) && "border-signal",
+        (selected || isActiveStep || focused) && "shadow-[var(--ow-focus-halo)]",
       )}
     >
       <Handle

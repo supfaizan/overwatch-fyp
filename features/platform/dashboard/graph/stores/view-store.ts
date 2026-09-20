@@ -20,6 +20,11 @@ interface ViewState {
   nodeLabels: ViewNodeLabel[] | null;
   edgeTypes: ViewEdgeType[] | null;
 
+  /** The node the pointer is over. Focus follows it, so connections can be
+   *  read without committing to a selection. */
+  hovered: string | null;
+
+  hover: (nodeId: string | null) => void;
   open: (nodeId: string) => void;
   close: (nodeId: string) => void;
   closeAll: () => void;
@@ -58,6 +63,9 @@ export const useViewStore = create<ViewState>((set) => ({
   revealed: [],
   nodeLabels: null,
   edgeTypes: null,
+  hovered: null,
+
+  hover: (hovered) => set((state) => (state.hovered === hovered ? state : { hovered })),
 
   open: (nodeId) =>
     set((state) =>

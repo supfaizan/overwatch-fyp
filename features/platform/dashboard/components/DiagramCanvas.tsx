@@ -11,6 +11,7 @@ import {
   useEdgesState,
   useNodesInitialized,
   useReactFlow,
+  MarkerType,
   type Node,
   type Edge,
 } from "@xyflow/react";
@@ -18,19 +19,23 @@ import "@xyflow/react/dist/style.css";
 import { Loader2, GitBranch, TriangleAlert } from "lucide-react";
 import { GraphNodeCard } from "../graph/components/GraphNodeCard";
 import { OverflowNode } from "../graph/components/OverflowNode";
+import { RoutedEdge } from "../graph/components/RoutedEdge";
 import { ViewControls } from "../graph/components/ViewControls";
 import { useGraphView } from "../graph/hooks";
-import { edgeStyle, spotlight } from "../graph/lib/appearance";
+import {
+  FOCUS_STROKE,
+  RECEDED,
+  edgeStyle,
+  spotlight,
+} from "../graph/lib/appearance";
+import { describeEdge, neighbourhood, relationTo } from "../graph/lib/edges";
 import { isGraphNode } from "../graph/lib/nodes";
 import { useViewStore } from "../graph/stores/view-store";
-import type {
-  CanvasNode,
-  ViewEdgeType,
-  ViewFlowEdge,
-} from "../graph/types";
+import type { CanvasNode, ViewEdgeType, ViewFlowEdge } from "../graph/types";
 import { useDashboardStore } from "../stores/dashboard-store";
 
 const nodeTypes = { graphNode: GraphNodeCard, overflow: OverflowNode };
+const edgeTypes = { routed: RoutedEdge };
 
 const FIT_PADDING = 0.22;
 
@@ -59,9 +64,8 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
 
 function styleEdges(
   edges: ViewFlowEdge[],
-  lit: Set<string>,
+  focusId: string | null,
   flowStepIds: string[],
-  dense: boolean,
 ): Edge[] {
   // Consecutive pairs in the walkthrough — these get the travelling animation.
   const flowPairs = new Set(
@@ -69,37 +73,77 @@ function styleEdges(
   );
 
   return edges.map((edge) => {
-    const style = edgeStyle(edge.data?.kind ?? "IMPORTS");
+    const detail = edge.data!;
+    const relation = relationTo(edge, focusId);
     const onFlow =
       flowPairs.has(`${edge.source}->${edge.target}`) ||
       flowPairs.has(`${edge.target}->${edge.source}`);
-    const active = onFlow || (lit.size > 0 && lit.has(edge.source) && lit.has(edge.target));
-    const dim = lit.size > 0 && !active;
-    const weight = edge.data?.weight ?? 1;
+    const connected = relation === "outgoing" || relation === "incoming";
+    const active = onFlow || connected;
+    const recede = focusId !== null && !active;
+
+    const stroke = onFlow
+      ? "var(--ow-signal)"
+      : relation === "outgoing"
+        ? FOCUS_STROKE.outgoing
+        : relation === "incoming"
+          ? FOCUS_STROKE.incoming
+          : edgeStyle(detail.kind).stroke;
 
     return {
       ...edge,
-      type: "default",
-      animated: active,
-      // Weight is how many underlying relationships this one line stands for.
-      // Unreadable at a dense zoom, and each label is a rendered element.
-      label: !dense && weight > 1 ? `×${weight}` : undefined,
+      // Drawn by `RoutedEdge`, which follows the waypoints the layout worked
+      // out so a long line goes around the nodes rather than through them.
+      type: "routed",
+      animated: onFlow,
+      // Focused lines sit above the rest instead of behind them.
+      zIndex: active ? 2 : 1,
+      // Named only when it answers the question being asked. Labelling all
+      // twenty-odd lines at rest buries the shape of the graph under text
+      // nobody is reading; point at a node and its own lines say what they
+      // are.
+      label: connected ? describeEdge(detail) : undefined,
       labelStyle: {
-        fill: "var(--ow-stale)",
+        fill: connected ? stroke : "var(--ow-stale)",
         fontFamily: "var(--ow-font-mono)",
-        fontSize: 8,
+        fontSize: connected ? 9 : 8,
         letterSpacing: "0.08em",
       },
       labelBgStyle: { fill: "var(--ow-ink-900)" },
       labelBgPadding: [4, 2] as [number, number],
+      // Every line says which way it points. Without this the graph shows
+      // that two things are related and never which depends on which.
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 16,
+        height: 16,
+        color: stroke,
+      },
       style: {
-        stroke: active ? "var(--ow-signal)" : style.stroke,
+        stroke,
         strokeWidth: active ? 2 : 1.5,
-        strokeDasharray: style.dash,
-        opacity: dim ? 0.18 : 1,
+        strokeDasharray: edgeStyle(detail.kind).dash,
+        opacity: recede ? RECEDED.edge : 1,
+        transition: "opacity 140ms, stroke 140ms",
       },
     };
   });
+}
+
+/** How strongly a node is drawn.
+ *
+ * Focus wins over a chat answer's spotlight: if you are pointing at something,
+ * that is the question being asked right now. Unrelated nodes recede rather
+ * than disappear, so the shape of the graph survives as context. */
+function nodeOpacity(
+  id: string,
+  focusId: string | null,
+  inFocus: Set<string>,
+  lit: Set<string>,
+): number {
+  if (focusId) return inFocus.has(id) ? 1 : RECEDED.node;
+  if (lit.size > 0) return lit.has(id) ? 1 : 0.35;
+  return 1;
 }
 
 function CanvasNotice({
@@ -130,6 +174,8 @@ export function DiagramCanvas() {
   const selectedNodeId = useDashboardStore((state) => state.selectedNodeId);
   const open = useViewStore((state) => state.open);
   const reveal = useViewStore((state) => state.reveal);
+  const hovered = useViewStore((state) => state.hovered);
+  const hover = useViewStore((state) => state.hover);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -150,6 +196,14 @@ export function DiagramCanvas() {
     [data, highlighted],
   );
 
+  // Pointing at a node is enough to read its connections; selecting one holds
+  // them. Hover wins, so you can look around without losing your place.
+  const focusId = hovered ?? selectedNodeId;
+  const inFocus = useMemo(
+    () => neighbourhood(data?.edges ?? [], focusId),
+    [data, focusId],
+  );
+
   // Identifies *which* nodes are on screen, not how they look, so restyling
   // for a chat answer does not yank the viewport around.
   const signature = useMemo(
@@ -159,9 +213,14 @@ export function DiagramCanvas() {
 
   useEffect(() => {
     if (!data) return;
-    setNodes(data.nodes);
-    setEdges(styleEdges(data.edges, lit, flowStepIds, dense));
-  }, [data, lit, flowStepIds, dense, setNodes, setEdges]);
+    setNodes(
+      data.nodes.map((node) => ({
+        ...node,
+        style: { opacity: nodeOpacity(node.id, focusId, inFocus, lit) },
+      })),
+    );
+    setEdges(styleEdges(data.edges, focusId, flowStepIds));
+  }, [data, focusId, inFocus, lit, flowStepIds, setNodes, setEdges]);
 
   if (isLoading) {
     return (
@@ -207,6 +266,7 @@ export function DiagramCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodeClick={(_, node: Node) => {
           selectNode(node.id);
           setHighlighted([node.id]);
@@ -219,9 +279,12 @@ export function DiagramCanvas() {
             reveal(canvasNode.data.containerId);
           }
         }}
+        onNodeMouseEnter={(_, node: Node) => hover(node.id)}
+        onNodeMouseLeave={() => hover(null)}
         onPaneClick={() => {
           selectNode(null);
           setHighlighted([]);
+          hover(null);
         }}
         fitView
         fitViewOptions={{ padding: FIT_PADDING }}
@@ -244,42 +307,70 @@ export function DiagramCanvas() {
           showInteractive={false}
           className="!border-line-1 !bg-surface-1 [&_button]:!border-line-1 [&_button]:!bg-surface-1 [&_button:hover]:!bg-surface-2 [&_svg]:!fill-text-mid"
         />
-        <MiniMap
-          pannable
-          zoomable
-          maskColor="rgba(7,9,13,0.7)"
-          className="!bg-ink-900 !border !border-line-1"
-          nodeColor={(node) =>
-            node.type === "overflow" || node.data?.kind === "external"
-              ? "#6B7280"
-              : "#4ADE80"
-          }
-          nodeStrokeWidth={0}
-        />
+        {/* Only worth its screen space once there is more graph than fits.
+            Below that it covers the very nodes it is meant to help find. */}
+        {dense && (
+          <MiniMap
+            pannable
+            zoomable
+            maskColor="rgba(7,9,13,0.7)"
+            className="!bg-ink-900 !border !border-line-1"
+            nodeColor={(node) =>
+              node.type === "overflow" || node.data?.kind === "external"
+                ? "#6B7280"
+                : "#4ADE80"
+            }
+            nodeStrokeWidth={0}
+          />
+        )}
       </ReactFlow>
 
       <ViewControls expanded={data.expanded} selected={selected} />
-      <EdgeLegend edges={data.edges} truncated={data.truncated} />
+      <EdgeLegend
+        edges={data.edges}
+        focused={focusId !== null}
+        truncated={data.truncated}
+      />
     </div>
   );
 }
 
 /** Only the relationships actually on screen, so the legend never explains
- *  a line the canvas is not drawing. */
+ *  a line the canvas is not drawing.
+ *
+ *  With a node in focus it explains the focus colours instead, because that
+ *  is what the canvas is showing at that moment. */
 function EdgeLegend({
   edges,
+  focused,
   truncated,
 }: {
   edges: ViewFlowEdge[];
+  focused: boolean;
   truncated: boolean;
 }) {
   const kinds = useMemo(() => {
     const seen = new Set<ViewEdgeType>();
-    for (const edge of edges) if (edge.data) seen.add(edge.data.kind);
+    for (const edge of edges) for (const type of edge.data?.types ?? []) seen.add(type);
     return [...seen].sort();
   }, [edges]);
 
   if (kinds.length === 0 && !truncated) return null;
+
+  if (focused) {
+    return (
+      <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1 rounded-md border border-line-1 bg-ink-900/85 px-3 py-2 backdrop-blur-sm">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-px w-3.5 bg-signal" />
+          <span className="ow-mono-micro text-text-mid">THIS USES →</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-px w-3.5 bg-warn" />
+          <span className="ow-mono-micro text-text-mid">→ USES THIS</span>
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="pointer-events-none absolute right-3 top-3 flex max-w-[16rem] flex-col items-end gap-1.5 rounded-md border border-line-1 bg-ink-900/85 px-3 py-2 backdrop-blur-sm">

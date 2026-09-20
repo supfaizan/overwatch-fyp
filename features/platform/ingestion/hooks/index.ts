@@ -8,6 +8,7 @@ import {
   connectJiraProject,
   connectRepo,
   disconnectJira,
+  disconnectRepo,
   getConnectedRepos,
   getGithubRepos,
   getJiraProjects,
@@ -90,6 +91,26 @@ export function useRetryGithubWebhook() {
     onError: (error: Error) => toast.error(error.message),
   });
 }
+
+export function useDisconnectRepo() {
+  const queryClient = useQueryClient();
+  const activeRepo = useRepoStore((state) => state.activeRepo);
+  const clearActiveRepo = useRepoStore((state) => state.clearActiveRepo);
+
+  return useMutation({
+    mutationFn: disconnectRepo,
+    onSuccess: (_result, repoFullName) => {
+      if (activeRepo?.fullName === repoFullName) clearActiveRepo();
+      queryClient.removeQueries({ queryKey: ["dashboard"] });
+      queryClient.removeQueries({ queryKey: ["explorer"] });
+      void queryClient.invalidateQueries({ queryKey: onboardingKeys.status() });
+      void queryClient.invalidateQueries({ queryKey: onboardingKeys.connectedRepos() });
+      toast.success(`Disconnected ${repoFullName}. Its data has been deleted.`);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+}
+
 
 export function useStartJiraOAuth() {
   return useMutation({

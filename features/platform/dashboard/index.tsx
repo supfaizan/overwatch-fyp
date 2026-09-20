@@ -1,12 +1,13 @@
 "use client";
 
-import { MessageSquare, Boxes, Route } from "lucide-react";
+import { Compass, Gauge, MessageSquare, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore, type DashboardPanel } from "./stores/dashboard-store";
 import { DiagramCanvas } from "./components/DiagramCanvas";
 import { ChatPanel } from "./components/ChatPanel";
 import { FlowPanel } from "./components/FlowPanel";
-import { NodeInspector } from "./components/NodeInspector";
+import { CoveragePanel } from "./explorer/components/CoveragePanel";
+import { ExplorerPanel } from "./explorer/components/ExplorerPanel";
 
 // The contract-checker (WarningsPanel) tab is deliberately absent — it is out
 // of eval-1 scope. The component stays in the tree for a later eval.
@@ -14,7 +15,8 @@ const TABS: { id: DashboardPanel; label: string; icon: typeof MessageSquare }[] 
   [
     { id: "chat", label: "CHAT", icon: MessageSquare },
     { id: "flow", label: "FLOW", icon: Route },
-    { id: "inspector", label: "INSPECT", icon: Boxes },
+    { id: "explorer", label: "EXPLORE", icon: Compass },
+    { id: "coverage", label: "COVERAGE", icon: Gauge },
   ];
 
 export function Dashboard() {
@@ -39,7 +41,7 @@ export function Dashboard() {
                 key={t.id}
                 onClick={() => setPanel(t.id)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 border-b-2 py-3 ow-mono-micro transition-colors",
+                  "flex flex-1 items-center justify-center gap-1 border-b-2 py-3 ow-mono-micro transition-colors",
                   active
                     ? "border-signal text-signal"
                     : "border-transparent text-text-lo hover:text-text-hi",
@@ -55,7 +57,8 @@ export function Dashboard() {
         <div className="min-h-0 flex-1">
           {panel === "chat" && <ChatPanel />}
           {panel === "flow" && <FlowPanel />}
-          {panel === "inspector" && <NodeInspector />}
+          {panel === "explorer" && <ExplorerPanel />}
+          {panel === "coverage" && <CoveragePanel />}
         </div>
       </aside>
     </div>

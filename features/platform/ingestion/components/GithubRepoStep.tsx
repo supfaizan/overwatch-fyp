@@ -16,6 +16,7 @@ import {
   useGithubRepos,
   useRetryGithubWebhook,
 } from "../hooks";
+import { DisconnectRepoButton } from "./DisconnectRepoButton";
 import type { OnboardingStatus } from "../types";
 
 interface GithubRepoStepProps {
@@ -42,6 +43,11 @@ export function GithubRepoStep({ status }: GithubRepoStepProps) {
             PARSE {status.parseStatus?.replace("_", " ") ?? "QUEUED"} · WEBHOOK{" "}
             {status.webhookStatus ?? "PENDING"}
           </p>
+          {repoFullName && (
+            <div className="mt-3">
+              <DisconnectRepoButton repoFullName={repoFullName} />
+            </div>
+          )}
           {status.webhookStatus === "failed" && (
             <div className="mt-3 space-y-2">
               <p className="ow-body text-critical">

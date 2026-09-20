@@ -5,6 +5,8 @@ import { Send, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useChat } from "../hooks";
+import { useDashboardStore } from "../stores/dashboard-store";
+import { AnswerReferences } from "./AnswerReferences";
 
 const SUGGESTIONS = [
   "Which modules have the most dependents?",
@@ -14,6 +16,7 @@ const SUGGESTIONS = [
 
 export function ChatPanel() {
   const { messages, send, isPending, disabled } = useChat();
+  const openInExplorer = useDashboardStore((state) => state.selectNode);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -39,16 +42,23 @@ export function ChatPanel() {
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-3 p-4">
           {messages.map((m) => (
-            <div
-              key={m.id}
-              className={cn(
-                "max-w-[90%] rounded-md border px-3 py-2 ow-body !text-[13px]",
-                m.role === "user"
-                  ? "ml-auto border-signal-border bg-signal-soft text-text-hi"
-                  : "border-line-1 bg-surface-1 text-text-mid",
+            <div key={m.id} className="space-y-1.5">
+              <div
+                className={cn(
+                  "max-w-[90%] rounded-md border px-3 py-2 ow-body !text-[13px]",
+                  m.role === "user"
+                    ? "ml-auto border-signal-border bg-signal-soft text-text-hi"
+                    : "border-line-1 bg-surface-1 text-text-mid",
+                )}
+              >
+                {m.content}
+              </div>
+              {m.references && m.references.length > 0 && (
+                <AnswerReferences
+                  references={m.references}
+                  onOpen={openInExplorer}
+                />
               )}
-            >
-              {m.content}
             </div>
           ))}
           {isPending && (

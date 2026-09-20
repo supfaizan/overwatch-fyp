@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+import { SERVICES } from "@/lib/services";
 import type {
   ConnectedJiraProject,
   ConnectedRepository,
@@ -154,4 +155,18 @@ export async function getOnboardingStatus(): Promise<OnboardingStatus> {
       syncStatus: data.jira.sync_status,
     },
   };
+}
+
+
+/** Disconnect a repository.
+ *
+ * The backend removes the webhook, the graph, the extracted facts and the
+ * checked-out source. The name is split into path segments so it is encoded
+ * rather than interpolated raw.
+ */
+export async function disconnectRepo(repoFullName: string): Promise<void> {
+  const [owner, name] = repoFullName.split("/");
+  await api.delete(
+    `${SERVICES.GITHUB}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
+  );
 }

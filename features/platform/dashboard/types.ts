@@ -2,8 +2,8 @@ import type { Edge, Node } from "@xyflow/react";
 import type { Priority } from "@/types";
 import type { JobStatus } from "@/features/platform/ingestion/types";
 
-/** Backend node kinds (`app/parsing/graph_builder.py`): one node per top-level
- *  directory, plus a single collapsed node for external package imports. */
+/** Diagram node kinds: one node per top-level directory, plus a single
+ *  collapsed node for external packages. The explorer goes deeper. */
 export type GraphNodeKind = "module" | "external";
 
 /** Node payload rendered by the custom ServiceNode. Declared as a `type`
@@ -57,10 +57,15 @@ export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
-  highlight?: string[]; // node ids to spotlight on the diagram
+  highlight?: string[]; // module ids to spotlight on the diagram
+  /** Exact files and definitions the answer drew on, for drill-down. */
+  references?: string[];
 }
 
 export interface QueryResult {
   answer: string;
+  /** Module ids: what the diagram can highlight. */
   highlight: string[];
+  /** File and definition ids: what the explorer can open. */
+  references: string[];
 }

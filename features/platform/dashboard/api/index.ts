@@ -34,6 +34,7 @@ interface BackendGraphResponse {
 interface AskResponse {
   answer: string;
   highlighted_node_ids: string[];
+  references?: string[];
 }
 
 interface FlowResponse {
@@ -96,7 +97,11 @@ export async function sendQuery(input: {
     question: input.question,
     focused_node_id: input.focusedNodeId ?? null,
   });
-  return { answer: data.answer, highlight: data.highlighted_node_ids };
+  return {
+    answer: data.answer,
+    highlight: data.highlighted_node_ids,
+    references: data.references ?? [],
+  };
 }
 
 export async function requestFlow(input: {

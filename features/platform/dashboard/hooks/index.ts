@@ -57,6 +57,7 @@ export function useChat() {
           role: "assistant",
           content: result.answer,
           highlight: result.highlight,
+          references: result.references,
         },
       ]);
       setHighlighted(result.highlight);

@@ -4,7 +4,7 @@
 
 import { create } from "zustand";
 
-export type DashboardPanel = "chat" | "inspector" | "flow";
+export type DashboardPanel = "chat" | "flow" | "explorer" | "coverage";
 
 interface DashboardState {
   selectedNodeId: string | null;
@@ -31,8 +31,10 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   flowCursor: 0,
   panel: "chat",
   setPanel: (panel) => set({ panel }),
+  // Picking a node on the diagram opens it in the explorer, which is where
+  // its files, definitions and relationships live.
   selectNode: (selectedNodeId) =>
-    set({ selectedNodeId, panel: selectedNodeId ? "inspector" : "chat" }),
+    set({ selectedNodeId, panel: selectedNodeId ? "explorer" : "chat" }),
   setHighlighted: (highlightedNodeIds) => set({ highlightedNodeIds }),
   focusNodes: (ids) =>
     set({ highlightedNodeIds: ids, selectedNodeId: ids[0] ?? null }),

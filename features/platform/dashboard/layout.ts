@@ -1,9 +1,10 @@
 /* The backend graph carries no coordinates — it's a dependency graph, not a
    diagram — so positions are derived here.
 
-   Nodes are placed in dependency layers: a module sits below the modules that
-   import it, so consumers land at the top and leaves at the bottom. The
-   collapsed external-dependency node is forced to the last row.
+   Nodes are placed in dependency layers: a node sits below the nodes that
+   depend on it, so consumers land at the top and leaves at the bottom. The
+   two synthetic containers — external packages and HTTP routes — are forced
+   to the last row, because nothing inside the repository sits beneath them.
 
    Real repositories import in cycles (features ↔ components ↔ lib), and a
    cycle has no "depth". Back edges are therefore dropped before layering:
@@ -20,8 +21,11 @@ interface LayoutNode {
 interface LayoutEdge {
   source: string;
   target: string;
-  kind: string;
 }
+
+/** Kinds that always sit at the bottom: they are outside the repository, or
+ *  they are its outward-facing surface. */
+const SINK_KINDS: ReadonlySet<string> = new Set(["external", "routes"]);
 
 const COLUMN_WIDTH = 230;
 const ROW_HEIGHT = 150;
@@ -33,7 +37,6 @@ export function layoutPositions(
   const ids = new Set(nodes.map((node) => node.id));
   const dependencies = edges.filter(
     (edge) =>
-      edge.kind === "DEPENDS_ON" &&
       edge.source !== edge.target &&
       ids.has(edge.source) &&
       ids.has(edge.target),
@@ -42,11 +45,11 @@ export function layoutPositions(
   const depth = layerDepths(nodes, forwardEdges(nodes, dependencies));
 
   // Everything outside the repository sits below everything inside it.
-  const deepestModule = nodes
-    .filter((node) => node.kind !== "external")
+  const deepest = nodes
+    .filter((node) => !SINK_KINDS.has(node.kind))
     .reduce((max, node) => Math.max(max, depth.get(node.id) ?? 0), 0);
   for (const node of nodes) {
-    if (node.kind === "external") depth.set(node.id, deepestModule + 1);
+    if (SINK_KINDS.has(node.kind)) depth.set(node.id, deepest + 1);
   }
 
   return positionsByRow(nodes, depth);

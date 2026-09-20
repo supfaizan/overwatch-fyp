@@ -4,25 +4,11 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useActiveRepoFullName } from "@/stores/repo-store";
-import { getGraph, getWarnings, requestFlow, sendQuery } from "../api";
+import { getWarnings, requestFlow, sendQuery } from "../api";
+import { useGraphView } from "../graph/hooks";
 import { dashboardKeys } from "../api/query-keys";
 import { useDashboardStore } from "../stores/dashboard-store";
 import type { ChatMessage } from "../types";
-
-export function useGraph() {
-  const repoFullName = useActiveRepoFullName();
-  return useQuery({
-    queryKey: dashboardKeys.graph(repoFullName ?? ""),
-    queryFn: () => getGraph(repoFullName!),
-    enabled: Boolean(repoFullName),
-    // The initial parse runs as a background job, so an empty graph is a
-    // "not yet" rather than a "none" — keep polling until it lands.
-    refetchInterval: (query) => {
-      const status = query.state.data?.parseStatus;
-      return status === "pending" || status === "in_progress" ? 4_000 : false;
-    },
-  });
-}
 
 /** Out of eval-1 scope (contract checker); the panel is unrouted. */
 export function useWarnings() {
@@ -90,7 +76,7 @@ const FLOW_STEP_MS = 1_600;
 
 export function useFlow() {
   const repoFullName = useActiveRepoFullName();
-  const { data: graph } = useGraph();
+  const { data: view } = useGraphView();
   const [playing, setPlaying] = useState(false);
 
   const stepIds = useDashboardStore((s) => s.flowStepIds);
@@ -126,7 +112,7 @@ export function useFlow() {
 
   const steps = stepIds.map((id) => ({
     id,
-    label: graph?.nodes.find((n) => n.id === id)?.data.label ?? id,
+    label: view?.nodes.find((node) => node.id === id)?.data.label ?? id,
   }));
 
   return {

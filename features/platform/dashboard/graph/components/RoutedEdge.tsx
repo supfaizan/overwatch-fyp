@@ -6,12 +6,21 @@ import type { Point } from "../../layout";
 /** An edge that follows the route the layout computed for it.
  *
  * A line spanning several rows would otherwise be drawn straight from one
- * node to the other, crossing every node in between — which is what made the
- * graph unreadable. The layout already worked out where such a line should
- * bend to get around them; this draws it there.
+ * node to the other, crossing every node in between. The layout already
+ * worked out which channel such a line should travel down; this draws it
+ * there, as a right-angled path with as few corners as the route needs.
  *
- * With no route (adjacent rows, nothing in the way) it falls back to React
- * Flow's own stepped path. */
+ * The layout hands over one waypoint per row the line crosses, nearly all of
+ * them in a straight line down the same channel. Treating each as a corner
+ * produced a path with thirty anchor points and a visible kink at every one,
+ * so every point that does not actually change direction is dropped first —
+ * a line down thirteen rows turns twice, not twenty-seven times.
+ *
+ * The route is otherwise left as the layout drew it. Squaring it off into
+ * right angles was worse: each line then left its node along the same
+ * horizontal corridor as every other line from that node, so they all lay on
+ * top of each other. Letting each one run straight to its own channel keeps
+ * them apart. */
 export function RoutedEdge({
   id,
   sourceX,
@@ -26,7 +35,7 @@ export function RoutedEdge({
   style,
   data,
 }: EdgeProps) {
-  const waypoints = (data?.points as Point[] | undefined) ?? [];
+  const waypoints = simplify((data?.points as Point[] | undefined) ?? []);
 
   const [fallbackPath, fallbackLabelX, fallbackLabelY] = getSmoothStepPath({
     sourceX,
@@ -38,20 +47,18 @@ export function RoutedEdge({
     borderRadius: CORNER,
   });
 
-  const routed = waypoints.length > 0;
-  const path = routed
-    ? roundedPath([
-        { x: sourceX, y: sourceY },
-        ...waypoints,
-        { x: targetX, y: targetY },
-      ])
-    : fallbackPath;
+  // Nothing in the way: React Flow's own stepped path is exactly right.
+  const corners =
+    waypoints.length === 0
+      ? null
+      : simplify([
+          { x: sourceX, y: sourceY },
+          ...waypoints,
+          { x: targetX, y: targetY },
+        ]);
 
-  // On a routed line the midpoint of the *route* is clear of the nodes it
-  // travels past; the straight-line midpoint is not.
-  const midpoint = routed ? waypoints[Math.floor(waypoints.length / 2)] : null;
-  const labelX = midpoint?.x ?? fallbackLabelX;
-  const labelY = midpoint?.y ?? fallbackLabelY;
+  const path = corners ? roundedPath(corners) : fallbackPath;
+  const midpoint = corners ? alongPath(corners, 0.5) : null;
 
   return (
     <>
@@ -63,7 +70,7 @@ export function RoutedEdge({
             // and a node underneath must stay clickable.
             className="pointer-events-none absolute rounded-sm bg-ink-900/90 px-1 py-0.5"
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${midpoint?.x ?? fallbackLabelX}px, ${midpoint?.y ?? fallbackLabelY}px)`,
               ...labelStyle,
             }}
           >
@@ -75,45 +82,86 @@ export function RoutedEdge({
   );
 }
 
-/** How much of a corner to round off. Enough to read as a turn rather than a
- *  kink, small enough not to swallow short segments. */
-const CORNER = 10;
+/** How much of a corner to round off. */
+const CORNER = 12;
+/** Distances below this count as "the same", when deciding whether a point
+ *  really changes direction. */
+const EPSILON = 1;
 
-/** An SVG path through the points, with the corners rounded.
- *
- * Each bend is replaced by a quadratic curve that starts and ends a little
- * short of it, so the line turns rather than snapping. The radius shrinks on
- * short segments, which is what stops a tight bend from overshooting. */
+/** Drop every point that does not change the direction of travel. */
+function simplify(points: Point[]): Point[] {
+  const kept: Point[] = [];
+
+  for (const point of points) {
+    const last = kept[kept.length - 1];
+    if (last && Math.abs(point.x - last.x) < EPSILON && Math.abs(point.y - last.y) < EPSILON) {
+      continue; // same place twice
+    }
+    if (kept.length >= 2 && isStraight(kept[kept.length - 2], last, point)) {
+      kept[kept.length - 1] = point; // extend the run instead of bending it
+      continue;
+    }
+    kept.push(point);
+  }
+
+  return kept;
+}
+
+function isStraight(a: Point, b: Point, c: Point): boolean {
+  // Twice the area of the triangle: zero when the three are in a line.
+  const cross = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  const scale = Math.max(Math.hypot(c.x - a.x, c.y - a.y), 1);
+  return Math.abs(cross) / scale < EPSILON;
+}
+
+/** An SVG path through the points, with the corners rounded. */
 function roundedPath(points: Point[]): string {
   if (points.length < 2) return "";
-
-  const parts = [`M ${points[0].x},${points[0].y}`];
+  const parts = [`M ${round(points[0].x)},${round(points[0].y)}`];
 
   for (let index = 1; index < points.length - 1; index++) {
     const previous = points[index - 1];
     const corner = points[index];
     const next = points[index + 1];
 
-    const before = shorten(corner, previous);
-    const after = shorten(corner, next);
+    // The radius shrinks on short segments, so a tight bend cannot overshoot
+    // into the one before or after it.
+    const radius = Math.min(CORNER, distance(previous, corner) / 2, distance(corner, next) / 2);
+    const before = towards(corner, previous, radius);
+    const after = towards(corner, next, radius);
 
-    parts.push(`L ${before.x},${before.y}`);
-    parts.push(`Q ${corner.x},${corner.y} ${after.x},${after.y}`);
+    parts.push(`L ${round(before.x)},${round(before.y)}`);
+    parts.push(`Q ${round(corner.x)},${round(corner.y)} ${round(after.x)},${round(after.y)}`);
   }
 
   const last = points[points.length - 1];
-  parts.push(`L ${last.x},${last.y}`);
+  parts.push(`L ${round(last.x)},${round(last.y)}`);
   return parts.join(" ");
 }
 
-/** A point `CORNER` along the way from `from` towards `to`, or the midpoint
- *  if the segment is shorter than that. */
-function shorten(from: Point, to: Point): Point {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const length = Math.hypot(dx, dy);
-  if (length === 0) return { ...from };
+/** The point a given fraction of the way along the polyline. */
+function alongPath(points: Point[], fraction: number): Point {
+  const lengths = points.slice(1).map((point, index) => distance(points[index], point));
+  const total = lengths.reduce((sum, length) => sum + length, 0);
+  let remaining = total * fraction;
 
-  const step = Math.min(CORNER, length / 2);
-  return { x: from.x + (dx / length) * step, y: from.y + (dy / length) * step };
+  for (let index = 0; index < lengths.length; index++) {
+    if (remaining <= lengths[index]) {
+      return towards(points[index], points[index + 1], remaining);
+    }
+    remaining -= lengths[index];
+  }
+  return points[points.length - 1];
 }
+
+function towards(from: Point, to: Point, step: number): Point {
+  const length = distance(from, to);
+  if (length === 0) return { ...from };
+  return {
+    x: from.x + ((to.x - from.x) / length) * step,
+    y: from.y + ((to.y - from.y) / length) * step,
+  };
+}
+
+const distance = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
+const round = (value: number) => Math.round(value * 10) / 10;

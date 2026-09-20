@@ -9,7 +9,6 @@
  * camelCase throughout; the snake_case mapping lives in ./api. */
 
 import type { Edge, Node } from "@xyflow/react";
-import type { Point } from "../layout";
 import type { JobStatus } from "@/features/platform/ingestion/types";
 
 /** Node labels a view may draw. The repository is the frame, never a box. */
@@ -77,9 +76,6 @@ export type ViewEdgeData = {
   /** True when either end was rolled up into a shut container, so the line
    *  represents relationships between things you cannot currently see. */
   collapsed: boolean;
-  /** Bends the line follows to get around the nodes it travels past. Empty
-   *  when it runs between neighbouring rows with nothing in the way. */
-  points: Point[];
 };
 
 export type ViewFlowEdge = Edge<ViewEdgeData>;

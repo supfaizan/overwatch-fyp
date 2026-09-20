@@ -3,15 +3,13 @@
 
    This is a layered drawing: rows run top to bottom, a node sits below what
    depends on it, and lines run downwards. Getting that right means breaking
-   cycles (real repositories import in circles), assigning rows, ordering each
-   row to reduce crossings, and — the part that matters most for reading it —
-   routing a line that spans several rows *around* the nodes in between rather
-   than straight through them.
+   cycles (real repositories import in circles), assigning rows, and ordering
+   each row so the lines between rows cross as little as possible.
 
-   That last step needs dummy nodes and is where hand-rolled layouts fall
-   over, so this delegates to dagre, which does all four properly. What is
-   ours is the choice of spacing, and handing the computed waypoints to the
-   edge that draws them. */
+   All three are delegated to dagre rather than hand-rolled — the ordering
+   step in particular needs dummy nodes for edges that span several rows, and
+   that is where a home-grown layout falls over. What is ours is the choice of
+   spacing. The lines themselves are drawn by React Flow. */
 
 import dagre from "@dagrejs/dagre";
 
@@ -30,13 +28,6 @@ export interface Point {
   y: number;
 }
 
-export interface GraphLayout {
-  /** Top-left corner of each node, which is what React Flow positions by. */
-  positions: Record<string, Point>;
-  /** The waypoints a line should follow, keyed `source->target`. */
-  routes: Record<string, Point[]>;
-}
-
 /** The node card's rendered size. Dagre reserves space from these, so they
  *  have to match what `GraphNodeCard` and `OverflowNode` actually draw. */
 const NODE_WIDTH = 184;
@@ -47,12 +38,10 @@ const NODE_HEIGHT = 68;
 const NODE_SEPARATION = 48;
 const RANK_SEPARATION = 96;
 
-export const routeKey = (source: string, target: string) => `${source}->${target}`;
-
-export function layoutGraph(
+export function layoutPositions(
   nodes: LayoutNode[],
   edges: LayoutEdge[],
-): GraphLayout {
+): Record<string, Point> {
   const ids = new Set(nodes.map((node) => node.id));
   const drawable = edges.filter(
     (edge) =>
@@ -95,19 +84,7 @@ export function layoutGraph(
     };
   }
 
-  const routes: Record<string, Point[]> = {};
-  for (const edge of drawable) {
-    const points = graph.edge(edge.source, edge.target)?.points;
-    if (points && points.length > 2) {
-      // The ends are already at the node boundary; the edge component draws
-      // from its own handles, so only the bends in between are useful.
-      routes[routeKey(edge.source, edge.target)] = points
-        .slice(1, -1)
-        .map((point: Point) => ({ x: point.x, y: point.y }));
-    }
-  }
-
-  return { positions, routes };
+  return positions;
 }
 
 const byId = (a: LayoutNode, b: LayoutNode) => a.id.localeCompare(b.id);

@@ -19,7 +19,6 @@ import "@xyflow/react/dist/style.css";
 import { Loader2, GitBranch, TriangleAlert } from "lucide-react";
 import { GraphNodeCard } from "../graph/components/GraphNodeCard";
 import { OverflowNode } from "../graph/components/OverflowNode";
-import { RoutedEdge } from "../graph/components/RoutedEdge";
 import { ViewControls } from "../graph/components/ViewControls";
 import { useGraphView } from "../graph/hooks";
 import {
@@ -35,7 +34,6 @@ import type { CanvasNode, ViewEdgeType, ViewFlowEdge } from "../graph/types";
 import { useDashboardStore } from "../stores/dashboard-store";
 
 const nodeTypes = { graphNode: GraphNodeCard, overflow: OverflowNode };
-const edgeTypes = { routed: RoutedEdge };
 
 const FIT_PADDING = 0.22;
 
@@ -92,9 +90,7 @@ function styleEdges(
 
     return {
       ...edge,
-      // Drawn by `RoutedEdge`, which follows the waypoints the layout worked
-      // out so a long line goes around the nodes rather than through them.
-      type: "routed",
+      type: "default",
       animated: onFlow,
       // Focused lines sit above the rest instead of behind them.
       zIndex: active ? 2 : 1,
@@ -110,6 +106,7 @@ function styleEdges(
         letterSpacing: "0.08em",
       },
       labelBgStyle: { fill: "var(--ow-ink-900)" },
+      labelBgBorderRadius: 3,
       labelBgPadding: [4, 2] as [number, number],
       // Every line says which way it points. Without this the graph shows
       // that two things are related and never which depends on which.
@@ -266,7 +263,6 @@ export function DiagramCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
         onNodeClick={(_, node: Node) => {
           selectNode(node.id);
           setHighlighted([node.id]);

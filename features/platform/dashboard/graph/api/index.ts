@@ -7,9 +7,8 @@
 
 import { api } from "@/lib/axios";
 import { SERVICES } from "@/lib/services";
-import { layoutGraph, routeKey } from "../../layout";
+import { layoutPositions } from "../../layout";
 import { mergeByPair, type MergedEdge } from "../lib/edges";
-import type { Point } from "../../layout";
 import type {
   GraphView,
   Granularity,
@@ -113,7 +112,7 @@ export async function getGraphView(
 
   // Markers are laid out with everything else: they carry real edges, so
   // placing them separately would put them somewhere the edges do not go.
-  const { positions, routes } = layoutGraph(
+  const positions = layoutPositions(
     [
       ...nodes.map((node) => ({ id: node.id, kind: node.kind ?? node.label })),
       ...overflows.map((overflow) => ({ id: overflow.id, kind: "overflow" })),
@@ -129,7 +128,7 @@ export async function getGraphView(
       ...nodes.map(toFlowNode(positions)),
       ...overflows.map(toOverflowNode(positions)),
     ],
-    edges: merged.map(toFlowEdge(routes)),
+    edges: merged.map(toFlowEdge),
     expanded: (data.expanded ?? []).map(toOpenContainer),
     truncated: data.truncated ?? false,
   };
@@ -168,23 +167,19 @@ const toOverflowNode =
     },
   });
 
-const toFlowEdge =
-  (routes: Record<string, Point[]>) =>
-  (edge: MergedEdge): ViewFlowEdge => ({
-    // Keyed by the pair, so React Flow ids stay stable as the view opens and
-    // closes and a line keeps its identity across a refresh.
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    type: "routed",
-    data: {
-      kind: edge.dominant,
-      types: edge.types,
-      weight: edge.weight,
-      collapsed: edge.collapsed,
-      points: routes[routeKey(edge.source, edge.target)] ?? [],
-    },
-  });
+const toFlowEdge = (edge: MergedEdge): ViewFlowEdge => ({
+  // Keyed by the pair, so React Flow ids stay stable as the view opens and
+  // closes and a line keeps its identity across a refresh.
+  id: edge.id,
+  source: edge.source,
+  target: edge.target,
+  data: {
+    kind: edge.dominant,
+    types: edge.types,
+    weight: edge.weight,
+    collapsed: edge.collapsed,
+  },
+});
 
 const toOpenContainer = (row: ViewResponse["expanded"][number]): OpenContainer => ({
   id: row.id,

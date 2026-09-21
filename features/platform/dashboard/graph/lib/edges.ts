@@ -15,7 +15,8 @@
  *
  * Pure functions over view data: no React, no fetching. */
 
-import type { ViewEdgeType } from "../types";
+import type { Edge } from "@xyflow/react";
+import type { ContainmentLine, ViewEdgeType } from "../types";
 
 /** One relationship as the backend reports it. */
 export interface RawEdge {
@@ -119,6 +120,34 @@ export function neighbourhood(
     if (edge.target === focusId) found.add(edge.source);
   }
   return found;
+}
+
+/** The tree lines, as React Flow edges.
+ *
+ * Deliberately plain: no arrowhead, no label, no weight, and unaffected by
+ * the relationship filters or by which node is in focus. They are the shape
+ * of the folder tree, which stays true whatever question is being asked of
+ * the graph.
+ *
+ * They are also the *first* thing to read. A folder view whose structure is
+ * fainter than its dependencies has it backwards, so these are drawn solidly
+ * and it is the relationship lines that sit back until something is in
+ * focus. */
+export function containmentEdges(lines: ContainmentLine[]): Edge[] {
+  return lines.map((line) => ({
+    id: `${line.parent}>${line.child}:holds`,
+    source: line.parent,
+    target: line.child,
+    type: "smoothstep",
+    pathOptions: { borderRadius: 16 },
+    selectable: false,
+    focusable: false,
+    zIndex: 0,
+    style: {
+      stroke: "var(--ow-line-2)",
+      strokeWidth: 1.5,
+    },
+  }));
 }
 
 /** How a merged line reads: "imports, calls · 14". */

@@ -10,14 +10,11 @@ import { useViewStore } from "../stores/view-store";
 import type { ViewFlowNode } from "../types";
 import { NodeGlyph } from "./NodeGlyph";
 
-/** Every graph id but the repository's own carries a colon, so this says
- *  whether a node came out of a container that can be closed again — as
- *  opposed to sitting at the top level, where there is nothing above it. */
-const isClosable = (parentId: string | null) =>
-  Boolean(parentId && parentId.includes(":"));
-
-/** One box on the canvas: what it is, what it holds, and the two controls
- *  that move between levels. */
+/** One box on the canvas: what it is, what it holds, and the control that
+ *  opens or shuts it.
+ *
+ *  An open folder stays on screen with its contents drawn beneath it, so the
+ *  control that shuts it lives here rather than on each of its children. */
 export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
   const open = useViewStore((state) => state.open);
   const close = useViewStore((state) => state.close);
@@ -50,6 +47,8 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         outside && "border-dashed",
         (selected || highlighted || isActiveStep || focused) && "border-signal",
         (selected || isActiveStep || focused) && "shadow-[var(--ow-focus-halo)]",
+        // An open folder is scaffolding for what is under it, so it sits back.
+        data.expanded && "bg-surface-1",
       )}
     >
       <Handle
@@ -78,7 +77,12 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
             outside ? "bg-surface-3 text-text-lo" : "bg-signal-soft text-signal",
           )}
         >
-          <NodeGlyph label={data.nodeLabel} kind={data.kind} className="size-3.5" />
+          <NodeGlyph
+            label={data.nodeLabel}
+            kind={data.kind}
+            open={data.expanded}
+            className="size-3.5"
+          />
         </span>
         <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-text-hi">
           {data.label}
@@ -94,35 +98,35 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         )}
       </div>
 
-      {/* Level controls. Shown on hover or focus so the resting canvas stays
-          quiet, but always reachable from the keyboard. */}
+      {/* Shown on hover or focus so the resting canvas stays quiet, but
+          always reachable from the keyboard. An open folder keeps its control
+          visible: it is the way back out. */}
       <div
         className={cn(
-          "absolute -right-2 -top-2 flex gap-1 opacity-0 transition-opacity",
+          "absolute -right-2 -top-2 flex gap-1 transition-opacity",
           "group-hover:opacity-100 focus-within:opacity-100",
+          data.expanded ? "opacity-100" : "opacity-0",
         )}
       >
-        {isClosable(data.parentId) && (
-          <LevelButton
-            title="Close the folder this came out of"
-            onClick={() => close(data.parentId!)}
-          >
+        {data.expanded ? (
+          <LevelButton title="Close this folder" onClick={() => close(id)}>
             <ChevronUp className="size-3" aria-hidden />
           </LevelButton>
-        )}
-        {data.expandable && (
-          <LevelButton
-            title={
-              overflows
-                ? `Open — ${data.childCount} inside, ${options!.pageSize} drawn first`
-                : `Open — ${data.childCount} inside`
-            }
-            onClick={() => open(id)}
-            emphasis={overflows ? "heavy" : "normal"}
-          >
-            <ChevronDown className="size-3" aria-hidden />
-            <span className="ow-mono-micro">{data.childCount}</span>
-          </LevelButton>
+        ) : (
+          data.expandable && (
+            <LevelButton
+              title={
+                overflows
+                  ? `Open — ${data.childCount} inside, ${options!.pageSize} drawn first`
+                  : `Open — ${data.childCount} inside`
+              }
+              onClick={() => open(id)}
+              emphasis={overflows ? "heavy" : "normal"}
+            >
+              <ChevronDown className="size-3" aria-hidden />
+              <span className="ow-mono-micro">{data.childCount}</span>
+            </LevelButton>
+          )
         )}
       </div>
 

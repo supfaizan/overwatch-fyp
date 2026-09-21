@@ -41,9 +41,11 @@ export type ViewNodeData = {
   definitionCount: number;
   /** How many nodes it contains — what opening it would reveal. */
   childCount: number;
-  /** The container it was drawn under, so it can be closed again. */
+  /** The folder it was drawn under, which is where its tree line comes from. */
   parentId: string | null;
   expandable: boolean;
+  /** True when this folder is open and what it holds is drawn beneath it. */
+  expanded: boolean;
 };
 
 export type ViewFlowNode = Node<ViewNodeData, "graphNode">;
@@ -80,6 +82,14 @@ export type ViewEdgeData = {
 
 export type ViewFlowEdge = Edge<ViewEdgeData>;
 
+/** One line of the tree: an open folder and something it holds. Kept apart
+ *  from the relationship edges because it means something else entirely —
+ *  structure, not dependency — and is drawn, filtered and read differently. */
+export interface ContainmentLine {
+  parent: string;
+  child: string;
+}
+
 /** A container currently held open. Described rather than just named, because
  *  it is no longer on the canvas to be looked up. */
 export interface OpenContainer {
@@ -97,6 +107,7 @@ export interface GraphView {
   graphVersion: string | null;
   nodes: CanvasNode[];
   edges: ViewFlowEdge[];
+  containment: ContainmentLine[];
   expanded: OpenContainer[];
   /** A cap cut the result short — said out loud rather than shown quietly. */
   truncated: boolean;

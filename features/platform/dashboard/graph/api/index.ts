@@ -36,6 +36,7 @@ interface ViewNodeResponse {
   language: string | null;
   parent_id: string | null;
   expandable: boolean;
+  expanded: boolean;
 }
 
 interface ViewEdgeResponse {
@@ -60,6 +61,7 @@ interface ViewResponse {
   graph_version: string | null;
   nodes: ViewNodeResponse[];
   edges: ViewEdgeResponse[];
+  containment: { parent: string; child: string }[];
   overflows: OverflowResponse[];
   expanded: {
     id: string;
@@ -109,6 +111,7 @@ export async function getGraphView(
   // Merge before laying out, so the layout routes exactly the lines that get
   // drawn — one per pair of nodes, not one per relationship type.
   const merged = mergeByPair(data.edges ?? []);
+  const containment = data.containment ?? [];
 
   // Markers are laid out with everything else: they carry real edges, so
   // placing them separately would put them somewhere the edges do not go.
@@ -117,7 +120,9 @@ export async function getGraphView(
       ...nodes.map((node) => ({ id: node.id, kind: node.kind ?? node.label })),
       ...overflows.map((overflow) => ({ id: overflow.id, kind: "overflow" })),
     ],
-    merged,
+    // Only the tree: which folder holds what is the whole of the drawing.
+    // Dependencies are drawn over it, and never move a node off its row.
+    containment.map((line) => ({ source: line.parent, target: line.child })),
   );
 
   return {
@@ -129,6 +134,7 @@ export async function getGraphView(
       ...overflows.map(toOverflowNode(positions)),
     ],
     edges: merged.map(toFlowEdge),
+    containment: containment.map((line) => ({ parent: line.parent, child: line.child })),
     expanded: (data.expanded ?? []).map(toOpenContainer),
     truncated: data.truncated ?? false,
   };
@@ -150,6 +156,7 @@ const toFlowNode =
       childCount: node.child_count,
       parentId: node.parent_id,
       expandable: node.expandable,
+      expanded: node.expanded,
     },
   });
 

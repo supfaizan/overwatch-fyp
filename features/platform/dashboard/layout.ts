@@ -1,15 +1,20 @@
 /* The backend graph carries no coordinates — it's a dependency graph, not a
    diagram — so the drawing is computed here.
 
-   This is a layered drawing: rows run top to bottom, a node sits below what
-   depends on it, and lines run downwards. Getting that right means breaking
-   cycles (real repositories import in circles), assigning rows, and ordering
-   each row so the lines between rows cross as little as possible.
+   **The folder tree, and only the folder tree, decides the drawing.**
+   Top-level folders share the first row; open one and what it holds takes the
+   row beneath it, and so on down. That is the whole point of the view — it
+   should read like a directory opened one level at a time — so dependencies
+   are given no say in it at all. They are drawn over the top.
 
-   All three are delegated to dagre rather than hand-rolled — the ordering
-   step in particular needs dummy nodes for edges that span several rows, and
-   that is where a home-grown layout falls over. What is ours is the choice of
-   spacing. The lines themselves are drawn by React Flow. */
+   Letting them in was tried and is wrong twice over: a dependency would drag
+   a node onto a row that has nothing to do with where it lives, and the one
+   way to stop dagre doing that (`minlen: 0`) makes it throw outright.
+
+   So dagre is given the tree: it assigns the rows, orders each one, and
+   places everything. What is ours is the spacing and the order children
+   arrive in, which is what decides their left-to-right order under a parent.
+   The lines themselves are drawn by React Flow. */
 
 import dagre from "@dagrejs/dagre";
 
@@ -40,15 +45,11 @@ const RANK_SEPARATION = 96;
 
 export function layoutPositions(
   nodes: LayoutNode[],
-  edges: LayoutEdge[],
+  tree: LayoutEdge[],
 ): Record<string, Point> {
   const ids = new Set(nodes.map((node) => node.id));
-  const drawable = edges.filter(
-    (edge) =>
-      edge.source !== edge.target &&
-      ids.has(edge.source) &&
-      ids.has(edge.target),
-  );
+  const between = (edge: LayoutEdge) =>
+    edge.source !== edge.target && ids.has(edge.source) && ids.has(edge.target);
 
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({
@@ -67,7 +68,10 @@ export function layoutPositions(
   for (const node of [...nodes].sort(byId)) {
     graph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   }
-  for (const edge of [...drawable].sort(bySourceThenTarget)) {
+  // Children arrive already sorted — folders before files, then by how
+  // connected they are — and dagre keeps that as their left-to-right order
+  // under the parent, so a level reads like a directory listing.
+  for (const edge of tree.filter(between).sort(bySourceThenTarget)) {
     graph.setEdge(edge.source, edge.target);
   }
 

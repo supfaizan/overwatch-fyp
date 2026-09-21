@@ -1,9 +1,10 @@
 "use client";
 
 import {
-  Boxes,
   Braces,
   FileCode2,
+  Folder,
+  FolderOpen,
   Globe,
   Package,
   Shapes,
@@ -15,16 +16,23 @@ import type { ViewNodeLabel } from "../types";
 export function NodeGlyph({
   label,
   kind,
+  open,
   className,
 }: {
   label: ViewNodeLabel;
   kind: string | null;
+  /** A folder that is holding its contents open. */
+  open?: boolean;
   className?: string;
 }) {
   if (label === "Module") {
     if (kind === "external") return <Package className={className} aria-hidden />;
     if (kind === "routes") return <Globe className={className} aria-hidden />;
-    return <Boxes className={className} aria-hidden />;
+    return open ? (
+      <FolderOpen className={className} aria-hidden />
+    ) : (
+      <Folder className={className} aria-hidden />
+    );
   }
   if (label === "Package") return <Package className={className} aria-hidden />;
   if (label === "Route") return <Globe className={className} aria-hidden />;

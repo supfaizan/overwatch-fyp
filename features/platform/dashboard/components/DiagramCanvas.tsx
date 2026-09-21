@@ -27,7 +27,12 @@ import {
   edgeStyle,
   spotlight,
 } from "../graph/lib/appearance";
-import { describeEdge, neighbourhood, relationTo } from "../graph/lib/edges";
+import {
+  containmentEdges,
+  describeEdge,
+  neighbourhood,
+  relationTo,
+} from "../graph/lib/edges";
 import { isGraphNode } from "../graph/lib/nodes";
 import { useViewStore } from "../graph/stores/view-store";
 import type { CanvasNode, ViewEdgeType, ViewFlowEdge } from "../graph/types";
@@ -38,9 +43,15 @@ const nodeTypes = { graphNode: GraphNodeCard, overflow: OverflowNode };
 const FIT_PADDING = 0.22;
 
 /** Past this many boxes the canvas stops being a diagram and starts being a
- *  cost. Edge labels, the refit animation and off-screen nodes are the three
- *  things that make the difference between "big" and "frozen tab". */
+ *  cost. The refit animation and off-screen nodes are the two things that
+ *  make the difference between "big" and "frozen tab". */
 const DENSE = 60;
+
+/** How far relationship lines sit back when nothing is in focus.
+ *
+ *  The folder tree is what the view is *for*; dependencies are the question
+ *  you ask of it. At rest the structure should read first, so they wait. */
+const AT_REST = 0.3;
 
 /** Refits the viewport whenever the set of nodes changes.
  *
@@ -120,7 +131,7 @@ function styleEdges(
         stroke,
         strokeWidth: active ? 2 : 1.5,
         strokeDasharray: edgeStyle(detail.kind).dash,
-        opacity: recede ? RECEDED.edge : 1,
+        opacity: recede ? RECEDED.edge : active ? 1 : AT_REST,
         transition: "opacity 140ms, stroke 140ms",
       },
     };
@@ -216,7 +227,11 @@ export function DiagramCanvas() {
         style: { opacity: nodeOpacity(node.id, focusId, inFocus, lit) },
       })),
     );
-    setEdges(styleEdges(data.edges, focusId, flowStepIds));
+    // The tree first, so relationship lines draw over it rather than under.
+    setEdges([
+      ...containmentEdges(data.containment),
+      ...styleEdges(data.edges, focusId, flowStepIds),
+    ]);
   }, [data, focusId, inFocus, lit, flowStepIds, setNodes, setEdges]);
 
   if (isLoading) {

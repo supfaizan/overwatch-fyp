@@ -34,6 +34,8 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
   );
 
   const outside = data.kind === "external";
+  // The root of the tree: always open, and there is nothing to shut it into.
+  const isRoot = data.nodeLabel === "Repository";
   const contents = describeContents(data);
   // Say what a click costs before it is made. Past one page the rest arrives
   // behind a marker rather than all at once, and the control says so.
@@ -49,13 +51,16 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         (selected || isActiveStep || focused) && "shadow-[var(--ow-focus-halo)]",
         // An open folder is scaffolding for what is under it, so it sits back.
         data.expanded && "bg-surface-1",
+        isRoot && "border-line-2 bg-surface-2",
       )}
     >
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!size-1.5 !border-0 !bg-line-2"
-      />
+      {!isRoot && (
+        <Handle
+          type="target"
+          position={Position.Top}
+          className="!size-1.5 !border-0 !bg-line-2"
+        />
+      )}
 
       {stepIndex !== -1 && (
         <span
@@ -108,7 +113,7 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
           data.expanded ? "opacity-100" : "opacity-0",
         )}
       >
-        {data.expanded ? (
+        {isRoot ? null : data.expanded ? (
           <LevelButton title="Close this folder" onClick={() => close(id)}>
             <ChevronUp className="size-3" aria-hidden />
           </LevelButton>

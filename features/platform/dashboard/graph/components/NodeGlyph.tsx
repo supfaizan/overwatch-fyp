@@ -5,6 +5,7 @@ import {
   FileCode2,
   Folder,
   FolderOpen,
+  GitBranch,
   Globe,
   Package,
   Shapes,
@@ -25,6 +26,7 @@ export function NodeGlyph({
   open?: boolean;
   className?: string;
 }) {
+  if (label === "Repository") return <GitBranch className={className} aria-hidden />;
   if (label === "Module") {
     if (kind === "external") return <Package className={className} aria-hidden />;
     if (kind === "routes") return <Globe className={className} aria-hidden />;

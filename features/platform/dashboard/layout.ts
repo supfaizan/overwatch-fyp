@@ -11,9 +11,12 @@
    a node onto a row that has nothing to do with where it lives, and the one
    way to stop dagre doing that (`minlen: 0`) makes it throw outright.
 
-   So dagre is given the tree: it assigns the rows, orders each one, and
-   places everything. What is ours is the spacing and the order children
-   arrive in, which is what decides their left-to-right order under a parent.
+   So dagre is given the tree: it assigns the rows and places everything.
+   What is ours is the spacing, and the left-to-right order of each folder's
+   children — dagre will happily hand them back reversed, which puts a file
+   before the folders it should follow, so the last step takes the seats it
+   produced and sits the children in them in the order they were given.
+
    The lines themselves are drawn by React Flow. */
 
 import dagre from "@dagrejs/dagre";
@@ -88,7 +91,47 @@ export function layoutPositions(
     };
   }
 
-  return positions;
+  return seatChildrenInOrder(positions, nodes, tree);
+}
+
+/**
+ * Sit each folder's children in the order they arrived.
+ *
+ * Dagre decides *where* the seats in a row are; this decides who sits in
+ * which. Only siblings ever swap places, so nothing moves to another row and
+ * two nodes can never land on top of each other — the set of coordinates is
+ * exactly the set dagre produced, just handed out in listing order.
+ *
+ * Without it the order is whatever dagre's crossing pass happened to settle
+ * on, which for a plain tree is often the reverse of what it was given.
+ */
+function seatChildrenInOrder(
+  positions: Record<string, Point>,
+  nodes: LayoutNode[],
+  tree: LayoutEdge[],
+): Record<string, Point> {
+  const parentOf = new Map(tree.map((edge) => [edge.target, edge.source]));
+  const siblings = new Map<string, string[]>();
+
+  // `nodes` arrives in listing order — folders, then files, then the rest —
+  // so walking it in order builds each sibling group already sorted.
+  for (const node of nodes) {
+    const parent = parentOf.get(node.id);
+    if (parent === undefined) continue;
+    siblings.set(parent, [...(siblings.get(parent) ?? []), node.id]);
+  }
+
+  const seated = { ...positions };
+  for (const children of siblings.values()) {
+    const placed = children.filter((id) => seated[id] !== undefined);
+    const seats = placed
+      .map((id) => seated[id].x)
+      .sort((left, right) => left - right);
+    placed.forEach((id, index) => {
+      seated[id] = { ...seated[id], x: seats[index] };
+    });
+  }
+  return seated;
 }
 
 const byId = (a: LayoutNode, b: LayoutNode) => a.id.localeCompare(b.id);

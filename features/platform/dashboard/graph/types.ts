@@ -11,8 +11,15 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { JobStatus } from "@/features/platform/ingestion/types";
 
-/** Node labels a view may draw. The repository is the frame, never a box. */
-export type ViewNodeLabel = "Module" | "File" | "Symbol" | "Package" | "Route";
+/** Node labels a view may draw. `Repository` is the root of the tree: it is
+ *  always drawn, always open, and never shut. */
+export type ViewNodeLabel =
+  | "Repository"
+  | "Module"
+  | "File"
+  | "Symbol"
+  | "Package"
+  | "Route";
 
 /** Relationships a view may draw, from `GET /graph/view/options`.
  *  Containment is excluded: it builds the hierarchy rather than crossing it. */

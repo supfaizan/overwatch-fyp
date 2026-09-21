@@ -143,7 +143,10 @@ export function containmentEdges(lines: ContainmentLine[]): Edge[] {
     type: "default",
     selectable: false,
     focusable: false,
-    zIndex: 0,
+    // React Flow draws an invisible, much wider path along every edge so it
+    // is easy to click. Nothing here is clickable, and that path sits over
+    // the nodes a line passes, swallowing the hover meant for them.
+    interactionWidth: 0,
     style: {
       stroke: "var(--ow-idle)",
       strokeWidth: 1.5,

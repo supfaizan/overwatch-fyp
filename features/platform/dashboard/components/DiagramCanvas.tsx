@@ -116,8 +116,10 @@ function styleEdges(
       ...edge,
       type: "default",
       animated: onFlow,
-      // Focused lines sit above the rest instead of behind them.
-      zIndex: active ? 2 : 1,
+      // No line is clickable, and the invisible interaction path React Flow
+      // would draw along it covers every node it passes, taking the hover
+      // those nodes should get.
+      interactionWidth: 0,
       // Named only when it answers the question being asked. Labelling all
       // twenty-odd lines at rest buries the shape of the graph under text
       // nobody is reading; point at a node and its own lines say what they
@@ -128,8 +130,12 @@ function styleEdges(
         fontFamily: "var(--ow-font-mono)",
         fontSize: connected ? 9 : 8,
         letterSpacing: "0.08em",
+        pointerEvents: "none" as const,
       },
-      labelBgStyle: { fill: "var(--ow-ink-900)" },
+      labelBgStyle: {
+        fill: "var(--ow-ink-900)",
+        pointerEvents: "none" as const,
+      },
       labelBgBorderRadius: 3,
       labelBgPadding: [4, 2] as [number, number],
       // Every line says which way it points. Without this the graph shows
@@ -240,10 +246,14 @@ export function DiagramCanvas() {
         style: { opacity: nodeOpacity(node.id, focusId, inFocus, lit) },
       })),
     );
-    // The tree first, so relationship lines draw over it rather than under.
+    // Paint order, quietest first: the tree, then the relationships at rest,
+    // then whatever is in focus. All of them stay in the one layer beneath
+    // the nodes, so a line never covers a card it passes.
+    const relations = styleEdges(data.edges, focusId, flowStepIds);
     setEdges([
       ...containmentEdges(data.containment),
-      ...styleEdges(data.edges, focusId, flowStepIds),
+      ...relations.filter((edge) => !edge.animated && edge.style?.opacity !== 1),
+      ...relations.filter((edge) => edge.animated || edge.style?.opacity === 1),
     ]);
   }, [data, focusId, inFocus, lit, flowStepIds, setNodes, setEdges]);
 

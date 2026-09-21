@@ -40,18 +40,27 @@ import { useDashboardStore } from "../stores/dashboard-store";
 
 const nodeTypes = { graphNode: GraphNodeCard, overflow: OverflowNode };
 
-const FIT_PADDING = 0.22;
+const FIT_PADDING = 0.18;
+
+/** The furthest the view will zoom out to fit.
+ *
+ *  Below this a node is a grey rectangle with unreadable text, which is worse
+ *  than showing part of the graph and letting it be panned. A wide repository
+ *  does not fit on a screen, and pretending otherwise helps nobody. */
+const MIN_FIT_ZOOM = 0.55;
 
 /** Past this many boxes the canvas stops being a diagram and starts being a
  *  cost. The refit animation and off-screen nodes are the two things that
  *  make the difference between "big" and "frozen tab". */
 const DENSE = 60;
 
-/** How far relationship lines sit back when nothing is in focus.
+/** How relationship lines are drawn when nothing is in focus.
  *
  *  The folder tree is what the view is *for*; dependencies are the question
- *  you ask of it. At rest the structure should read first, so they wait. */
-const AT_REST = 0.3;
+ *  you ask of it. At rest they are present but quiet — enough to see that a
+ *  node is connected, not enough to compete with the shape of the tree. Point
+ *  at a node and its own come forward in full. */
+const AT_REST = { opacity: 0.22, width: 1 } as const;
 
 /** Refits the viewport whenever the set of nodes changes.
  *
@@ -65,7 +74,11 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
 
   useEffect(() => {
     if (!measured) return;
-    void fitView({ padding: FIT_PADDING, duration: dense ? 0 : 220 });
+    void fitView({
+      padding: FIT_PADDING,
+      minZoom: MIN_FIT_ZOOM,
+      duration: dense ? 0 : 220,
+    });
   }, [signature, measured, dense, fitView]);
 
   return null;
@@ -129,10 +142,10 @@ function styleEdges(
       },
       style: {
         stroke,
-        strokeWidth: active ? 2 : 1.5,
+        strokeWidth: active ? 2 : AT_REST.width,
         strokeDasharray: edgeStyle(detail.kind).dash,
-        opacity: recede ? RECEDED.edge : active ? 1 : AT_REST,
-        transition: "opacity 140ms, stroke 140ms",
+        opacity: recede ? RECEDED.edge : active ? 1 : AT_REST.opacity,
+        transition: "opacity 140ms, stroke 140ms, stroke-width 140ms",
       },
     };
   });
@@ -298,7 +311,7 @@ export function DiagramCanvas() {
           hover(null);
         }}
         fitView
-        fitViewOptions={{ padding: FIT_PADDING }}
+        fitViewOptions={{ padding: FIT_PADDING, minZoom: MIN_FIT_ZOOM }}
         // Off-screen boxes cost nothing to not draw, and a dense view is
         // exactly when that matters.
         onlyRenderVisibleElements={dense}

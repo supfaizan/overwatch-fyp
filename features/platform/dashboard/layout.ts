@@ -41,10 +41,14 @@ export interface Point {
 const NODE_WIDTH = 184;
 const NODE_HEIGHT = 68;
 
-/** Gap between nodes in a row, and between rows. Generous vertically: a line
- *  that has to turn needs somewhere to turn. */
-const NODE_SEPARATION = 48;
-const RANK_SEPARATION = 96;
+/** Gap between nodes in a row, and between rows.
+ *
+ *  A row holds every child of an open folder, so it gets wide before it gets
+ *  tall — a repository with a dozen top-level entries is already wider than
+ *  any screen. Horizontal spacing is therefore tight and vertical spacing
+ *  generous, which is also the shape that leaves room for the lines. */
+const NODE_SEPARATION = 28;
+const RANK_SEPARATION = 110;
 
 export function layoutPositions(
   nodes: LayoutNode[],

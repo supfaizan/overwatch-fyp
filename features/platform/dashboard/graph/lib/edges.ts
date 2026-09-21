@@ -138,13 +138,14 @@ export function containmentEdges(lines: ContainmentLine[]): Edge[] {
     id: `${line.parent}>${line.child}:holds`,
     source: line.parent,
     target: line.child,
-    type: "smoothstep",
-    pathOptions: { borderRadius: 16 },
+    // The same curve the relationship lines use. A stepped path put corners
+    // on every tree line, which read as detail that was not there.
+    type: "default",
     selectable: false,
     focusable: false,
     zIndex: 0,
     style: {
-      stroke: "var(--ow-line-2)",
+      stroke: "var(--ow-idle)",
       strokeWidth: 1.5,
     },
   }));

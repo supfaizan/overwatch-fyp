@@ -13,7 +13,7 @@ export function RegisterForm() {
         loading={github.isPending}
         onClick={github.start}
       />
-      <p className="ow-mono-micro text-center text-text-dim">
+      <p className="ow-micro text-center text-text-dim">
         Your GitHub profile creates your Overwatch account automatically.
       </p>
     </div>

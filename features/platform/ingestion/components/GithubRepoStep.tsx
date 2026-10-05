@@ -39,7 +39,7 @@ export function GithubRepoStep({ status }: GithubRepoStepProps) {
           <p className="ow-mono-data text-text-hi">
             {repoFullName ?? "GitHub repository connected"}
           </p>
-          <p className="ow-mono-micro mt-1 text-text-mid">
+          <p className="ow-micro mt-1 text-text-mid">
             PARSE {status.parseStatus?.replace("_", " ") ?? "QUEUED"} · WEBHOOK{" "}
             {status.webhookStatus ?? "PENDING"}
           </p>
@@ -91,7 +91,7 @@ export function GithubRepoStep({ status }: GithubRepoStepProps) {
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="github-repository" className="ow-mono-micro text-text-lo">
+        <label htmlFor="github-repository" className="ow-micro text-text-lo">
           GITHUB REPOSITORY
         </label>
         <div className="relative mt-2">
@@ -101,7 +101,7 @@ export function GithubRepoStep({ status }: GithubRepoStepProps) {
             value={selectedRepo}
             onChange={(event) => setSelectedRepo(event.target.value)}
             disabled={repos.isLoading || repos.isError}
-            className="h-10 w-full appearance-none rounded-md border border-line-2 bg-ink-850 pl-9 pr-3 font-mono text-[13px] text-text-hi outline-none focus:border-signal-border disabled:opacity-50"
+            className="h-10 w-full appearance-none rounded-md border border-line-2 bg-surface-1 pl-9 pr-3 font-mono text-[13px] text-text-hi outline-none focus:border-signal-border disabled:opacity-50"
           >
             <option value="">
               {repos.isLoading ? "Loading repositories…" : "Select a repository"}
@@ -139,7 +139,7 @@ export function GithubRepoStep({ status }: GithubRepoStepProps) {
         CONNECT & INDEX REPOSITORY
       </Button>
 
-      <p className="ow-mono-micro text-text-dim">
+      <p className="ow-micro text-text-dim">
         ADMIN ACCESS IS REQUIRED TO INSTALL THE PUSH WEBHOOK
       </p>
     </div>

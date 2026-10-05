@@ -35,7 +35,7 @@ export function OnboardingStatusBadge() {
     return (
       <div className="hidden items-center gap-2 rounded-sm border border-line-1 bg-surface-1 px-3 py-1.5 sm:flex">
         <Loader2 className="size-3.5 animate-spin text-text-lo" />
-        <span className="ow-mono-micro text-text-mid">CHECKING SETUP</span>
+        <span className="ow-micro text-text-mid">CHECKING SETUP</span>
       </div>
     );
   }
@@ -47,7 +47,7 @@ export function OnboardingStatusBadge() {
         className="hidden items-center gap-2 rounded-sm border border-line-1 bg-surface-1 px-3 py-1.5 sm:flex"
       >
         <GitBranch className="size-3.5 text-text-lo" />
-        <span className="ow-mono-micro text-text-mid">CONNECT REPOSITORY</span>
+        <span className="ow-micro text-text-mid">CONNECT REPOSITORY</span>
       </Link>
     );
   }
@@ -59,7 +59,7 @@ export function OnboardingStatusBadge() {
         className="hidden items-center gap-2 rounded-sm border border-critical/30 bg-critical/5 px-3 py-1.5 sm:flex"
       >
         <AlertTriangle className="size-3.5 text-critical" />
-        <span className="ow-mono-micro text-critical">SETUP NEEDS ATTENTION</span>
+        <span className="ow-micro text-critical">SETUP NEEDS ATTENTION</span>
       </Link>
     );
   }
@@ -72,9 +72,9 @@ export function OnboardingStatusBadge() {
       {pending ? (
         <Loader2 className="size-3.5 animate-spin text-signal" />
       ) : (
-        <CheckCircle2 className="size-3.5 text-signal" />
+        <CheckCircle2 className="size-3.5 text-success" />
       )}
-      <span className="max-w-40 truncate ow-mono-micro text-text-mid">
+      <span className="max-w-40 truncate ow-micro text-text-mid">
         {pending ? "SETTING UP WORKSPACE" : activeRepo?.fullName ?? "WORKSPACE READY"}
       </span>
     </Link>

@@ -21,7 +21,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
 
   if (detail.isLoading) {
     return (
-      <p className="flex items-center gap-2 p-4 ow-mono-micro text-text-dim">
+      <p className="flex items-center gap-2 p-4 ow-micro text-text-dim">
         <Loader2 className="size-3.5 animate-spin text-signal" /> LOADING NODE…
       </p>
     );
@@ -30,7 +30,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
   if (detail.isError || !detail.data) {
     return (
       <div className="space-y-2 p-4">
-        <p className="flex items-center gap-2 ow-mono-micro text-critical">
+        <p className="flex items-center gap-2 ow-micro text-critical">
           <TriangleAlert className="size-3.5" /> NODE UNAVAILABLE
         </p>
         <p className="ow-body !text-[12px] text-text-mid">
@@ -50,7 +50,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
         <button
           type="button"
           onClick={back}
-          className="flex items-center gap-1 ow-mono-micro text-text-lo transition-colors hover:text-signal"
+          className="flex items-center gap-1 ow-micro text-text-lo transition-colors hover:text-signal"
         >
           <ChevronLeft className="size-3" /> BACK
         </button>
@@ -61,7 +61,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
           <h2 className="min-w-0 break-all font-mono text-[14px] text-text-hi">
             {node.name}
           </h2>
-          <span className="shrink-0 rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-mono-micro uppercase text-text-mid">
+          <span className="shrink-0 rounded-sm border border-line-2 bg-surface-2 px-1.5 py-0.5 ow-micro uppercase text-text-mid">
             {describeNode(node)}
           </span>
         </div>
@@ -76,7 +76,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
           <p className="ow-body !text-[12px] text-text-mid">{node.docstring}</p>
         )}
 
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 ow-mono-micro text-text-dim">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 ow-micro text-text-dim">
           {node.path && (
             <div className="flex gap-1.5">
               <dt>PATH</dt>
@@ -110,7 +110,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
       )}
 
       {neighbours.isLoading && (
-        <p className="flex items-center gap-2 ow-mono-micro text-text-dim">
+        <p className="flex items-center gap-2 ow-micro text-text-dim">
           <Loader2 className="size-3.5 animate-spin text-signal" /> LOADING RELATIONSHIPS…
         </p>
       )}
@@ -129,7 +129,7 @@ export function NodeDetail({ nodeId, onOpen }: NodeDetailProps) {
       ))}
 
       {!neighbours.isLoading && neighbours.groups.length === 0 && (
-        <p className="ow-mono-micro text-text-dim">
+        <p className="ow-micro text-text-dim">
           NO RESOLVED RELATIONSHIPS
         </p>
       )}
@@ -152,7 +152,7 @@ function Section({
     <section className="space-y-1.5">
       <h3
         className={cn(
-          "flex items-center gap-2 ow-mono-micro",
+          "flex items-center gap-2 ow-micro",
           muted ? "text-text-dim" : "text-text-lo",
         )}
       >

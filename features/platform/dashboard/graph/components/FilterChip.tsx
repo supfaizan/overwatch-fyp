@@ -25,7 +25,7 @@ export function FilterChip({
       title={title}
       aria-pressed={selected}
       className={cn(
-        "flex items-center gap-1.5 rounded-sm border px-1.5 py-1 ow-mono-micro transition-colors",
+        "flex items-center gap-1.5 rounded-sm border px-1.5 py-1 ow-micro transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
           ? "border-line-2 bg-surface-2 text-text-mid hover:text-text-hi"

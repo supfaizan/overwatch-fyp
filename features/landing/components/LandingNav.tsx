@@ -18,7 +18,7 @@ export function LandingNav() {
           <Button asChild variant="ghost" size="sm" className="text-text-mid">
             <Link href={NAV_ACTIONS.signIn.href}>{NAV_ACTIONS.signIn.label}</Link>
           </Button>
-          <Button asChild size="sm" className="rounded-full px-4">
+          <Button asChild size="sm" className="px-4">
             <Link href={NAV_ACTIONS.start.href}>{NAV_ACTIONS.start.label}</Link>
           </Button>
         </nav>

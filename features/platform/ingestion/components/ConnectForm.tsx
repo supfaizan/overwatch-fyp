@@ -57,7 +57,7 @@ export function ConnectForm() {
           </span>
           <div>
             <h2 className="ow-mono-data text-text-hi">Select a GitHub repository</h2>
-            <p className="ow-mono-micro text-text-dim">REQUIRED</p>
+            <p className="ow-micro text-text-dim">REQUIRED</p>
           </div>
         </div>
         <GithubRepoStep status={status.data.github} />
@@ -72,7 +72,7 @@ export function ConnectForm() {
           </span>
           <div>
             <h2 className="ow-mono-data text-text-hi">Select a Jira project</h2>
-            <p className="ow-mono-micro text-text-dim">OPTIONAL</p>
+            <p className="ow-micro text-text-dim">OPTIONAL</p>
           </div>
         </div>
         <JiraProjectStep status={status.data.jira} />
@@ -91,7 +91,7 @@ export function ConnectForm() {
         <ArrowRight className="size-4" />
       </Button>
 
-      <p className="ow-mono-micro text-center text-text-dim">
+      <p className="ow-micro text-center text-text-dim">
         PARSING AND TICKET SYNC CONTINUE SECURELY IN THE BACKGROUND
       </p>
     </div>

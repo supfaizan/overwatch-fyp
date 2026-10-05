@@ -24,10 +24,13 @@ export function ExplorerSearch({ onOpen }: { onOpen: (nodeId: string) => void })
         <input
           value={term}
           onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search files and definitions…"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setSearchTerm("");
+          }}
+          placeholder="Search folders, files, definitions, routes…"
           aria-label="Search the graph"
           maxLength={200}
-          className="h-9 w-full rounded-md border border-line-2 bg-ink-850 pl-8 pr-8 font-mono text-[12px] text-text-hi outline-none placeholder:text-text-dim focus:border-signal-border"
+          className="h-9 w-full rounded-md border border-line-2 bg-surface-1 pl-8 pr-8 font-mono text-[12px] text-text-hi outline-none placeholder:text-text-dim focus:border-signal-border"
         />
         {searching ? (
           <Loader2 className="absolute right-5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-signal" />
@@ -44,7 +47,7 @@ export function ExplorerSearch({ onOpen }: { onOpen: (nodeId: string) => void })
       </div>
 
       {isTermTooShort && (
-        <p className="px-3 pb-2 ow-mono-micro text-text-dim">
+        <p className="px-3 pb-2 ow-micro text-text-dim">
           TYPE AT LEAST {MIN_SEARCH_LENGTH} CHARACTERS
         </p>
       )}
@@ -56,7 +59,8 @@ export function ExplorerSearch({ onOpen }: { onOpen: (nodeId: string) => void })
       )}
 
       {results.length > 0 && (
-        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pb-3">
+        // Bounded, so the node opened from a result still has room beneath.
+        <div className="max-h-64 space-y-1.5 overflow-y-auto border-b border-line-1 px-3 pb-3">
           {results.map((node) => (
             <NodeRow key={node.id} node={node} onOpen={onOpen} />
           ))}
@@ -64,7 +68,7 @@ export function ExplorerSearch({ onOpen }: { onOpen: (nodeId: string) => void })
       )}
 
       {!searching && !isTermTooShort && term.trim() && results.length === 0 && (
-        <p className="px-3 pb-3 ow-mono-micro text-text-dim">NO MATCHES</p>
+        <p className="px-3 pb-3 ow-micro text-text-dim">NO MATCHES</p>
       )}
     </div>
   );

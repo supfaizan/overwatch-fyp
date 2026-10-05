@@ -12,7 +12,8 @@ export type GraphLabel =
   | "File"
   | "Symbol"
   | "Package"
-  | "Route";
+  | "Route"
+  | "Channel";
 
 /** Relationship types, as returned by `GET /graph/edge-types`. */
 export type GraphEdgeType =
@@ -26,6 +27,8 @@ export type GraphEdgeType =
   | "EXTENDS"
   | "IMPLEMENTS"
   | "HANDLES"
+  | "SENDS"
+  | "RECEIVES"
   | "REQUESTS"
   | "DEPENDS_ON"
   | "USES_EXTERNAL";
@@ -104,8 +107,14 @@ export interface ResolutionCoverage {
   callsTotal: number;
   callsResolved: number;
   callsToPackages: number;
+  /** Calls into the language runtime (`Date.now()`, `len()`). */
+  callsToBuiltins: number;
   callsAccounted: number;
   routesTotal: number;
   httpCallsTotal: number;
   httpCallsMatched: number;
+  /** Message/event patterns with a handler, and sends that reach one. */
+  channelsTotal: number;
+  channelSendsTotal: number;
+  channelSendsMatched: number;
 }

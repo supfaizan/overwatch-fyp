@@ -15,7 +15,7 @@
  *
  * Pure functions over view data: no React, no fetching. */
 
-import type { Edge } from "@xyflow/react";
+import { MarkerType, type Edge } from "@xyflow/react";
 import type { ContainmentLine, ViewEdgeType } from "../types";
 
 /** One relationship as the backend reports it. */
@@ -156,6 +156,24 @@ export function containmentEdges(lines: ContainmentLine[]): Edge[] {
 
 /** How a merged line reads: "imports, calls · 14". */
 export function describeEdge(edge: { types: ViewEdgeType[]; weight: number }): string {
-  const types = edge.types.map((type) => type.toLowerCase().replace("_", " "));
+  const types = edge.types.map((type) => type.toLowerCase().replaceAll("_", " "));
   return `${types.join(", ")} · ${edge.weight}`;
+}
+
+/** Lines for walkthrough moves the view draws no relationship for — the
+ *  relationship was rolled up, filtered out, or joins boxes at different
+ *  depths. Drawn in the walkthrough's colour, so the path has no gaps. */
+export function flowOverlayEdges(moves: readonly [string, string][]): Edge[] {
+  return moves.map(([source, target]) => ({
+    id: `${source}->${target}:flow`,
+    source,
+    target,
+    type: "default",
+    animated: true,
+    selectable: false,
+    focusable: false,
+    interactionWidth: 0,
+    markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "var(--ow-signal)" },
+    style: { stroke: "var(--ow-signal)", strokeWidth: 2, strokeDasharray: "6 4" },
+  }));
 }

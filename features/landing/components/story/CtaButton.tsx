@@ -16,7 +16,7 @@ export function CtaButton({
       asChild
       size="lg"
       className={cn(
-        "group h-12 self-start rounded-full px-6 text-[15px] has-[>svg]:px-6",
+        "group h-12 self-start rounded-lg px-6 text-[15px] has-[>svg]:px-6",
         className,
       )}
     >

@@ -80,6 +80,7 @@ interface OptionsResponse {
   granularities: Granularity[];
   page_size: number;
   max_nodes: number;
+  max_expanded: number;
 }
 
 /** Fields are omitted rather than sent as null, so the server's own defaults
@@ -205,5 +206,6 @@ export async function getViewOptions(): Promise<ViewOptions> {
     granularities: data.granularities ?? [],
     pageSize: data.page_size,
     maxNodes: data.max_nodes,
+    maxExpanded: data.max_expanded,
   };
 }

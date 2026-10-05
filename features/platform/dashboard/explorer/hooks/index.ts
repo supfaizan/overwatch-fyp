@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { useActiveRepoFullName } from "@/stores/repo-store";
 import { getCoverage, getNeighbours, getNodeDetail, searchGraph } from "../api";
@@ -62,11 +62,15 @@ export function useGraphSearch(term: string) {
     enabled,
     // Results only change when the repository is re-indexed.
     staleTime: 60_000,
+    // Keep the last results on screen while the next term is fetched, rather
+    // than flashing an empty list on every keystroke.
+    placeholderData: keepPreviousData,
   });
 
   return {
     ...query,
-    results: (query.data ?? []) as GraphNodeSummary[],
+    // Placeholder data outlives the search: cleared, it must show nothing.
+    results: enabled ? (query.data ?? []) : ([] as GraphNodeSummary[]),
     /** True while the user has typed something we have not searched for yet. */
     isTyping: enabled && debounced !== term,
     isTermTooShort: trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH,

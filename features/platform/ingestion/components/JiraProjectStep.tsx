@@ -78,7 +78,7 @@ export function JiraProjectStep({ status }: JiraProjectStepProps) {
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-signal" />
           <div>
             <p className="ow-mono-data text-text-hi">Jira project connected</p>
-            <p className="ow-mono-micro mt-1 text-text-mid">
+            <p className="ow-micro mt-1 text-text-mid">
               TICKET SYNC {status.syncStatus?.replace("_", " ") ?? "QUEUED"}
             </p>
           </div>
@@ -117,7 +117,7 @@ export function JiraProjectStep({ status }: JiraProjectStepProps) {
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="jira-project" className="ow-mono-micro text-text-lo">
+        <label htmlFor="jira-project" className="ow-micro text-text-lo">
           JIRA PROJECT
         </label>
         <select
@@ -125,7 +125,7 @@ export function JiraProjectStep({ status }: JiraProjectStepProps) {
           value={selectedProject}
           onChange={(event) => setSelectedProject(event.target.value)}
           disabled={projects.isLoading || projects.isError}
-          className="mt-2 h-10 w-full appearance-none rounded-md border border-line-2 bg-ink-850 px-3 font-mono text-[13px] text-text-hi outline-none focus:border-signal-border disabled:opacity-50"
+          className="mt-2 h-10 w-full appearance-none rounded-md border border-line-2 bg-surface-1 px-3 font-mono text-[13px] text-text-hi outline-none focus:border-signal-border disabled:opacity-50"
         >
           <option value="">
             {projects.isLoading ? "Loading Jira projects…" : "Select a project"}

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { describeLoginError } from "./api";
 import { AuthShell } from "./components/AuthShell";
 import { LoginForm } from "./components/LoginForm";
 import { RegisterForm } from "./components/RegisterForm";
 
 export { AuthComplete } from "./components/AuthComplete";
 
-export function Login() {
+export function Login({ errorCode }: { errorCode?: string }) {
   return (
     <AuthShell
       eyebrow="ACCESS // SIGN IN"
@@ -20,7 +21,7 @@ export function Login() {
         </>
       }
     >
-      <LoginForm />
+      <LoginForm errorMessage={describeLoginError(errorCode)} />
     </AuthShell>
   );
 }

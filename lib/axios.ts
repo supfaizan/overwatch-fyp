@@ -2,6 +2,11 @@ import axios, {
   AxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
+import {
+  broadcastAuth,
+  isSessionRejected,
+  redirectToLogin,
+} from "@/lib/auth-session";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface ApiError {
@@ -40,6 +45,7 @@ export function refreshAccessToken(): Promise<string> {
       .post<RefreshResponse>("/auth/refresh")
       .then(({ data }) => {
         useAuthStore.getState().setToken(data.access_token);
+        broadcastAuth({ type: "token", token: data.access_token });
         return data.access_token;
       })
       .finally(() => {
@@ -77,11 +83,11 @@ api.interceptors.response.use(
         const token = await refreshAccessToken();
         request.headers.Authorization = `Bearer ${token}`;
         return api(request);
-      } catch {
-        useAuthStore.getState().clearAuth();
-        if (typeof window !== "undefined") {
-          const from = `${window.location.pathname}${window.location.search}`;
-          window.location.assign(`/login?from=${encodeURIComponent(from)}`);
+      } catch (refreshError) {
+        // A dropped connection is not a logout; only a rejected session is.
+        if (isSessionRejected(refreshError)) {
+          useAuthStore.getState().clearAuth();
+          redirectToLogin();
         }
       }
     }

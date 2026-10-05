@@ -178,9 +178,13 @@ function toResolution(raw: Record<string, number> | null): ResolutionCoverage | 
     callsTotal: raw.calls_total ?? 0,
     callsResolved: raw.calls_resolved ?? 0,
     callsToPackages: raw.calls_to_packages ?? 0,
+    callsToBuiltins: raw.calls_to_builtins ?? 0,
     callsAccounted: raw.calls_accounted ?? 0,
     routesTotal: raw.routes_total ?? 0,
     httpCallsTotal: raw.http_calls_total ?? 0,
     httpCallsMatched: raw.http_calls_matched ?? 0,
+    channelsTotal: raw.channels_total ?? 0,
+    channelSendsTotal: raw.channel_sends_total ?? 0,
+    channelSendsMatched: raw.channel_sends_matched ?? 0,
   };
 }

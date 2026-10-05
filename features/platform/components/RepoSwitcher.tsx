@@ -29,7 +29,7 @@ function toRepository(repo: ConnectedRepository) {
 }
 
 function statusDot(status: JobStatus) {
-  if (status === "done") return "bg-signal";
+  if (status === "done") return "bg-success";
   if (status === "failed") return "bg-critical";
   return "bg-warn";
 }
@@ -59,7 +59,7 @@ export function RepoSwitcher() {
       <DropdownMenuTrigger
         className={cn(
           "flex items-center gap-2 rounded-sm border border-line-1 bg-surface-1 px-2.5 py-1.5",
-          "ow-mono-micro text-text-mid transition-colors hover:border-signal-border hover:text-text-hi",
+          "ow-micro text-text-mid transition-colors hover:border-signal-border hover:text-text-hi",
         )}
       >
         <GitBranch className="size-3.5 text-text-dim" />
@@ -75,7 +75,7 @@ export function RepoSwitcher() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="min-w-[260px]">
-        <DropdownMenuLabel className="ow-mono-micro text-text-dim">
+        <DropdownMenuLabel className="ow-micro text-text-dim">
           CONNECTED REPOSITORIES
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

@@ -1,6 +1,6 @@
 "use client";
 
-import { Boxes, Braces, FileCode2, Globe, Package, Shapes } from "lucide-react";
+import { Boxes, Braces, FileCode2, Globe, MessagesSquare, Package, Shapes } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { describeNode } from "../lib/relations";
 import type { GraphNodeSummary } from "../types";
@@ -11,6 +11,9 @@ const ICON_CLASS = "mt-0.5 size-3.5 shrink-0 text-signal";
  *  into a variable, so nothing is constructed during render. */
 function NodeIcon({ node }: { node: GraphNodeSummary }) {
   if (node.labels.includes("Route")) return <Globe className={ICON_CLASS} aria-hidden />;
+  if (node.labels.includes("Channel")) {
+    return <MessagesSquare className={ICON_CLASS} aria-hidden />;
+  }
   if (node.labels.includes("Package")) return <Package className={ICON_CLASS} aria-hidden />;
   if (node.labels.includes("File")) return <FileCode2 className={ICON_CLASS} aria-hidden />;
   if (node.labels.includes("Module")) return <Boxes className={ICON_CLASS} aria-hidden />;
@@ -44,7 +47,7 @@ export function NodeRow({ node, onOpen, trailing }: NodeRowProps) {
           <span className="truncate font-mono text-[12px] text-text-hi">
             {node.name}
           </span>
-          <span className="shrink-0 ow-mono-micro text-text-dim">
+          <span className="shrink-0 ow-micro text-text-dim">
             {describeNode(node)}
           </span>
         </span>
@@ -59,7 +62,7 @@ export function NodeRow({ node, onOpen, trailing }: NodeRowProps) {
         ) : null}
       </span>
       {trailing && (
-        <span className="shrink-0 ow-mono-micro text-text-dim">{trailing}</span>
+        <span className="shrink-0 ow-micro text-text-dim">{trailing}</span>
       )}
     </button>
   );

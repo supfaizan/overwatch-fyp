@@ -51,3 +51,21 @@ export async function completeGithubAuth(
 export async function logout(): Promise<void> {
   await api.post("/auth/logout");
 }
+
+export async function logoutEverywhere(): Promise<void> {
+  await api.post("/auth/logout-all");
+}
+
+/* Error codes the backend's OAuth callback sends back to /login?error=. */
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  oauth_cancelled: "GitHub sign-in was cancelled.",
+  oauth_state_mismatch: "Your sign-in link expired. Please try again.",
+  github_unavailable: "GitHub is not responding right now. Please try again shortly.",
+};
+
+const FALLBACK_LOGIN_ERROR = "Sign-in failed. Please try again.";
+
+export function describeLoginError(code: string | undefined): string | null {
+  if (!code) return null;
+  return LOGIN_ERROR_MESSAGES[code] ?? FALLBACK_LOGIN_ERROR;
+}

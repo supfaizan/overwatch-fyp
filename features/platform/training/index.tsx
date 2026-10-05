@@ -22,12 +22,12 @@ export function Training() {
     <div className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col justify-center px-3 py-12">
       <OnboardSteps current={done ? 3 : 2} />
 
-      <div className="mt-10 overflow-hidden rounded-lg border border-line-1 bg-surface-1 shadow-[var(--ow-shadow-card)]">
+      <div className="ow-pop mt-10 overflow-hidden rounded-lg border border-line-1 bg-surface-1 shadow-card">
         <div className="flex items-center justify-between border-b border-line-1 bg-ink-900 px-5 py-3">
-          <span className="ow-mono-micro text-text-mid">
+          <span className="ow-micro text-text-mid">
             TRAINING // T-GNN + EMBEDDINGS
           </span>
-          <span className="ow-mono-micro text-text-dim">
+          <span className="ow-micro text-text-dim">
             {activeRepo?.fullName ?? "repository"}
           </span>
         </div>
@@ -53,7 +53,7 @@ export function Training() {
               <div className="ow-mono-data !text-[26px] text-signal">
                 {progress}%
               </div>
-              <div className="ow-mono-micro text-text-dim">
+              <div className="ow-micro text-text-dim">
                 {done ? "READY" : "TRAINING"}
               </div>
             </div>
@@ -62,7 +62,7 @@ export function Training() {
           <div className="w-full">
             <div className="flex items-center justify-between">
               <p className="ow-mono-data text-text-hi">{currentLabel}</p>
-              <p className="ow-mono-micro text-text-dim">
+              <p className="ow-micro text-text-dim">
                 {stageIndex + (done ? 0 : 1)}/{TRAINING_STAGES.length}
               </p>
             </div>

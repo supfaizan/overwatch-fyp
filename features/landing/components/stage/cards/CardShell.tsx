@@ -13,8 +13,8 @@ export function CardShell({ tone = "default", className, children }: CardShellPr
       className={cn(
         "rounded-xl border px-4 py-3 font-mono text-[11px] leading-relaxed sm:text-xs",
         tone === "critical"
-          ? "border-critical-border bg-critical-soft"
-          : "border-line-1 bg-ink-900/80 backdrop-blur-sm",
+          ? "border-critical-border bg-surface-1 shadow-[0_3px_0_var(--ow-critical-border)]"
+          : "border-line-1 bg-surface-1 shadow-ledge",
         className,
       )}
     >

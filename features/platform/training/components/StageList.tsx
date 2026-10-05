@@ -42,12 +42,12 @@ export function StageList({
               >
                 {stage.label}
               </span>
-              <span className="ow-mono-micro text-text-dim">{stage.detail}</span>
+              <span className="ow-micro text-text-dim">{stage.detail}</span>
             </span>
             <span
               className={cn(
-                "ow-mono-micro",
-                isDone ? "text-signal" : isActive ? "text-warn" : "text-text-dim",
+                "ow-micro",
+                isDone ? "text-success" : isActive ? "text-warn" : "text-text-dim",
               )}
             >
               {isDone ? "DONE" : isActive ? "RUNNING" : "QUEUED"}

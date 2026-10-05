@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -16,20 +16,27 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Loader2, GitBranch, TriangleAlert } from "lucide-react";
+import { Loader2, GitBranch, Route, TriangleAlert } from "lucide-react";
+import { FocusWhenDrawn, FollowNode } from "../graph/components/FollowNode";
 import { GraphNodeCard } from "../graph/components/GraphNodeCard";
 import { OverflowNode } from "../graph/components/OverflowNode";
 import { ViewControls } from "../graph/components/ViewControls";
-import { useGraphView } from "../graph/hooks";
+import { useSelectNode } from "../hooks";
+import {
+  useFlowProjection,
+  useGraphView,
+  useMapFocusTarget,
+  useSpotlightProjection,
+} from "../graph/hooks";
 import {
   FOCUS_STROKE,
   RECEDED,
   edgeStyle,
-  spotlight,
 } from "../graph/lib/appearance";
 import {
   containmentEdges,
   describeEdge,
+  flowOverlayEdges,
   neighbourhood,
   relationTo,
 } from "../graph/lib/edges";
@@ -67,13 +74,19 @@ const AT_REST = { opacity: 0.22, width: 1 } as const;
  * Opening a folder can double the width of the picture, and React Flow only
  * fits on mount — without this, half the graph lands off-screen. It waits for
  * the new nodes to be measured, or it would fit to stale sizes. Rendered
- * inside `<ReactFlow>`, which is what puts it in the flow's context. */
+ * inside `<ReactFlow>`, which is what puts it in the flow's context.
+ *
+ * Fits once per signature. Measurement can lapse and return for reasons that
+ * change nothing on screen, and refitting then would yank away a viewport the
+ * reader had just panned or zoomed. */
 function FitToContent({ signature, dense }: { signature: string; dense: boolean }) {
   const { fitView } = useReactFlow();
   const measured = useNodesInitialized();
+  const fitted = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!measured) return;
+    if (!measured || fitted.current === signature) return;
+    fitted.current = signature;
     void fitView({
       padding: FIT_PADDING,
       minZoom: MIN_FIT_ZOOM,
@@ -84,15 +97,35 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
   return null;
 }
 
+/** Restyle nodes for the current focus, reusing every node object whose look
+ *  did not change.
+ *
+ *  React Flow re-measures any node handed to it as a new object, and every
+ *  node re-renders. Rebuilding all of them on each hover did both, for
+ *  hundreds of boxes, to change the opacity of a few. */
+function restyleNodes(
+  current: CanvasNode[],
+  next: CanvasNode[],
+  opacityOf: (id: string) => number,
+): CanvasNode[] {
+  const previous = new Map(current.map((node) => [node.id, node]));
+  return next.map((node) => {
+    const opacity = opacityOf(node.id);
+    const prior = previous.get(node.id);
+    // New data (a fresh view) replaces the node outright.
+    if (!prior || prior.data !== node.data) return { ...node, style: { opacity } };
+    if (prior.style?.opacity === opacity) return prior;
+    return { ...prior, style: { ...prior.style, opacity } };
+  });
+}
+
 function styleEdges(
   edges: ViewFlowEdge[],
   focusId: string | null,
-  flowStepIds: string[],
+  flowMoves: readonly [string, string][],
 ): Edge[] {
-  // Consecutive pairs in the walkthrough — these get the travelling animation.
-  const flowPairs = new Set(
-    flowStepIds.slice(0, -1).map((id, index) => `${id}->${flowStepIds[index + 1]}`),
-  );
+  // Consecutive moves in the walkthrough — these get the travelling animation.
+  const flowPairs = new Set(flowMoves.map(([from, to]) => `${from}->${to}`));
 
   return edges.map((edge) => {
     const detail = edge.data!;
@@ -186,18 +219,19 @@ function CanvasNotice({
     <div className="grid h-full place-items-center bg-ink-850 px-6">
       <div className="flex max-w-sm flex-col items-center gap-2 text-center">
         <Icon className={`size-4 text-signal ${spin ? "animate-spin" : ""}`} />
-        <p className="ow-mono-micro text-text-dim">{children}</p>
+        <p className="ow-micro text-text-dim">{children}</p>
       </div>
     </div>
   );
 }
 
 export function DiagramCanvas() {
-  const { data, isLoading, isError } = useGraphView();
-  const highlighted = useDashboardStore((state) => state.highlightedNodeIds);
-  const flowStepIds = useDashboardStore((state) => state.flowStepIds);
-  const selectNode = useDashboardStore((state) => state.selectNode);
-  const setHighlighted = useDashboardStore((state) => state.setHighlighted);
+  const { data, isLoading, isError, isFetching } = useGraphView();
+  const flowPlaying = useDashboardStore((state) => state.flowPlaying);
+  const clearMapFocus = useDashboardStore((state) => state.clearMapFocus);
+  const setFlowPlaying = useDashboardStore((state) => state.setFlowPlaying);
+  const selectNode = useSelectNode();
+  const setSpotlight = useDashboardStore((state) => state.setSpotlight);
   const selectedNodeId = useDashboardStore((state) => state.selectedNodeId);
   const open = useViewStore((state) => state.open);
   const reveal = useViewStore((state) => state.reveal);
@@ -216,12 +250,17 @@ export function DiagramCanvas() {
     return node && isGraphNode(node) ? { id: node.id, name: node.data.label } : null;
   }, [data, selectedNodeId]);
 
-  // A chat answer names modules. Once a module is opened it is no longer on
-  // the canvas, so its children carry the spotlight in its place.
-  const lit = useMemo(
-    () => spotlight((data?.nodes ?? []).map((node) => node.id), highlighted),
-    [data, highlighted],
-  );
+  const walkthrough = useFlowProjection(data?.nodes, data?.edges);
+  // "Show in map" opens a step's folders, then brings into view whatever box
+  // stands for it once that view has arrived: the step itself, or — for one
+  // of hundreds of routes or channels — the marker it is paged behind.
+  const mapFocusTarget = useMapFocusTarget(data?.nodes);
+  const spotlit = useSpotlightProjection(data?.nodes);
+
+  // The most recent thing asked for wins: a chat answer or a clicked node
+  // (the spotlight), else a walkthrough's path. Starting a walkthrough
+  // clears the spotlight, so its path then shows.
+  const lit = spotlit.size > 0 || !walkthrough.isActive ? spotlit : walkthrough.onPath;
 
   // Pointing at a node is enough to read its connections; selecting one holds
   // them. Hover wins, so you can look around without losing your place.
@@ -240,22 +279,20 @@ export function DiagramCanvas() {
 
   useEffect(() => {
     if (!data) return;
-    setNodes(
-      data.nodes.map((node) => ({
-        ...node,
-        style: { opacity: nodeOpacity(node.id, focusId, inFocus, lit) },
-      })),
+    setNodes((current) =>
+      restyleNodes(current, data.nodes, (id) => nodeOpacity(id, focusId, inFocus, lit)),
     );
     // Paint order, quietest first: the tree, then the relationships at rest,
     // then whatever is in focus. All of them stay in the one layer beneath
     // the nodes, so a line never covers a card it passes.
-    const relations = styleEdges(data.edges, focusId, flowStepIds);
+    const relations = styleEdges(data.edges, focusId, walkthrough.moves);
     setEdges([
       ...containmentEdges(data.containment),
       ...relations.filter((edge) => !edge.animated && edge.style?.opacity !== 1),
       ...relations.filter((edge) => edge.animated || edge.style?.opacity === 1),
+      ...flowOverlayEdges(walkthrough.unlinked),
     ]);
-  }, [data, focusId, inFocus, lit, flowStepIds, setNodes, setEdges]);
+  }, [data, focusId, inFocus, lit, walkthrough.moves, walkthrough.unlinked, setNodes, setEdges]);
 
   if (isLoading) {
     return (
@@ -302,22 +339,31 @@ export function DiagramCanvas() {
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         onNodeClick={(_, node: Node) => {
-          selectNode(node.id);
-          setHighlighted([node.id]);
+          const canvasNode = node as CanvasNode;
+          // A "+N more" marker stands for several nodes and has nothing to
+          // select or explore: clicking it is the request to see them.
+          if (!isGraphNode(canvasNode)) {
+            reveal(canvasNode.data.containerId);
+            return;
+          }
+          selectNode(canvasNode.id);
+          setSpotlight([{ nodeId: canvasNode.id, containers: [] }]);
         }}
         onNodeDoubleClick={(_, node: Node) => {
           const canvasNode = node as CanvasNode;
-          if (isGraphNode(canvasNode)) {
-            if (canvasNode.data.expandable) open(canvasNode.id);
-          } else {
-            reveal(canvasNode.data.containerId);
-          }
+          if (isGraphNode(canvasNode) && canvasNode.data.expandable) open(canvasNode.id);
         }}
         onNodeMouseEnter={(_, node: Node) => hover(node.id)}
         onNodeMouseLeave={() => hover(null)}
+        // Panning or zooming by hand means the reader wants to look around:
+        // the walkthrough stops steering the viewport. Programmatic moves
+        // (fitting, following) carry no event.
+        onMoveStart={(event) => {
+          if (event && flowPlaying) setFlowPlaying(false);
+        }}
         onPaneClick={() => {
           selectNode(null);
-          setHighlighted([]);
+          setSpotlight([]);
           hover(null);
         }}
         fitView
@@ -328,9 +374,15 @@ export function DiagramCanvas() {
         proOptions={{ hideAttribution: true }}
         minZoom={0.2}
         maxZoom={1.6}
-        colorMode="dark"
+        colorMode="light"
       >
         <FitToContent signature={signature} dense={dense} />
+        <FollowNode nodeId={walkthrough.activeId} following={flowPlaying} />
+        <FocusWhenDrawn
+          nodeId={mapFocusTarget}
+          isDrawn={!isFetching}
+          onDone={clearMapFocus}
+        />
         <Background
           variant={BackgroundVariant.Dots}
           gap={22}
@@ -347,12 +399,12 @@ export function DiagramCanvas() {
           <MiniMap
             pannable
             zoomable
-            maskColor="rgba(7,9,13,0.7)"
-            className="!bg-ink-900 !border !border-line-1"
+            maskColor="color-mix(in oklab, var(--ow-ink-900) 70%, transparent)"
+            className="!bg-surface-1 !border !border-line-1"
             nodeColor={(node) =>
               node.type === "overflow" || node.data?.kind === "external"
-                ? "#6B7280"
-                : "#4ADE80"
+                ? "var(--ow-line-2)"
+                : "var(--ow-signal)"
             }
             nodeStrokeWidth={0}
           />
@@ -360,12 +412,27 @@ export function DiagramCanvas() {
       </ReactFlow>
 
       <ViewControls expanded={data.expanded} selected={selected} />
+      {walkthrough.isActive && <BackToFlow />}
       <EdgeLegend
         edges={data.edges}
         focused={focusId !== null}
         truncated={data.truncated}
       />
     </div>
+  );
+}
+
+/** The way back to a walkthrough after looking at one of its steps here. */
+function BackToFlow() {
+  const setCanvas = useDashboardStore((state) => state.setCanvas);
+  return (
+    <button
+      type="button"
+      onClick={() => setCanvas("flow")}
+      className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-pill border border-signal-border bg-ink-900/90 px-3 py-1.5 ow-micro text-signal shadow-lg backdrop-blur-sm transition-colors hover:bg-signal-soft"
+    >
+      <Route className="size-3.5" aria-hidden /> BACK TO FLOW VIEW
+    </button>
   );
 }
 
@@ -396,11 +463,11 @@ function EdgeLegend({
       <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1 rounded-md border border-line-1 bg-ink-900/85 px-3 py-2 backdrop-blur-sm">
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="h-px w-3.5 bg-signal" />
-          <span className="ow-mono-micro text-text-mid">THIS USES →</span>
+          <span className="ow-micro text-text-mid">THIS USES →</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="h-px w-3.5 bg-warn" />
-          <span className="ow-mono-micro text-text-mid">→ USES THIS</span>
+          <span className="ow-micro text-text-mid">→ USES THIS</span>
         </span>
       </div>
     );
@@ -423,13 +490,13 @@ function EdgeLegend({
                     : undefined,
                 }}
               />
-              <span className="ow-mono-micro text-text-lo">{style.label}</span>
+              <span className="ow-micro text-text-lo">{style.label}</span>
             </span>
           );
         })}
       </div>
       {truncated && (
-        <span className="ow-mono-micro text-warn">
+        <span className="ow-micro text-warn">
           VIEW TRUNCATED — CLOSE SOMETHING OR NARROW THE FILTERS
         </span>
       )}

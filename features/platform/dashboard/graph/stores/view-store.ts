@@ -26,6 +26,9 @@ interface ViewState {
 
   hover: (nodeId: string | null) => void;
   open: (nodeId: string) => void;
+  /** Open several containers at once, keeping what is already open and
+   *  staying within `limit` — the server rejects a longer list. */
+  openMany: (nodeIds: string[], limit: number) => void;
   close: (nodeId: string) => void;
   closeAll: () => void;
   reveal: (containerId: string) => void;
@@ -35,6 +38,9 @@ interface ViewState {
   toggleNodeLabel: (label: ViewNodeLabel, available: ViewNodeLabel[]) => void;
   toggleEdgeType: (type: ViewEdgeType, available: ViewEdgeType[]) => void;
   clearFilters: () => void;
+  /** Back to the closed, unfiltered view — for a different repository,
+   *  whose ids none of this state would match. */
+  reset: () => void;
 }
 
 /** Toggling within a fixed vocabulary: `null` (no filter) behaves as "all
@@ -74,6 +80,12 @@ export const useViewStore = create<ViewState>((set) => ({
         : { expanded: [...state.expanded, nodeId] },
     ),
 
+  openMany: (nodeIds, limit) =>
+    set((state) => {
+      const merged = [...new Set([...state.expanded, ...nodeIds])].slice(0, limit);
+      return sameIds(state.expanded, merged) ? state : { expanded: merged };
+    }),
+
   // Closing a container also closes — and un-reveals — everything that was
   // open inside it. Otherwise those ids linger and silently take effect the
   // next time its parent is opened.
@@ -108,6 +120,9 @@ export const useViewStore = create<ViewState>((set) => ({
     })),
 
   clearFilters: () => set({ nodeLabels: null, edgeTypes: null }),
+
+  reset: () =>
+    set({ expanded: [], revealed: [], nodeLabels: null, edgeTypes: null, hovered: null }),
 }));
 
 /** Whether one node id is a container or lies inside it.

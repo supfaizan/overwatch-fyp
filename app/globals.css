@@ -5,58 +5,76 @@
 
 /* ============================================================
    OVERWATCH — Design Tokens
-   Developer Intelligence Platform · Dark-first
+   Developer Intelligence Platform · light, PostHog-style
+   (warm "3000" cream ramp, orange accent, pressable ledges)
+
+   Token names describe ROLES, not lightness: `ink-*` are the
+   frame/canvas backgrounds, `surface-*` sit on top of them.
    ============================================================ */
 
 :root {
-  /* ---- Brand signal -------------------------------------- */
-  --ow-signal:        #4ADE80;  /* live & healthy · signal green (LEAD) */
-  --ow-signal-ink:    #06351B;  /* text on signal fills */
-  --ow-signal-soft:   rgba(74, 222, 128, 0.10);
-  --ow-signal-border: rgba(74, 222, 128, 0.25);
+  color-scheme: light;
 
-  /* ---- Neutrals (blue-black ramp) ------------------------ */
-  --ow-ink-900:   #07090D;  /* deepest — app frame / header */
-  --ow-ink-850:   #0A0D12;  /* canvas / page background     */
-  --ow-ink-800:   #0E1219;  /* base panels                  */
-  --ow-surface-1: #12161F;  /* cards on canvas              */
-  --ow-surface-2: #171C27;  /* raised / selected            */
-  --ow-surface-3: #1D2330;  /* hover / popovers             */
-  --ow-line-1:    #232A36;  /* hairlines, dividers          */
-  --ow-line-2:    #2C3543;  /* stronger borders, controls   */
+  /* ---- Brand signal (accent · active · selected) ---------- */
+  --ow-signal:        #F54E00;  /* PostHog orange (LEAD)        */
+  --ow-signal-ink:    #FFFFFF;  /* text on signal fills         */
+  --ow-signal-soft:   rgba(245, 78, 0, 0.08);
+  --ow-signal-border: rgba(245, 78, 0, 0.30);
+
+  /* ---- Call to action (yellow face, dark ledge) ---------- */
+  --ow-cta:        #F1A82C;
+  --ow-cta-hover:  #F5B547;
+  --ow-cta-ledge:  #B17816;
+  --ow-cta-ink:    #151515;
+
+  /* ---- Neutrals (warm cream ramp) ------------------------ */
+  --ow-ink-900:   #EEEFE9;  /* frame — app bar, side rails   */
+  --ow-ink-850:   #F3F4EF;  /* canvas / page background      */
+  --ow-ink-800:   #F8F8F5;  /* base panels                   */
+  --ow-surface-1: #FFFFFF;  /* cards on canvas               */
+  --ow-surface-2: #E9EAE3;  /* hover / selected              */
+  --ow-surface-3: #DFE0D8;  /* pressed / tracks / chips      */
+  --ow-line-1:    #DADBD2;  /* hairlines, dividers           */
+  --ow-line-2:    #C1C2B9;  /* stronger borders, controls    */
 
   /* ---- Text ---------------------------------------------- */
-  --ow-text-hi:   #E8ECF2;  /* primary                      */
-  --ow-text-mid:  #97A2B2;  /* secondary / body             */
-  --ow-text-lo:   #5E6878;  /* tertiary / mono labels       */
-  --ow-text-dim:  #3D4654;  /* faint captions               */
+  --ow-text-hi:   #151515;  /* primary                       */
+  --ow-text-mid:  #4D4F46;  /* secondary / body              */
+  --ow-text-lo:   #65675E;  /* tertiary / mono labels        */
+  --ow-text-dim:  #8A8C82;  /* faint captions                */
 
   /* ---- Semantic states ----------------------------------- */
-  --ow-warn:        #F5A524;  /* warning · amber (workhorse) */
-  --ow-warn-deep:   #7A5512;  /* warning rings/borders       */
-  --ow-warn-soft:   rgba(245, 165, 36, 0.10);
-  --ow-warn-border: rgba(245, 165, 36, 0.28);
+  --ow-success:        #388600;  /* live & healthy            */
+  --ow-success-soft:   rgba(56, 134, 0, 0.10);
+  --ow-success-border: rgba(56, 134, 0, 0.30);
 
-  --ow-critical:        #E5564F;  /* predicted break (rationed) */
-  --ow-critical-deep:   #5E1D1B;
-  --ow-critical-soft:   rgba(229, 86, 79, 0.10);
-  --ow-critical-border: rgba(229, 86, 79, 0.28);
+  --ow-warn:        #B97400;  /* warning · amber (workhorse) */
+  --ow-warn-deep:   #F2C66B;  /* warning rings/borders       */
+  --ow-warn-soft:   rgba(247, 165, 1, 0.14);
+  --ow-warn-border: rgba(224, 148, 35, 0.42);
 
-  --ow-stale:  #737FA0;  /* unverified by AI · dashed ghost  */
-  --ow-idle:   #3F4856;  /* dimmed / out of focus            */
+  --ow-critical:        #D1293D;  /* predicted break (rationed) */
+  --ow-critical-deep:   #F4B4BC;
+  --ow-critical-soft:   rgba(209, 41, 61, 0.08);
+  --ow-critical-border: rgba(209, 41, 61, 0.30);
+
+  --ow-stale:  #747EA1;  /* unverified by AI · dashed ghost  */
+  --ow-idle:   #C8C9C0;  /* dimmed / out of focus            */
 
   /* ---- Typography ---------------------------------------- */
-  --ow-font-sans: var(--font-space-grotesk), 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  --ow-font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --ow-font-sans: var(--font-ibm-plex-sans), 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --ow-font-mono: var(--font-source-code-pro), 'Source Code Pro', ui-monospace, 'SF Mono', monospace;
 
   /* ---- Radius / elevation -------------------------------- */
   --ow-radius-sm: 4px;
-  --ow-radius-md: 5px;
-  --ow-radius-lg: 6px;
+  --ow-radius-md: 6px;
+  --ow-radius-lg: 8px;
   --ow-radius-pill: 999px;
-  --ow-shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.50);
-  --ow-shadow-card:   0 8px 30px rgba(0, 0, 0, 0.45);
-  --ow-focus-halo:    0 0 0 1px rgba(45,212,191,.15), 0 0 30px rgba(45,212,191,.08);
+  /* PostHog lifts things with a solid ledge, not a blur */
+  --ow-shadow-ledge:  0 3px 0 var(--ow-line-1);
+  --ow-shadow-raised: 0 1px 2px rgba(21, 21, 21, 0.06), 0 12px 28px -12px rgba(35, 37, 29, 0.25);
+  --ow-shadow-card:   0 3px 0 var(--ow-line-1), 0 10px 24px -14px rgba(35, 37, 29, 0.22);
+  --ow-focus-halo:    0 0 0 1px var(--ow-signal-border), 0 0 0 4px var(--ow-signal-soft);
 
   /* ---- App roles ----------------------------------------- */
   --background: var(--ow-ink-850);
@@ -66,18 +84,18 @@
   --radius: var(--ow-radius-lg);
   --card:                  var(--ow-surface-1);
   --card-foreground:       var(--ow-text-hi);
-  --popover:               var(--ow-surface-3);
+  --popover:               var(--ow-surface-1);
   --popover-foreground:    var(--ow-text-hi);
   --primary:               var(--ow-signal);
   --primary-foreground:    var(--ow-signal-ink);
   --secondary:             var(--ow-surface-2);
   --secondary-foreground:  var(--ow-text-hi);
   --muted:                 var(--ow-surface-2);
-  --muted-foreground:      var(--ow-text-mid);
-  --accent:                var(--ow-surface-3);
+  --muted-foreground:      var(--ow-text-lo);
+  --accent:                var(--ow-surface-2);
   --accent-foreground:     var(--ow-text-hi);
   --destructive:           var(--ow-critical);
-  --destructive-foreground: var(--ow-text-hi);
+  --destructive-foreground: var(--ow-surface-1);
   --border:                var(--ow-line-1);
   --input:                 var(--ow-line-2);
   --ring:                  var(--ow-signal);
@@ -96,11 +114,6 @@
   --chart-5: var(--ow-text-lo);
 }
 
-/* dark-first: .dark mirrors :root so next-themes class toggling is inert */
-.dark {
-  color-scheme: dark;
-}
-
 /* ---- Tailwind theme mapping ------------------------------ */
 @theme inline {
   --color-background: var(--background);
@@ -111,6 +124,12 @@
   --color-signal-ink:    var(--ow-signal-ink);
   --color-signal-soft:   var(--ow-signal-soft);
   --color-signal-border: var(--ow-signal-border);
+
+  /* call to action */
+  --color-cta:       var(--ow-cta);
+  --color-cta-hover: var(--ow-cta-hover);
+  --color-cta-ledge: var(--ow-cta-ledge);
+  --color-cta-ink:   var(--ow-cta-ink);
 
   /* neutrals */
   --color-ink-900:   var(--ow-ink-900);
@@ -129,6 +148,9 @@
   --color-text-dim: var(--ow-text-dim);
 
   /* semantic states */
+  --color-success:        var(--ow-success);
+  --color-success-soft:   var(--ow-success-soft);
+  --color-success-border: var(--ow-success-border);
   --color-warn:        var(--ow-warn);
   --color-warn-deep:   var(--ow-warn-deep);
   --color-warn-soft:   var(--ow-warn-soft);
@@ -148,8 +170,13 @@
   --radius-sm: var(--ow-radius-sm);
   --radius-md: var(--ow-radius-md);
   --radius-lg: var(--ow-radius-lg);
-  --radius-xl: 8px;
+  --radius-xl: 12px;
   --radius-pill: var(--ow-radius-pill);
+
+  /* elevation */
+  --shadow-ledge: var(--ow-shadow-ledge);
+  --shadow-raised: var(--ow-shadow-raised);
+  --shadow-card: var(--ow-shadow-card);
 
   /* shadcn/ui token bridge */
   --color-card:                  var(--card);
@@ -190,6 +217,15 @@
     border-color: var(--border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
+
+  html {
+    scrollbar-color: rgba(21, 21, 21, 0.2) transparent;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--ow-signal) 22%, transparent);
+    color: var(--ow-text-hi);
+  }
 }
 
 body {
@@ -207,42 +243,45 @@ body {
   font-family: var(--ow-font-sans);
   font-size: 64px;
   line-height: 1.02;
-  font-weight: 500;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .ow-heading {
   font-family: var(--ow-font-sans);
   font-size: 24px;
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
 .ow-body {
   font-family: var(--ow-font-sans);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   font-weight: 400;
 }
 
 .ow-label {
   font-family: var(--ow-font-sans);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .ow-mono-data {
   font-family: var(--ow-font-mono);
   font-size: 12px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
-.ow-mono-micro {
-  font-family: var(--ow-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+/* PostHog-style micro label (table headers, eyebrows, chips) */
+.ow-micro {
+  font-family: var(--ow-font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -252,8 +291,8 @@ body {
    ============================================================ */
 
 @keyframes ow-pulse {
-  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 var(--ow-signal-soft); }
-  50%      { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 var(--ow-success-border); }
+  50%      { opacity: 0.7; box-shadow: 0 0 0 5px transparent; }
 }
 
 @keyframes ow-scan {
@@ -270,6 +309,13 @@ body {
 @keyframes ow-rise {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* PostHog windows open with a short, springy scale-in */
+@keyframes ow-pop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.97); }
+  60%  { opacity: 1; transform: translateY(-1px) scale(1.005); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes ow-fade {
@@ -308,13 +354,17 @@ body {
   animation: ow-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.ow-pop {
+  animation: ow-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .ow-live-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: var(--ow-radius-pill);
-  background: var(--ow-signal);
-  box-shadow: 0 0 0 0 var(--ow-signal-soft);
+  background: var(--ow-success);
+  box-shadow: 0 0 0 0 var(--ow-success-border);
   animation: ow-pulse 2s ease-in-out infinite;
 }
 
@@ -344,28 +394,26 @@ body {
   animation: ow-blink 1.1s step-end infinite;
 }
 
-/* ---- Background grid (uses line token) ------------------- */
+/* ---- Background dots (uses line token) ------------------- */
 .ow-grid {
-  background-image:
-    linear-gradient(to right, var(--ow-line-1) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--ow-line-1) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-image: radial-gradient(var(--ow-line-2) 1px, transparent 1.2px);
+  background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
           mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
 }
 
-/* ---- Console panel --------------------------------------- */
+/* ---- Window panel ---------------------------------------- */
 .ow-panel {
   background: var(--ow-surface-1);
   border: 1px solid var(--ow-line-1);
   border-radius: var(--ow-radius-lg);
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  box-shadow: var(--ow-shadow-ledge);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 .ow-panel:hover {
   border-color: var(--ow-line-2);
-  background: var(--ow-surface-2);
-  transform: translateY(-3px);
-  box-shadow: var(--ow-shadow-card);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--ow-line-2);
 }
 
 /* graph edge flow */

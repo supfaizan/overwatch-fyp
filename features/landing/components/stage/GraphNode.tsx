@@ -12,7 +12,7 @@ const TONE_CLASS: Record<NodeTone, string> = {
   alert:
     "border-critical-border bg-surface-1 text-text-hi shadow-[0_0_0_4px_var(--ow-critical-soft)]",
   changed: "border-signal bg-surface-1 text-text-hi",
-  healthy: "border-signal-border bg-surface-1 text-text-hi",
+  healthy: "border-success-border bg-surface-1 text-text-hi",
 };
 
 const DOT_CLASS: Record<NodeTone, string> = {
@@ -23,7 +23,7 @@ const DOT_CLASS: Record<NodeTone, string> = {
   dim: "bg-line-1",
   alert: "bg-critical",
   changed: "bg-signal",
-  healthy: "bg-signal",
+  healthy: "bg-success",
 };
 
 interface GraphNodeProps {

@@ -1,8 +1,8 @@
 "use client";
 
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, MonitorX, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
-import { useLogout } from "@/features/auth/hooks";
+import { useLogout, useLogoutEverywhere } from "@/features/auth/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ import {
 export function UserMenu() {
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
+  const logoutEverywhere = useLogoutEverywhere();
+  const isSigningOut = logout.isPending || logoutEverywhere.isPending;
 
   const initials = (user?.name ?? "OW")
     .split(" ")
@@ -37,7 +39,7 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <p className="ow-mono-data text-text-hi">{user?.name ?? "Signed in"}</p>
-          <p className="ow-mono-micro text-text-dim">
+          <p className="ow-micro text-text-dim">
             {user?.githubHandle ? `@${user.githubHandle}` : "GitHub account"}
           </p>
         </DropdownMenuLabel>
@@ -47,10 +49,17 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => logout.mutate()}
-          disabled={logout.isPending}
+          disabled={isSigningOut}
           className="font-mono text-[12px] text-critical focus:text-critical"
         >
           <LogOut className="size-4" /> Sign out
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => logoutEverywhere.mutate()}
+          disabled={isSigningOut}
+          className="font-mono text-[12px] text-critical focus:text-critical"
+        >
+          <MonitorX className="size-4" /> Sign out everywhere
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

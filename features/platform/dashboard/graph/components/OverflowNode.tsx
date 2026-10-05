@@ -41,10 +41,10 @@ export function OverflowNode({ data }: NodeProps<OverflowFlowNode>) {
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="ow-mono-micro truncate text-text-dim">
+        <span className="ow-micro truncate text-text-dim">
           IN {data.containerName}
         </span>
-        <span className="ow-mono-micro shrink-0 text-signal">DRAW</span>
+        <span className="ow-micro shrink-0 text-signal">DRAW</span>
       </div>
 
       <Handle

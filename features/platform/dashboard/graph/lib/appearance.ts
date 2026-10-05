@@ -24,6 +24,8 @@ export const EDGE_STYLES: Record<ViewEdgeType, EdgeStyle> = {
   USES_PACKAGE: { stroke: "var(--ow-idle)", dash: "5 5", label: "uses package" },
   HANDLES: { stroke: "var(--ow-warn)", label: "handles" },
   REQUESTS: { stroke: "var(--ow-warn)", dash: "5 4", label: "requests" },
+  SENDS: { stroke: "var(--ow-signal)", dash: "2 4", label: "sends message" },
+  RECEIVES: { stroke: "var(--ow-signal)", dash: "6 3", label: "handles message" },
 };
 
 const FALLBACK_EDGE: EdgeStyle = { stroke: "var(--ow-line-2)", label: "relates to" };
@@ -50,9 +52,11 @@ export function describeNode(label: ViewNodeLabel, kind: string | null): string 
   if (label === "Module") {
     if (kind === "external") return "packages";
     if (kind === "routes") return "routes";
+    if (kind === "channels") return "messages";
     return "folder";
   }
   if (label === "Symbol") return kind ?? "definition";
+  if (label === "Channel") return kind ?? "message";
   return label.toLowerCase();
 }
 
@@ -92,24 +96,13 @@ export function containerLabel(container: {
   return (isFolder && container.path) || container.name;
 }
 
-/** Whether a node lies inside a container, by id.
- *
- * Used only to keep a chat answer's spotlight visible after its module has
- * been opened: the module named in the answer is gone, so its children stand
- * in for it. Cosmetic — the server remains the authority on containment. */
-export function isWithin(nodeId: string, containerId: string): boolean {
-  if (nodeId === containerId) return true;
-  if (!nodeId.startsWith(containerId)) return false;
-  const next = nodeId.charAt(containerId.length);
-  return next === "/" || next === "#";
-}
-
-/** Node ids to light up, given what the chat answer named. */
-export function spotlight(nodeIds: string[], highlighted: string[]): Set<string> {
-  if (highlighted.length === 0) return new Set();
-  return new Set(
-    nodeIds.filter((id) =>
-      highlighted.some((target) => isWithin(id, target)),
-    ),
-  );
-}
+/** How a walkthrough reads between two steps: "login → calls → verify". */
+export const FLOW_VIA_PHRASE: Record<string, string> = {
+  REQUESTS: "sends a request to",
+  HANDLES: "is handled by",
+  SENDS: "publishes",
+  RECEIVES: "is handled by",
+  CALLS: "calls",
+  RENDERS: "renders",
+  IMPORTS: "imports",
+};

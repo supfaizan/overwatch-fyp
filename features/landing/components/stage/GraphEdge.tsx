@@ -11,13 +11,13 @@ const BASE_STROKE: Record<EdgeTone, string> = {
   focus: "var(--ow-signal-border)",
   dim: "var(--ow-line-1)",
   alert: "var(--ow-critical-border)",
-  healthy: "var(--ow-signal-border)",
+  healthy: "var(--ow-success-border)",
 };
 
 /** Tones that carry travelling dashes, and their colour. */
 const SIGNAL_STROKE: Partial<Record<EdgeTone, string>> = {
   focus: "var(--ow-signal)",
-  healthy: "var(--ow-signal)",
+  healthy: "var(--ow-success)",
   alert: "var(--ow-critical)",
 };
 

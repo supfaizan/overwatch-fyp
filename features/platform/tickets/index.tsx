@@ -43,12 +43,12 @@ export function Tickets() {
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden">
       <header className="flex shrink-0 items-center gap-3 border-b border-line-1 bg-ink-900 px-4 py-3">
-        <span className="ow-mono-micro text-text-mid">TICKETS</span>
-        <span className="ow-mono-micro text-text-dim">{count} JIRA ISSUES</span>
+        <span className="ow-micro text-text-mid">TICKETS</span>
+        <span className="ow-micro text-text-dim">{count} JIRA ISSUES</span>
       </header>
 
       {onboarding.isLoading ? (
-        <div className="flex flex-1 items-center justify-center gap-2 ow-mono-micro text-text-dim">
+        <div className="flex flex-1 items-center justify-center gap-2 ow-micro text-text-dim">
           <Loader2 className="size-4 animate-spin" /> CHECKING JIRA CONNECTION…
         </div>
       ) : onboarding.isError ? (
@@ -73,7 +73,7 @@ export function Tickets() {
           </div>
         </div>
       ) : !syncDone || tickets.isLoading ? (
-        <div className="flex flex-1 items-center justify-center gap-2 ow-mono-micro text-text-dim">
+        <div className="flex flex-1 items-center justify-center gap-2 ow-micro text-text-dim">
           <Loader2 className="size-4 animate-spin" /> SYNCHRONIZING JIRA ISSUES…
         </div>
       ) : tickets.isError ? (

@@ -1,40 +1,48 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, MapPin } from "lucide-react";
+import type { AnswerReference } from "../types";
 
-/** The exact files and definitions an answer drew on.
- *
- * The diagram can only highlight modules, so without these the reader cannot
- * tell *which* function an answer meant. Each one opens in the explorer. */
+/** The nodes an answer drew on. Each shows on the map — lit and centred,
+ *  without leaving the chat — or opens in the explorer. */
 export function AnswerReferences({
   references,
-  onOpen,
+  onShow,
+  onExplore,
 }: {
-  references: string[];
-  onOpen: (nodeId: string) => void;
+  references: readonly AnswerReference[];
+  onShow: (reference: AnswerReference) => void;
+  onExplore: (nodeId: string) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="ow-mono-micro text-text-dim">FROM</span>
+      <span className="ow-micro text-text-dim">FROM</span>
       {references.map((reference) => (
-        <button
-          key={reference}
-          type="button"
-          onClick={() => onOpen(reference)}
-          title={reference}
-          className="group flex max-w-[180px] items-center gap-1 rounded-pill border border-line-1 bg-surface-1 px-2 py-0.5 font-mono text-[10px] text-text-lo transition-colors hover:border-signal-border hover:text-signal"
+        <span
+          key={reference.nodeId}
+          className="group flex max-w-[200px] items-center rounded-pill border border-line-1 bg-surface-1 font-mono text-[10px] text-text-lo transition-colors hover:border-signal-border"
         >
-          <span className="truncate">{label(reference)}</span>
-          <ArrowUpRight className="size-2.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
-        </button>
+          <button
+            type="button"
+            onClick={() => onShow(reference)}
+            title={`${reference.name}${reference.path ? ` — ${reference.path}` : ""} · show on map`}
+            className="flex min-w-0 items-center gap-1 py-0.5 pl-2 pr-1 hover:text-signal"
+          >
+            <span className="text-text-dim">{reference.number}</span>
+            <MapPin className="size-2.5 shrink-0 opacity-60" aria-hidden />
+            <span className="truncate">{reference.name}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onExplore(reference.nodeId)}
+            aria-label={`Open ${reference.name} in the explorer`}
+            title="Open in the explorer"
+            className="py-0.5 pl-0.5 pr-2 hover:text-signal"
+          >
+            <ArrowUpRight className="size-2.5" aria-hidden />
+          </button>
+        </span>
       ))}
     </div>
   );
-}
-
-/** Node ids are long; show the definition, or the filename it lives in. */
-function label(nodeId: string): string {
-  const afterRepo = nodeId.split(":").slice(1).join(":") || nodeId;
-  const symbol = afterRepo.split("#")[1];
-  return symbol ?? afterRepo.split("/").at(-1) ?? afterRepo;
 }

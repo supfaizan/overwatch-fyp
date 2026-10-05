@@ -31,7 +31,7 @@ Jira ids.
 | Realtime | `socket.io-client` | Singleton exists, **not yet consumed** — see FE-B3 |
 | Toasts | `sonner` | |
 | Icons | `lucide-react` | |
-| Fonts | Space Grotesk (sans), JetBrains Mono (data/labels) | via `next/font/google` |
+| Fonts | IBM Plex Sans (prose, labels), Source Code Pro (data) | via `next/font/google` |
 
 ---
 
@@ -105,18 +105,26 @@ Onboarding flow: register → `/connect` → `/training` → `/dashboard`.
 Defined as CSS custom properties in `app/globals.css`. Use the tokens, never raw
 hex.
 
+Light, PostHog-style theme: warm cream "3000" ramp, orange accent, solid ledges
+instead of blurred shadows.
+
 - **Surfaces:** `ink-900` (chrome) → `ink-850` (canvas) → `ink-800` (panels) →
-  `surface-1/2/3` (cards → raised → hover)
+  `surface-1/2/3` (white cards → hover/selected → pressed/tracks). Names are
+  roles, not lightness.
 - **Lines:** `line-1` (hairline), `line-2` (control borders)
 - **Text:** `text-hi` → `text-mid` → `text-lo` → `text-dim`
-- **Semantic:** `signal` (green, healthy/live — the lead colour), `warn` (amber),
-  `critical` (red, rationed), `stale` (probabilistic/unverified), `idle`
+- **Semantic:** `signal` (PostHog orange — accent, active, selected; the lead
+  colour), `success` (green, healthy/live/done), `warn` (amber), `critical`
+  (crimson, rationed), `stale` (probabilistic/unverified), `idle`
+- **Call to action:** `cta` / `cta-ledge` / `cta-ink` — the yellow pressable
+  button face, its ledge, and its text
+- **Elevation:** `shadow-ledge` (3px solid ledge), `shadow-card`, `shadow-raised`
 - **Type utilities:** `ow-display`, `ow-heading`, `ow-body`, `ow-label`,
-  `ow-mono-data`, `ow-mono-micro`
-- **Motion/effect utilities:** `ow-panel`, `ow-rise`, `ow-live-dot`,
+  `ow-mono-data`, `ow-micro`
+- **Motion/effect utilities:** `ow-panel`, `ow-rise`, `ow-pop`, `ow-live-dot`,
   `ow-scanline`, `ow-grid`, `ow-edge-flow`, `ow-cursor`
 
-Convention: monospace carries data and labels; sans carries prose. Colour encodes
+Convention: monospace carries data; sans carries prose and labels. Colour encodes
 confidence — solid/`signal` for confirmed, dashed/`stale` for probabilistic.
 
 ---

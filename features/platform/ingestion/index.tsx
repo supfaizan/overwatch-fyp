@@ -7,7 +7,7 @@ export function Ingestion() {
       <OnboardSteps current={1} />
 
       <div className="mt-10">
-        <p className="ow-mono-micro text-signal">INGESTION // CONNECT YOUR TOOLS</p>
+        <p className="ow-micro text-signal">INGESTION // CONNECT YOUR TOOLS</p>
         <h1 className="ow-heading mt-3 text-text-hi">Set up your workspace</h1>
         <p className="ow-body mt-2 text-text-mid">
           Choose the GitHub repository Overwatch should analyze and optionally
@@ -15,7 +15,7 @@ export function Ingestion() {
         </p>
       </div>
 
-      <div className="mt-8 rounded-lg border border-line-1 bg-surface-1 p-6 shadow-[var(--ow-shadow-card)]">
+      <div className="ow-pop mt-8 rounded-lg border border-line-1 bg-surface-1 p-6 shadow-card">
         <ConnectForm />
       </div>
 

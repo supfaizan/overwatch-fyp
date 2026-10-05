@@ -19,7 +19,8 @@ export type ViewNodeLabel =
   | "File"
   | "Symbol"
   | "Package"
-  | "Route";
+  | "Route"
+  | "Channel";
 
 /** Relationships a view may draw, from `GET /graph/view/options`.
  *  Containment is excluded: it builds the hierarchy rather than crossing it. */
@@ -31,7 +32,9 @@ export type ViewEdgeType =
   | "EXTENDS"
   | "IMPLEMENTS"
   | "HANDLES"
-  | "REQUESTS";
+  | "REQUESTS"
+  | "SENDS"
+  | "RECEIVES";
 
 /** How far `expandTo` opens the tree in one step. */
 export type Granularity = "module" | "file" | "symbol";
@@ -130,6 +133,8 @@ export interface ViewOptions {
    *  Server-owned, so the UI can warn ahead of a click without repeating it. */
   pageSize: number;
   maxNodes: number;
+  /** How many containers one request may hold open. */
+  maxExpanded: number;
 }
 
 /** The request: what is open, and what may be drawn. */

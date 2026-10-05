@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "../../stores/dashboard-store";
 import { useViewOptions } from "../hooks";
-import { describeContents, describeNode, isWithin } from "../lib/appearance";
+import { describeContents, describeNode } from "../lib/appearance";
 import { useViewStore } from "../stores/view-store";
 import type { ViewFlowNode } from "../types";
 import { NodeGlyph } from "./NodeGlyph";
@@ -21,17 +21,14 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
   const { data: options } = useViewOptions();
 
   const selected = useDashboardStore((state) => state.selectedNodeId === id);
-  const highlighted = useDashboardStore((state) =>
-    state.highlightedNodeIds.some((target) => isWithin(id, target)),
-  );
+  const highlighted = useDashboardStore((state) => state.spotlightMarks[id] === true);
   // How far a node recedes is decided on the canvas, which is the only place
   // that knows what the focused node is connected to. The card only styles
   // itself.
   const focused = useViewStore((state) => state.hovered === id);
-  const stepIndex = useDashboardStore((state) => state.flowStepIds.indexOf(id));
-  const isActiveStep = useDashboardStore(
-    (state) => state.flowStepIds[state.flowCursor] === id,
-  );
+  // Several steps can land on one shut folder; it carries all their numbers.
+  const flowMark = useDashboardStore((state) => state.flowMarks[id]);
+  const isActiveStep = flowMark?.active ?? false;
 
   const outside = data.kind === "external";
   // The root of the tree: always open, and there is nothing to shut it into.
@@ -62,16 +59,16 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
         />
       )}
 
-      {stepIndex !== -1 && (
+      {flowMark && (
         <span
           className={cn(
-            "absolute -left-2 -top-2 flex size-5 items-center justify-center rounded-full border ow-mono-micro",
+            "absolute -left-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full border px-1 ow-micro",
             isActiveStep
-              ? "border-signal bg-signal text-ink-900"
+              ? "border-signal bg-signal text-signal-ink"
               : "border-line-2 bg-surface-3 text-text-lo",
           )}
         >
-          {stepIndex + 1}
+          {stepLabel(flowMark.steps)}
         </span>
       )}
 
@@ -95,11 +92,11 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="ow-mono-micro truncate text-text-dim">
+        <span className="ow-micro truncate text-text-dim">
           {describeNode(data.nodeLabel, data.kind)}
         </span>
         {contents && (
-          <span className="ow-mono-micro shrink-0 text-text-lo">{contents}</span>
+          <span className="ow-micro shrink-0 text-text-lo">{contents}</span>
         )}
       </div>
 
@@ -129,7 +126,7 @@ export function GraphNodeCard({ id, data }: NodeProps<ViewFlowNode>) {
               emphasis={overflows ? "heavy" : "normal"}
             >
               <ChevronDown className="size-3" aria-hidden />
-              <span className="ow-mono-micro">{data.childCount}</span>
+              <span className="ow-micro">{data.childCount}</span>
             </LevelButton>
           )
         )}
@@ -177,4 +174,11 @@ function LevelButton({
       {children}
     </button>
   );
+}
+
+/** "3", "3–5" or "2,5": the steps a box stands for, compact enough for a badge. */
+function stepLabel(steps: number[]): string {
+  if (steps.length === 1) return String(steps[0]);
+  const consecutive = steps.every((step, index) => index === 0 || step === steps[index - 1] + 1);
+  return consecutive ? `${steps[0]}–${steps.at(-1)}` : steps.join(",");
 }

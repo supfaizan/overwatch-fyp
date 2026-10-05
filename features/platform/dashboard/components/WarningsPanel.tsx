@@ -47,11 +47,11 @@ function WarningCard({ warning }: { warning: ContractWarning }) {
       )}
     >
       <div className="flex items-center justify-between">
-        <span className={cn("flex items-center gap-1.5 ow-mono-micro", meta.cls)}>
+        <span className={cn("flex items-center gap-1.5 ow-micro", meta.cls)}>
           <Icon className="size-3.5" />
           {warning.priority.toUpperCase()}
         </span>
-        <span className="ow-mono-micro text-text-dim">{warning.createdAt}</span>
+        <span className="ow-micro text-text-dim">{warning.createdAt}</span>
       </div>
 
       <p className="mt-2 ow-body !text-[13px] font-semibold text-text-hi">
@@ -78,7 +78,7 @@ function WarningCard({ warning }: { warning: ContractWarning }) {
       </p>
 
       <div className="mt-3">
-        <div className="flex items-center justify-between ow-mono-micro text-text-dim">
+        <div className="flex items-center justify-between ow-micro text-text-dim">
           <span>T-GNN CONFIDENCE</span>
           <span className="text-signal">{warning.tgnnConfidence}%</span>
         </div>
@@ -88,7 +88,7 @@ function WarningCard({ warning }: { warning: ContractWarning }) {
         />
       </div>
 
-      <p className="mt-3 ow-mono-micro text-signal">
+      <p className="mt-3 ow-micro text-signal">
         › {warning.suggestion}
       </p>
     </button>
@@ -101,11 +101,11 @@ export function WarningsPanel() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-line-1 px-4 py-3">
-        <span className="ow-mono-micro text-text-mid">
+        <span className="ow-micro text-text-mid">
           CONTRACT WARNINGS
         </span>
         {data ? (
-          <span className="rounded-sm border border-critical-border bg-critical-soft px-1.5 py-0.5 ow-mono-micro text-critical">
+          <span className="rounded-sm border border-critical-border bg-critical-soft px-1.5 py-0.5 ow-micro text-critical">
             {data.filter((w) => w.priority === "critical").length} CRITICAL
           </span>
         ) : null}
@@ -114,7 +114,7 @@ export function WarningsPanel() {
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-3 p-4">
           {isLoading ? (
-            <div className="flex items-center gap-2 ow-mono-micro text-text-dim">
+            <div className="flex items-center gap-2 ow-micro text-text-dim">
               <Loader2 className="size-4 animate-spin" /> SCANNING PUSHES…
             </div>
           ) : (

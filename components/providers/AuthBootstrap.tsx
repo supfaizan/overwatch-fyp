@@ -5,93 +5,100 @@ import { usePathname, useRouter } from "next/navigation";
 import { AFTER_LOGIN } from "@/constants";
 import { getCurrentUser } from "@/features/auth/api";
 import { getTokenExpiration, isValidAccessToken } from "@/lib/auth-token";
+import {
+  isSessionRejected,
+  onAuthBroadcast,
+  redirectToLogin,
+} from "@/lib/auth-session";
 import { refreshAccessToken } from "@/lib/axios";
 import { useAuthStore } from "@/stores/auth-store";
 
 const REFRESH_BUFFER_MS = 60_000;
+const AUTH_COMPLETE_PATH = "/auth/complete";
+
+function isAuthPage(pathname: string): boolean {
+  return pathname === "/login" || pathname === "/register";
+}
 
 function postRestoreDestination(): string {
   const from = new URLSearchParams(window.location.search).get("from");
   return from?.startsWith("/") && !from.startsWith("//") ? from : AFTER_LOGIN;
 }
 
+function endSession(): void {
+  useAuthStore.getState().clearAuth();
+  redirectToLogin();
+}
+
+/* Keeps the client session alive: restores it from the refresh cookie when
+   the access token is missing or stale, refreshes ahead of expiry, loads the
+   profile once per page load, and mirrors sign-ins/outs from other tabs.
+   Successful refreshes write the store, which re-runs the effect, so every
+   path converges on the "valid token" branch. */
 export function AuthBootstrap() {
   const pathname = usePathname();
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
-  // The cold-start recovery below must run at most once per mount, or every
-  // client navigation while logged out would fire another /auth/refresh.
-  const coldStartAttempted = useRef(false);
+  // One restore attempt per lapse in the session, so a logged-out visitor
+  // navigating around does not fire /auth/refresh on every page.
+  const restoreAttempted = useRef(false);
+  const profileLoaded = useRef(false);
 
   useEffect(() => {
-    if (pathname === "/auth/complete") return;
+    void useAuthStore.persist.rehydrate();
 
-    // No access token at all, but the httpOnly refresh cookie may still be
-    // alive — in production it lives on the API's domain, so clearing site
-    // data for the frontend leaves it intact. Try to recover before giving up.
-    if (!token) {
-      if (coldStartAttempted.current) return;
-      coldStartAttempted.current = true;
+    return onAuthBroadcast((message) => {
+      if (message.type === "token") {
+        useAuthStore.getState().setToken(message.token);
+      } else {
+        endSession();
+      }
+    });
+  }, []);
 
-      let active = true;
-      refreshAccessToken()
-        .then(async (accessToken) => {
-          const user = await getCurrentUser(accessToken);
-          if (!active) return;
-          useAuthStore.getState().setAuth({ token: accessToken, user });
-          if (pathname === "/login" || pathname === "/register") {
-            router.replace(postRestoreDestination());
-          }
-        })
-        .catch(() => undefined); // genuinely logged out — stay put
-      return () => {
-        active = false;
-      };
+  useEffect(() => {
+    if (pathname === AUTH_COMPLETE_PATH) return;
+
+    if (!token || !isValidAccessToken(token)) {
+      profileLoaded.current = false; // whoever signs in next may be someone else
+      if (restoreAttempted.current) return;
+      restoreAttempted.current = true;
+
+      refreshAccessToken().catch((error: unknown) => {
+        if (!isSessionRejected(error)) return; // offline or server down: keep the session
+        if (token) {
+          endSession();
+        } else {
+          useAuthStore.getState().clearAuth(); // never signed in here: stay put
+        }
+      });
+      return;
     }
 
-    let active = true;
-    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    restoreAttempted.current = false;
+    if (isAuthPage(pathname)) router.replace(postRestoreDestination());
 
-    const restoreUser = async (accessToken: string) => {
-      const user = await getCurrentUser(accessToken);
-      if (!active) return;
-      useAuthStore.getState().setAuth({ token: accessToken, user });
-
-      if (pathname === "/login" || pathname === "/register") {
-        router.replace(postRestoreDestination());
-      }
-    };
-
-    if (isValidAccessToken(token)) {
-      if (!useAuthStore.getState().user) {
-        getCurrentUser(token)
-          .then((user) => {
-            if (!active) return;
-            useAuthStore.getState().setUser(user);
-            if (pathname === "/login" || pathname === "/register") {
-              router.replace(postRestoreDestination());
-            }
-          })
-          .catch(() => undefined);
-      }
-
-      const expiresAt = getTokenExpiration(token);
-      const delay = Math.max(0, (expiresAt ?? Date.now()) - Date.now() - REFRESH_BUFFER_MS);
-      refreshTimer = setTimeout(() => {
-        refreshAccessToken().catch(() => useAuthStore.getState().clearAuth());
-      }, delay);
-    } else {
-      refreshAccessToken()
-        .then(restoreUser)
+    if (!profileLoaded.current) {
+      profileLoaded.current = true;
+      getCurrentUser()
+        .then((user) => {
+          // The store outlives this effect; only guard against a sign-out
+          // that landed while the request was in flight.
+          if (useAuthStore.getState().token) useAuthStore.getState().setUser(user);
+        })
         .catch(() => {
-          if (active) useAuthStore.getState().clearAuth();
+          profileLoaded.current = false; // retry on the next navigation
         });
     }
 
-    return () => {
-      active = false;
-      if (refreshTimer) clearTimeout(refreshTimer);
-    };
+    const expiresAt = getTokenExpiration(token) ?? Date.now();
+    const refreshTimer = setTimeout(() => {
+      refreshAccessToken().catch((error: unknown) => {
+        if (isSessionRejected(error)) endSession();
+      });
+    }, Math.max(0, expiresAt - Date.now() - REFRESH_BUFFER_MS));
+
+    return () => clearTimeout(refreshTimer);
   }, [pathname, router, token]);
 
   return null;

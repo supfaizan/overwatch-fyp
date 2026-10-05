@@ -7,6 +7,7 @@ import {
   FolderOpen,
   GitBranch,
   Globe,
+  MessagesSquare,
   Package,
   Shapes,
 } from "lucide-react";
@@ -30,6 +31,7 @@ export function NodeGlyph({
   if (label === "Module") {
     if (kind === "external") return <Package className={className} aria-hidden />;
     if (kind === "routes") return <Globe className={className} aria-hidden />;
+    if (kind === "channels") return <MessagesSquare className={className} aria-hidden />;
     return open ? (
       <FolderOpen className={className} aria-hidden />
     ) : (
@@ -38,6 +40,7 @@ export function NodeGlyph({
   }
   if (label === "Package") return <Package className={className} aria-hidden />;
   if (label === "Route") return <Globe className={className} aria-hidden />;
+  if (label === "Channel") return <MessagesSquare className={className} aria-hidden />;
   if (label === "File") return <FileCode2 className={className} aria-hidden />;
   if (kind === "class" || kind === "interface") {
     return <Shapes className={className} aria-hidden />;

@@ -16,7 +16,7 @@ export function CoveragePanel() {
   if (isLoading) {
     return (
       <PanelShell>
-        <p className="flex items-center gap-2 ow-mono-micro text-text-dim">
+        <p className="flex items-center gap-2 ow-micro text-text-dim">
           <Loader2 className="size-3.5 animate-spin text-signal" /> READING GRAPH…
         </p>
       </PanelShell>
@@ -26,7 +26,7 @@ export function CoveragePanel() {
   if (isError || !data) {
     return (
       <PanelShell>
-        <p className="flex items-center gap-2 ow-mono-micro text-critical">
+        <p className="flex items-center gap-2 ow-micro text-critical">
           <TriangleAlert className="size-3.5" /> COVERAGE UNAVAILABLE
         </p>
         <p className="mt-2 ow-body !text-[12px] text-text-mid">
@@ -58,7 +58,7 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
 
       {resolution && (
         <section className="space-y-3">
-          <h3 className="ow-mono-micro text-text-lo">RESOLUTION</h3>
+          <h3 className="ow-micro text-text-lo">RESOLUTION</h3>
 
           <Meter
             label="Internal imports resolved"
@@ -68,7 +68,7 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
           <Meter
             label="Calls accounted for"
             ratio={resolution.callsAccounted}
-            detail={`${resolution.callsResolved} internal · ${resolution.callsToPackages} into packages · of ${resolution.callsTotal}`}
+            detail={`${resolution.callsResolved} internal · ${resolution.callsToPackages} into packages · ${resolution.callsToBuiltins} built-in · of ${resolution.callsTotal}`}
           />
 
           <p className="ow-body !text-[11px] text-text-dim">
@@ -78,9 +78,19 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
         </section>
       )}
 
+      {resolution && resolution.channelsTotal > 0 && (
+        <section className="space-y-2">
+          <h3 className="ow-micro text-text-lo">MESSAGES &amp; EVENTS</h3>
+          <p className="ow-mono-data !text-[11px] text-text-mid">
+            {resolution.channelsTotal} handled patterns · {resolution.channelSendsMatched} of{" "}
+            {resolution.channelSendsTotal} sends reach a handler
+          </p>
+        </section>
+      )}
+
       {resolution && resolution.routesTotal > 0 && (
         <section className="space-y-2">
-          <h3 className="ow-mono-micro text-text-lo">HTTP</h3>
+          <h3 className="ow-micro text-text-lo">HTTP</h3>
           <p className="ow-mono-data !text-[11px] text-text-mid">
             {resolution.routesTotal} routes · {resolution.httpCallsMatched} of{" "}
             {resolution.httpCallsTotal} calls matched to one
@@ -89,7 +99,7 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
       )}
 
       <section className="space-y-2">
-        <h3 className="ow-mono-micro text-text-lo">RELATIONSHIPS</h3>
+        <h3 className="ow-micro text-text-lo">RELATIONSHIPS</h3>
         <ul className="space-y-1">
           {Object.entries(coverage.edgesByType)
             .sort(([, a], [, b]) => b - a)
@@ -114,7 +124,7 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
 
       {skipped.length > 0 && (
         <section className="space-y-2">
-          <h3 className="ow-mono-micro text-text-lo">SKIPPED FILES</h3>
+          <h3 className="ow-micro text-text-lo">SKIPPED FILES</h3>
           <ul className="space-y-1">
             {skipped.map(([reason, count]) => (
               <li
@@ -130,7 +140,7 @@ function Contents({ coverage }: { coverage: GraphCoverage }) {
       )}
 
       {coverage.graphVersion && (
-        <p className="ow-mono-micro text-text-dim">
+        <p className="ow-micro text-text-dim">
           COMMIT {coverage.graphVersion.slice(0, 10)}
         </p>
       )}
@@ -143,7 +153,7 @@ function PanelShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b border-line-1 px-4 py-3">
         <Gauge className="size-3.5 text-signal" />
-        <span className="ow-mono-micro text-text-mid">COVERAGE</span>
+        <span className="ow-micro text-text-mid">COVERAGE</span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">{children}</div>
     </div>
@@ -156,7 +166,7 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p className="ow-mono-data !text-[16px] text-text-hi">
         {value.toLocaleString()}
       </p>
-      <p className="mt-0.5 ow-mono-micro text-text-dim">{label}</p>
+      <p className="mt-0.5 ow-micro text-text-dim">{label}</p>
     </div>
   );
 }
@@ -196,12 +206,12 @@ function Meter({
         <div
           className={cn(
             "h-full rounded-pill transition-[width] duration-500",
-            percent >= 90 ? "bg-signal" : percent >= 50 ? "bg-warn" : "bg-line-2",
+            percent >= 90 ? "bg-success" : percent >= 50 ? "bg-warn" : "bg-line-2",
           )}
           style={{ width: `${percent}%` }}
         />
       </div>
-      <p className="ow-mono-micro text-text-dim">{detail}</p>
+      <p className="ow-micro text-text-dim">{detail}</p>
     </div>
   );
 }

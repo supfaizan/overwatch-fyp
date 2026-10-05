@@ -22,7 +22,7 @@ export function OnboardSteps({ current }: { current: 1 | 2 | 3 }) {
             >
               <span
                 className={cn(
-                  "flex size-4 items-center justify-center rounded-full ow-mono-micro",
+                  "flex size-4 items-center justify-center rounded-full ow-micro",
                   active && "bg-signal text-signal-ink",
                   done && "bg-line-2 text-text-hi",
                   !active && !done && "bg-surface-2 text-text-dim",
@@ -32,7 +32,7 @@ export function OnboardSteps({ current }: { current: 1 | 2 | 3 }) {
               </span>
               <span
                 className={cn(
-                  "ow-mono-micro",
+                  "ow-micro",
                   active ? "text-signal" : done ? "text-text-mid" : "text-text-dim",
                 )}
               >

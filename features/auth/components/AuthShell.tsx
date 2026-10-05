@@ -26,11 +26,11 @@ export function AuthShell({
         <Link href="/" className="relative flex items-center gap-2.5">
           <span className="ow-live-dot" aria-hidden />
           <span className="ow-label !text-[14px] text-text-hi">OVERWATCH</span>
-          <span className="ow-mono-micro text-text-dim">{"// OPINT"}</span>
+          <span className="ow-micro text-text-dim">{"// OPINT"}</span>
         </Link>
 
         <div className="relative max-w-md">
-          <p className="ow-mono-micro text-signal">{eyebrow}</p>
+          <p className="ow-micro text-signal">{eyebrow}</p>
           <h2 className="ow-display mt-4 !text-[40px] leading-[1.05] text-text-hi">
             System knowledge,
             <br />
@@ -53,7 +53,7 @@ export function AuthShell({
           </div>
         </div>
 
-        <p className="relative ow-mono-micro text-text-dim">
+        <p className="relative ow-micro text-text-dim">
           OPERATIONAL INTELLIGENCE FOR ENGINEERING TEAMS
         </p>
       </aside>
@@ -61,7 +61,7 @@ export function AuthShell({
       {/* form side */}
       <main className="relative flex items-center justify-center px-3 py-12">
         <div className="ow-grid pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40 lg:hidden" aria-hidden />
-        <div className="relative w-full max-w-sm">
+        <div className="ow-pop relative w-full max-w-md rounded-xl border border-line-1 bg-surface-1 p-8 shadow-card">
           <Link
             href="/"
             className="mb-10 flex items-center gap-2.5 lg:hidden"
@@ -70,13 +70,13 @@ export function AuthShell({
             <span className="ow-label !text-[13px] text-text-hi">OVERWATCH</span>
           </Link>
 
-          <p className="ow-mono-micro text-text-dim">{eyebrow}</p>
+          <p className="ow-micro text-text-dim">{eyebrow}</p>
           <h1 className="ow-heading mt-3 text-text-hi">{title}</h1>
           <p className="ow-body mt-2 text-text-mid">{subtitle}</p>
 
           <div className="mt-8">{children}</div>
 
-          <p className="mt-8 text-center ow-mono-micro text-text-lo">{footer}</p>
+          <p className="mt-8 text-center ow-micro text-text-lo">{footer}</p>
         </div>
       </main>
     </div>

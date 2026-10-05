@@ -48,7 +48,7 @@ export function ViewControls({
     <div className="pointer-events-none absolute left-3 top-3 flex max-w-[min(30rem,calc(100%-1.5rem))] flex-col gap-2">
       <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-line-1 bg-ink-900/85 p-1 backdrop-blur-sm">
         <Layers className="ml-1 size-3 shrink-0 text-text-dim" aria-hidden />
-        <span className="ow-mono-micro mr-1 max-w-[10rem] truncate text-text-dim">
+        <span className="ow-micro mr-1 max-w-[10rem] truncate text-text-dim">
           {selected ? `OPEN ${selected.name} TO` : "PICK A NODE TO OPEN"}
         </span>
         {LEVELS.map((level) => (
@@ -63,7 +63,7 @@ export function ViewControls({
             }
             onClick={() => selected && expandTo(level.id, selected.id)}
             className={cn(
-              "rounded-sm px-1.5 py-1 ow-mono-micro text-text-lo transition-colors",
+              "rounded-sm px-1.5 py-1 ow-micro text-text-lo transition-colors",
               "hover:bg-surface-2 hover:text-text-hi",
               "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -81,7 +81,7 @@ export function ViewControls({
           disabled={expanded.length === 0}
           title="Close every folder"
           className={cn(
-            "rounded-sm px-1.5 py-1 ow-mono-micro text-text-lo transition-colors",
+            "rounded-sm px-1.5 py-1 ow-micro text-text-lo transition-colors",
             "hover:bg-surface-2 hover:text-text-hi",
             "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -97,7 +97,7 @@ export function ViewControls({
           onClick={() => setFiltersOpen((open) => !open)}
           aria-expanded={filtersOpen}
           className={cn(
-            "flex items-center gap-1 rounded-sm px-1.5 py-1 ow-mono-micro transition-colors",
+            "flex items-center gap-1 rounded-sm px-1.5 py-1 ow-micro transition-colors",
             "hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             filtered ? "text-signal" : "text-text-lo hover:text-text-hi",
           )}
@@ -151,7 +151,7 @@ function FilterPanel({
             onClick={() => toggleEdgeType(type, options.edgeTypes)}
             title={edgeStyle(type).label}
           >
-            {type.replace("_", " ")}
+            {type.replaceAll("_", " ")}
           </FilterChip>
         ))}
       </FilterRow>
@@ -160,7 +160,7 @@ function FilterPanel({
         <button
           type="button"
           onClick={clearFilters}
-          className="ow-mono-micro self-start text-signal hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="ow-micro self-start text-signal hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           SHOW EVERYTHING
         </button>
@@ -178,7 +178,7 @@ function FilterRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="ow-mono-micro mt-1.5 w-10 shrink-0 text-text-dim">
+      <span className="ow-micro mt-1.5 w-10 shrink-0 text-text-dim">
         {title}
       </span>
       <div className="flex flex-wrap gap-1">{children}</div>
@@ -207,7 +207,7 @@ function OpenTrail({ expanded }: { expanded: OpenContainer[] }) {
         showAll && "max-h-[40vh] overflow-y-auto",
       )}
     >
-      <span className="ow-mono-micro px-1 text-text-dim">OPEN</span>
+      <span className="ow-micro px-1 text-text-dim">OPEN</span>
       {shown.map((container) => (
         <button
           key={container.id}
@@ -230,7 +230,7 @@ function OpenTrail({ expanded }: { expanded: OpenContainer[] }) {
         <button
           type="button"
           onClick={() => setShowAll((open) => !open)}
-          className="ow-mono-micro px-1 text-text-lo transition-colors hover:text-text-hi focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="ow-micro px-1 text-text-lo transition-colors hover:text-text-hi focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {folded ? `+${expanded.length - TRAIL_PREVIEW} MORE` : "SHOW FEWER"}
         </button>
@@ -239,7 +239,7 @@ function OpenTrail({ expanded }: { expanded: OpenContainer[] }) {
         <button
           type="button"
           onClick={closeAll}
-          className="ow-mono-micro px-1 text-text-lo transition-colors hover:text-signal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="ow-micro px-1 text-text-lo transition-colors hover:text-signal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           CLOSE ALL
         </button>

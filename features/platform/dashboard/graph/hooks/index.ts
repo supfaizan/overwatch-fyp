@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useActiveRepoFullName } from "@/stores/repo-store";
+import { useDashboardStore } from "../../stores/dashboard-store";
 import { getGraphView, getViewOptions } from "../api";
 import { graphViewKeys } from "../api/query-keys";
 import { useViewQuery, useViewStore } from "../stores/view-store";
-import type { Granularity } from "../types";
+import { flowMarks, flowMoves, projectSteps, unlinkedMoves } from "../lib/flow";
+import type { CanvasNode, Granularity, ViewFlowEdge } from "../types";
 
 /** The filter vocabulary. It only changes when the backend does, so it is
  *  fetched once and kept — a new relationship type then appears in the UI
@@ -87,5 +89,80 @@ export function useExpandTo() {
     },
     isPending: mutation.isPending,
     disabled: !repoFullName,
+  };
+}
+
+/** What the spotlight (a chat answer's references, a clicked node) lights in
+ *  the current view: each node's own box if drawn, else the folder or marker
+ *  that stands for it — so a cited method lights its folder until opened,
+ *  never the whole top-level module. Published per box for the cards. */
+export function useSpotlightProjection(nodes: readonly CanvasNode[] | undefined): Set<string> {
+  const spotlight = useDashboardStore((state) => state.spotlight);
+  const setSpotlightMarks = useDashboardStore((state) => state.setSpotlightMarks);
+
+  const lit = useMemo(
+    () =>
+      new Set(
+        (spotlight.length && nodes ? projectSteps(spotlight, nodes) : []).filter(
+          (id): id is string => id !== null,
+        ),
+      ),
+    [spotlight, nodes],
+  );
+
+  useEffect(() => {
+    setSpotlightMarks(Object.fromEntries([...lit].map((id) => [id, true as const])));
+  }, [lit, setSpotlightMarks]);
+
+  return lit;
+}
+
+/** A node the map was asked to centre on, as the box that stands for it now. */
+export function useMapFocusTarget(nodes: readonly CanvasNode[] | undefined): string | null {
+  const mapFocus = useDashboardStore((state) => state.mapFocus);
+  return useMemo(
+    () => (mapFocus && nodes ? projectSteps([mapFocus], nodes)[0] : null),
+    [mapFocus, nodes],
+  );
+}
+
+/** The walkthrough as the canvas can currently draw it.
+ *
+ * Projects every step onto the box that stands for it in this view, and
+ * publishes the per-box step badges for the cards to read. Recomputed only
+ * when the view or the walkthrough changes — moving the cursor only
+ * re-derives the badges. */
+export function useFlowProjection(
+  nodes: readonly CanvasNode[] | undefined,
+  edges: readonly ViewFlowEdge[] | undefined,
+) {
+  const flow = useDashboardStore((state) => state.flow);
+  const cursor = useDashboardStore((state) => state.flowCursor);
+  const setFlowMarks = useDashboardStore((state) => state.setFlowMarks);
+
+  const projected = useMemo(
+    () => (flow && nodes ? projectSteps(flow.steps, nodes) : []),
+    [flow, nodes],
+  );
+  const moves = useMemo(
+    () => flowMoves(projected, flow?.steps.map((step) => step.parent) ?? []),
+    [projected, flow],
+  );
+  const unlinked = useMemo(() => unlinkedMoves(moves, edges ?? []), [moves, edges]);
+  const onPath = useMemo(
+    () => new Set(projected.filter((id): id is string => id !== null)),
+    [projected],
+  );
+
+  useEffect(() => {
+    setFlowMarks(flowMarks(projected, cursor));
+  }, [projected, cursor, setFlowMarks]);
+
+  return {
+    isActive: flow !== null,
+    moves,
+    unlinked,
+    onPath,
+    activeId: projected[cursor] ?? null,
   };
 }

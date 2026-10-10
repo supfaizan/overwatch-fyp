@@ -5,7 +5,6 @@ export const getStatus = () => api.get<OnboardingStatus>('/onboarding/status');
 
 export const getInstallations = () => api.get<Installations>('/github/installations');
 export const getAvailableRepos = () => api.get<AvailableRepo[]>('/github/repos');
-export const getConnectedRepos = () => api.get<ConnectedRepo[]>('/github/repos/connected');
 export const connectRepo = (repoFullName: string) => api.post<ConnectedRepo>('/github/repos/connect', { repo_full_name: repoFullName });
 export const reindexRepo = (repoFullName: string) => api.post<ConnectedRepo>(`/github/repos/${repoFullName}/index`);
 export const disconnectRepo = (repoFullName: string) => api.delete<null>(`/github/repos/${repoFullName}`);

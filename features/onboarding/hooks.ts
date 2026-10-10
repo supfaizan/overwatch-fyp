@@ -10,7 +10,6 @@ const keys = {
   status: ['onboarding', 'status'] as const,
   installations: ['github', 'installations'] as const,
   availableRepos: ['github', 'repos'] as const,
-  connectedRepos: ['github', 'repos', 'connected'] as const,
   jiraProjects: ['jira', 'projects'] as const,
 };
 
@@ -33,14 +32,6 @@ export function useInstallations(enabled = true) {
 
 export function useAvailableRepos(enabled: boolean) {
   return useQuery({ queryKey: keys.availableRepos, queryFn: onboardingApi.getAvailableRepos, enabled });
-}
-
-export function useConnectedRepos() {
-  return useQuery({
-    queryKey: keys.connectedRepos,
-    queryFn: onboardingApi.getConnectedRepos,
-    refetchInterval: ({ state }) => (state.data?.some(isRunning) ? POLL_MS : false),
-  });
 }
 
 export function useJiraProjects(enabled: boolean) {

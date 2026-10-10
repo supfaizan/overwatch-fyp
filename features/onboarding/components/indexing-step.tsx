@@ -5,15 +5,14 @@ import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
-import { useConnectedRepos, useInstallations, useOnboardingStatus, useReindexRepo } from '../hooks';
-import type { ConnectedRepo } from '../types';
+import { useInstallations, useOnboardingStatus, useReindexRepo } from '../hooks';
+import type { OnboardingRepo } from '../types';
 import StatusTag from './status-tag';
 import StepCard from './step-card';
 
 export default function IndexingStep() {
   const router = useRouter();
   const status = useOnboardingStatus();
-  const repos = useConnectedRepos();
 
   return (
     <StepCard
@@ -25,18 +24,18 @@ export default function IndexingStep() {
         </Button>
       }
     >
-      {repos.isPending ? (
+      {status.isPending ? (
         <Skeleton className="h-12 w-full" />
       ) : (
         <ul className="flex flex-col gap-3">
-          {repos.data?.map((repo) => <RepoProgress key={repo.repo_full_name} repo={repo} />)}
+          {status.data?.github.repos.map((repo) => <RepoProgress key={repo.repo_full_name} repo={repo} />)}
         </ul>
       )}
     </StepCard>
   );
 }
 
-function RepoProgress({ repo }: { repo: ConnectedRepo }) {
+function RepoProgress({ repo }: { repo: OnboardingRepo }) {
   const reindex = useReindexRepo();
   const files = repo.graph_stats?.files;
 

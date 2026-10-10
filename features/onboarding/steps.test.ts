@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { currentStep, isRunning, stepIndex } from './steps';
-import type { OnboardingStatus } from './types';
+import type { OnboardingRepo, OnboardingStatus } from './types';
 
-const repo = (parse_status: 'pending' | 'done', access_status: 'active' | 'revoked' = 'active') => ({
-  repo_full_name: 'acme/api', parse_status, parse_error: null, access_status,
+const repo = (parse_status: 'pending' | 'done', access_status: 'active' | 'revoked' = 'active'): OnboardingRepo => ({
+  repo_full_name: 'acme/api', parse_status, parse_error: null, access_status, graph_stats: null,
 });
 
-function status(overrides: { authorized?: boolean; repos?: ReturnType<typeof repo>[]; project?: boolean; ready?: boolean } = {}): OnboardingStatus {
+function status(overrides: { authorized?: boolean; repos?: OnboardingRepo[]; project?: boolean; ready?: boolean } = {}): OnboardingStatus {
   return {
     github: { authorized: overrides.authorized ?? true, needs_reauth: false, repos: overrides.repos ?? [] },
     jira: {

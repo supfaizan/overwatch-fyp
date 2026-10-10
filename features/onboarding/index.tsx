@@ -1,3 +1,4 @@
+export { default as GithubSetup } from './components/github-setup';
 export { default as GithubStep } from './components/github-step';
 export { default as IndexingStep } from './components/indexing-step';
 export { default as JiraStep } from './components/jira-step';

@@ -8,8 +8,6 @@ import { isRunning } from './steps';
 
 const keys = {
   status: ['onboarding', 'status'] as const,
-  installations: ['github', 'installations'] as const,
-  availableRepos: ['github', 'repos'] as const,
   jiraProjects: ['jira', 'projects'] as const,
 };
 
@@ -24,14 +22,6 @@ export function useOnboardingStatus() {
     refetchInterval: ({ state }) =>
       state.data && (state.data.github.repos.some(isRunning) || isRunning(state.data.jira.project)) ? POLL_MS : false,
   });
-}
-
-export function useInstallations(enabled = true) {
-  return useQuery({ queryKey: keys.installations, queryFn: onboardingApi.getInstallations, enabled });
-}
-
-export function useAvailableRepos(enabled: boolean) {
-  return useQuery({ queryKey: keys.availableRepos, queryFn: onboardingApi.getAvailableRepos, enabled });
 }
 
 export function useJiraProjects(enabled: boolean) {
@@ -52,12 +42,6 @@ function useOnboardingMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise
     onError: showError,
   });
 }
-
-export const useConnectRepo = (onConnected: () => void) =>
-  useOnboardingMutation(onboardingApi.connectRepo, (repo) => {
-    toast.success(`Connected ${repo.repo_full_name}. Indexing has started.`);
-    onConnected();
-  });
 
 export const useReindexRepo = () => useOnboardingMutation(onboardingApi.reindexRepo);
 

@@ -6,7 +6,8 @@ import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
-import { useInstallations, useOnboardingStatus, useReindexRepo } from '../hooks';
+import { useInstallations } from '@/shared/repos/hooks';
+import { useOnboardingStatus, useReindexRepo } from '../hooks';
 import type { OnboardingRepo } from '../types';
 import StepCard from './step-card';
 
@@ -75,7 +76,7 @@ function AccessLost() {
       action={
         installations.data && (
           <Button size="sm" asChild>
-            <a href={installations.data.install_url}>Fix on GitHub</a>
+            <a href={installations.data.install_url} target="_blank" rel="noopener noreferrer">Fix on GitHub</a>
           </Button>
         )
       }

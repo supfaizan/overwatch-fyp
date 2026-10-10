@@ -1,16 +1,16 @@
 'use client';
 
-import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
+import { ArrowSquareOut, GitBranch } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
+import RepoPicker from '@/shared/components/repo-picker';
 import StatusTag from '@/shared/components/status-tag';
-import { useAvailableRepos, useConnectRepo, useInstallations, useOnboardingStatus } from '../hooks';
+import { useAvailableRepos, useConnectRepo, useInstallations } from '@/shared/repos/hooks';
+import { useOnboardingStatus } from '../hooks';
 import DisconnectRepo from './disconnect-repo';
 import StepCard from './step-card';
 
@@ -22,7 +22,6 @@ export default function GithubStep() {
   const hasInstallation = (installations.data?.installations.length ?? 0) > 0;
   const repos = useAvailableRepos(hasInstallation && connected.length === 0);
   const connect = useConnectRepo(() => router.push('/onboarding/jira'));
-  const [selected, setSelected] = useState('');
 
   if (status.data && !status.data.github.authorized) {
     return (
@@ -47,10 +46,10 @@ export default function GithubStep() {
     return (
       <StepCard
         title="Install the Overwatch GitHub App"
-        description="Pick the account and repositories Overwatch may read. You'll come straight back here."
+        description="Pick the account and repositories Overwatch may read. GitHub opens in a new tab; come back here when you're done."
         actions={
           <Button variant="primary" asChild>
-            <a href={installUrl}>
+            <a href={installUrl} target="_blank" rel="noopener noreferrer">
               <GithubMark /> Install GitHub App
             </a>
           </Button>
@@ -61,19 +60,14 @@ export default function GithubStep() {
     );
   }
 
-  const choices = repos.data?.filter((repo) => !repo.connected) ?? [];
   return (
     <StepCard
       title="Connect a repository"
       description="Overwatch maps the repository's architecture and keeps it current on every push."
       actions={
-        connected.length > 0 ? (
+        connected.length > 0 && (
           <Button variant="primary" onClick={() => router.push('/onboarding/jira')}>
             Continue
-          </Button>
-        ) : (
-          <Button variant="primary" disabled={!selected} loading={connect.isPending} onClick={() => connect.mutate(selected)}>
-            Connect and index
           </Button>
         )
       }
@@ -82,7 +76,7 @@ export default function GithubStep() {
         <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
           {connected.map((repo) => (
             <li key={repo.repo_full_name} className="flex items-center gap-3 px-3 py-2 text-sm">
-              <GithubMark className="text-muted" />
+              <GitBranch weight="fill" className="size-4 shrink-0 text-accent-blue" />
               <span className="flex-1 truncate font-medium">{repo.repo_full_name}</span>
               <StatusTag status={repo.parse_status} />
               <DisconnectRepo repoFullName={repo.repo_full_name} />
@@ -91,27 +85,22 @@ export default function GithubStep() {
         </ul>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="repository" className="text-sm font-medium">
-            Repository
-          </label>
-          <Select value={selected} onValueChange={setSelected} disabled={repos.isPending || choices.length === 0}>
-            <SelectTrigger id="repository" placeholder={repos.isPending ? 'Loading repositories…' : 'Select a repository'} />
-            <SelectContent>
-              {choices.map((repo) => (
-                <SelectItem key={repo.id} value={repo.full_name}>
-                  {repo.full_name}
-                  {repo.private ? ' (private)' : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {repos.isError && <p className="text-sm text-danger">{repos.error.message}</p>}
-          {repos.isSuccess && choices.length === 0 && (
+          {repos.isError ? (
+            <p className="text-sm text-danger">{repos.error.message}</p>
+          ) : (
+            <RepoPicker
+              repos={repos.data?.filter((repo) => !repo.connected) ?? []}
+              loading={repos.isPending}
+              pending={connect.isPending ? (connect.variables ?? null) : null}
+              onSelect={(name) => connect.mutate(name)}
+            />
+          )}
+          {repos.isSuccess && repos.data.every((repo) => repo.connected) && (
             <p className="text-sm text-muted">The GitHub App can&apos;t see any repositories yet. Add some below.</p>
           )}
         </div>
       )}
-      <a href={installUrl} className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
+      <a href={installUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
         Missing a repository? Add it to the GitHub App <ArrowSquareOut className="size-3.5" />
       </a>
     </StepCard>

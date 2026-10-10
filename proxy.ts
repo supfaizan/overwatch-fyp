@@ -5,5 +5,5 @@ export function proxy(request: Request) {
   return NextResponse.redirect(new URL('/waitlist', request.url));
 }
 
-// makes sure that the proxy is not applied to the waitlist route – otherwise infinite redirect loop
-export const config = { matcher: '/((?!waitlist(?:/|$)|_next/|.*\\.).*)' };
+// skips waitlist (else infinite redirect loop) and the internal docs (gated in the page itself)
+export const config = { matcher: '/((?!waitlist(?:/|$)|docs(?:/|$)|_next/|.*\\.).*)' };

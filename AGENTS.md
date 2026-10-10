@@ -25,6 +25,7 @@ Follow feature-based ownership:
 
 - Keep single-feature code inside its feature, even if it could hypothetically be reused. Promote it to `shared/` when two or more features actually need it.
 - Existing shared UI belongs in `shared/components/`. Add other shared folders only when needed; do not create empty scaffolding.
+- Before building UI, check `shared/components/` for an existing component; each file's JSDoc documents its purpose, props and best practices (rendered at `/docs/ui` in dev). When adding or changing a shared component, document it with JSDoc (component summary, `- ` bullet best practices, `/** */` + `@default` on each prop) and add examples in `features/ui-docs/examples/<file>.tsx`, registered in `features/ui-docs/examples/index.ts`.
 - Use a feature's root `index.tsx` as its UI entry point, matching `features/waitlist/index.tsx`. Keep feature-owned components in `components/`, API calls in `api.ts`, and other files/folders beside them as needed.
 - Do not import another feature's internals. Compose features in `app/`; extract genuinely shared code to `shared/` instead of introducing cross-feature dependencies.
 - Dependency direction is `app → features → shared`; `app` may also import `shared`. Shared code must not import features or routes, and features must not import `app/` code. Global CSS is applied by the root layout.

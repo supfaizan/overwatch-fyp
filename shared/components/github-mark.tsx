@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 /**
- * The GitHub logo (lucide no longer ships brand icons). Inherits text color; size via `className`.
+ * The official GitHub mark. Inherits text color; size via `className`.
  * - Use it where GitHub is the subject (sign in with GitHub, a repo source), not as decoration.
  * - It's hidden from screen readers, so pair it with visible text or an `aria-label` on the button.
  */

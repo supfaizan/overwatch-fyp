@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react/ssr';
 import Button from '@/shared/components/button';
 import Tooltip from '@/shared/components/tooltip';
 

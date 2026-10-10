@@ -1,13 +1,13 @@
 'use client';
 
 import Button from '@/shared/components/button';
+import ConfirmDialog from '@/shared/components/confirm-dialog';
 import { useDisconnectRepo } from '../hooks';
-import ConfirmDisconnect from './confirm-disconnect';
 
 export default function DisconnectRepo({ repoFullName }: { repoFullName: string }) {
   const disconnect = useDisconnectRepo();
   return (
-    <ConfirmDisconnect
+    <ConfirmDialog
       trigger={
         <Button size="sm" variant="tertiary">
           Disconnect

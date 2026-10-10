@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check } from '@phosphor-icons/react/ssr';
 import { cn } from '@/shared/lib/cn';
 
 type StepsProps = {
@@ -30,7 +30,7 @@ export default function Steps({ steps, current, className }: StepsProps) {
                 !done && !active && 'border-border-strong text-muted',
               )}
             >
-              {done ? <Check className="size-3.5" strokeWidth={3} aria-label="done" /> : index + 1}
+              {done ? <Check className="size-3.5" weight="bold" aria-label="done" /> : index + 1}
             </span>
             <span className={cn('text-sm', active ? 'font-semibold' : 'text-muted')}>{label}</span>
             {index < steps.length - 1 && <span className="h-px w-6 bg-border-strong" aria-hidden />}

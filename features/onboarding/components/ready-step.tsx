@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleCheck } from 'lucide-react';
+import { CheckCircle } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import Button from '@/shared/components/button';
 import { useOnboardingStatus } from '../hooks';
@@ -23,11 +23,11 @@ export default function ReadyStep() {
     >
       <ul className="flex flex-col gap-2 text-sm">
         <li className="flex items-center gap-2">
-          <CircleCheck className="size-4 text-success" />
+          <CheckCircle className="size-4 text-success" />
           {indexed} {indexed === 1 ? 'repository' : 'repositories'} indexed
         </li>
         <li className="flex items-center gap-2">
-          <CircleCheck className={project ? 'size-4 text-success' : 'size-4 text-muted'} />
+          <CheckCircle className={project ? 'size-4 text-success' : 'size-4 text-muted'} />
           {project ? `Jira project ${project.key} connected` : 'Jira skipped. You can connect it later.'}
         </li>
       </ul>

@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from 'lucide-react';
+import { CaretDown, Check } from '@phosphor-icons/react/ssr';
 import { Select as SelectPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import { popIn } from '@/shared/lib/animations';
@@ -38,7 +38,7 @@ export function SelectTrigger({ className, placeholder, size = 'md', ...props }:
     >
       <SelectPrimitive.Value placeholder={placeholder} />
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="size-4 shrink-0 text-muted" />
+        <CaretDown className="size-4 shrink-0 text-muted" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );

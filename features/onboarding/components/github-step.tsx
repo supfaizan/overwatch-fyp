@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
+import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
@@ -9,9 +9,9 @@ import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
+import StatusTag from '@/shared/components/status-tag';
 import { useAvailableRepos, useConnectRepo, useInstallations, useOnboardingStatus } from '../hooks';
 import DisconnectRepo from './disconnect-repo';
-import StatusTag from './status-tag';
 import StepCard from './step-card';
 
 export default function GithubStep() {
@@ -112,7 +112,7 @@ export default function GithubStep() {
         </div>
       )}
       <a href={installUrl} className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
-        Missing a repository? Add it to the GitHub App <ExternalLink className="size-3.5" />
+        Missing a repository? Add it to the GitHub App <ArrowSquareOut className="size-3.5" />
       </a>
     </StepCard>
   );

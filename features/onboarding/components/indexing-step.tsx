@@ -5,9 +5,9 @@ import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
+import StatusTag from '@/shared/components/status-tag';
 import { useInstallations, useOnboardingStatus, useReindexRepo } from '../hooks';
 import type { OnboardingRepo } from '../types';
-import StatusTag from './status-tag';
 import StepCard from './step-card';
 
 export default function IndexingStep() {

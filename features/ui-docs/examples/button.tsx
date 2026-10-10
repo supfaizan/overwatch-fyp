@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash } from '@phosphor-icons/react/ssr';
 import Button from '@/shared/components/button';
 
 export function Variants() {
@@ -30,7 +30,7 @@ export function WithIcon() {
         New dashboard
       </Button>
       <Button iconOnly aria-label="Delete">
-        <Trash2 />
+        <Trash />
       </Button>
     </>
   );

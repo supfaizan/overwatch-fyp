@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react/ssr';
 import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
 
@@ -7,6 +7,6 @@ import { cn } from '@/shared/lib/cn';
  * - Inside buttons, use `<Button loading>` instead.
  * - For content that has a known shape (lists, cards), prefer a Skeleton.
  */
-export default function Spinner({ className, ...props }: ComponentProps<typeof Loader2>) {
-  return <Loader2 role="status" aria-label="Loading" className={cn('size-4 animate-spin', className)} {...props} />;
+export default function Spinner({ className, ...props }: ComponentProps<typeof CircleNotch>) {
+  return <CircleNotch role="status" aria-label="Loading" className={cn('size-4 animate-spin', className)} {...props} />;
 }

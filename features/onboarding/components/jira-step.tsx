@@ -4,12 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Button from '@/shared/components/button';
+import ConfirmDialog from '@/shared/components/confirm-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
+import StatusTag from '@/shared/components/status-tag';
 import { useConnectJiraProject, useDisconnectJira, useJiraProjects, useOnboardingStatus, useStartJiraAuthorization } from '../hooks';
 import { skipJira } from '../jira-skip';
-import ConfirmDisconnect from './confirm-disconnect';
-import StatusTag from './status-tag';
 import StepCard from './step-card';
 
 // what the backend's Jira callback reports in ?jira=
@@ -131,7 +131,7 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
 function DisconnectJira() {
   const disconnect = useDisconnectJira();
   return (
-    <ConfirmDisconnect
+    <ConfirmDialog
       trigger={<Button variant="tertiary">Disconnect Jira</Button>}
       title="Disconnect Jira?"
       description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."

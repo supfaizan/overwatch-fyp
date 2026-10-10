@@ -4,6 +4,8 @@ import * as banner from './banner';
 import * as button from './button';
 import * as card from './card';
 import * as checkbox from './checkbox';
+import * as command from './command';
+import * as confirmDialog from './confirm-dialog';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
 import * as githubMark from './github-mark';
@@ -13,6 +15,7 @@ import * as segmentedButton from './segmented-button';
 import * as select from './select';
 import * as skeleton from './skeleton';
 import * as spinner from './spinner';
+import * as statusTag from './status-tag';
 import * as steps from './steps';
 import * as switchExamples from './switch';
 import * as tag from './tag';
@@ -26,6 +29,8 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   button,
   card,
   checkbox,
+  command,
+  'confirm-dialog': confirmDialog,
   dialog,
   'dropdown-menu': dropdownMenu,
   'github-mark': githubMark,
@@ -35,6 +40,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   select,
   skeleton,
   spinner,
+  'status-tag': statusTag,
   steps,
   switch: switchExamples,
   tag,

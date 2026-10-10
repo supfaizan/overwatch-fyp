@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, MonitorX } from 'lucide-react';
+import { Devices, SignOut } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/shared/components/avatar';
 import {
@@ -11,8 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/dropdown-menu';
+import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
-import { signOut } from '../api';
 
 export default function UserMenu() {
   const user = useSession((state) => state.user);
@@ -36,10 +36,10 @@ export default function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={leave(false)}>
-          <LogOut /> Sign out
+          <SignOut /> Sign out
         </DropdownMenuItem>
         <DropdownMenuItem danger onSelect={leave(true)}>
-          <MonitorX /> Sign out everywhere
+          <Devices /> Sign out everywhere
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -110,7 +110,7 @@ Use file:line links and plain factual sentences, with no em-dashes. End with wha
 Pushing to an author's branch can dismiss approvals and collide with an author who is still pushing. So propose first, and push only on the user's explicit word in that message ("push", "fix it").
 
 - Make each fix with a regression test that is red before the fix and green after.
-- Commit with a conventional message and no narrative code comments, following the commit attribution rules in effect for the session.
+- Commit with a conventional message and no narrative code comments. No AI attribution anywhere (no `Co-Authored-By` trailer, no mention of Claude, Codex or any other tool in commits, PR text or comments); see AGENTS.md.
 - Before pushing, check the author hasn't pushed since you checked out: `git fetch origin <headRefName>`, then `git merge-base --is-ancestor origin/<headRefName> HEAD`. If that fails, stop and tell the user (references/merging.md covers rebuilding on their latest).
 - Push with `git push origin HEAD:<headRefName>`. Never use `--no-verify`; the BE pre-push hook runs the full pytest suite and must pass.
 - Watch CI in the background with `gh pr checks <n> --repo <repo> --watch --interval 30`. It can report "no checks" before GitHub registers the run, so check again. Never report a run that started before your push.

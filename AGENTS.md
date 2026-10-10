@@ -62,6 +62,7 @@ Follow feature-based ownership:
 - Do not add unrelated cleanup, files, helpers, wrappers, maps, abstractions, or validation layers unless they clearly reduce complexity within the request.
 - Do not install dependencies, change tooling, or introduce a new test library without justification and approval.
 - Never run Git write operations, including add, commit, push, reset, or checkout, unless explicitly authorized in the current user message.
+- Nothing may show it was written or assisted by AI (Claude, Codex, Copilot or any other tool): no `Co-Authored-By` or similar trailers, and no mentions in commit messages, PR or issue titles and descriptions, code comments, docs or any other output.
 - Do not delete or overwrite user work. Ask before destructive operations or changes to remote systems.
 
 ## Context Discipline and Command Output

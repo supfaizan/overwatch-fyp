@@ -1,1 +1,69 @@
 @import "tailwindcss";
+/* enter/exit utilities (animate-in, fade-in-0...) for Radix popovers and dialogs */
+@import "tw-animate-css";
+@source inline("motion-safe:animate-grid-drift");
+
+/* next-themes toggles `.dark` on <html>, so `dark:` follows it instead of the OS */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* PostHog "3000" palette, retuned around our blue. Dark overrides live in `.dark` below */
+@theme {
+  --color-background: #f3f4f0;
+  --color-surface: #ffffff;
+  --color-foreground: #111111;
+  --color-muted: rgb(17 17 17 / 0.6);
+  --color-border: #dadbd2;
+  --color-border-strong: #c7c8bf;
+  --color-border-hover: #a8a99f;
+  --color-fill-hover: rgb(17 17 17 / 0.05);
+  --color-fill-active: rgb(17 17 17 / 0.09);
+
+  /* #1d72e8 keeps white text AA-readable; -strong is the button border + 3D edge */
+  --color-primary: #1d72e8;
+  --color-primary-strong: #1559bd;
+  --color-grid: #7fb0f3;
+
+  --color-danger: #db3707;
+  --color-warning: #f7a501;
+  /* warning is too light for text on white, use -strong for text/icons */
+  --color-warning-strong: #a36500;
+  --color-success: #388600;
+
+  /* PostHog's raised "chrome" edge; pair with a shadow color, e.g. `shadow-chrome shadow-primary-strong` */
+  --shadow-chrome: 0 4px 0 #000;
+  --shadow-chrome-hover: 0 5px 0 #000;
+  --shadow-chrome-press: 0 1px 0 #000;
+
+  --animate-grid-drift: grid-drift 12s linear infinite;
+
+  @keyframes grid-drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(84px);
+    }
+  }
+}
+
+/* next/font injects --font-inter at runtime, hence `inline` */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.dark {
+  --color-background: #151619;
+  --color-surface: #1d1f27;
+  --color-foreground: #f4f4f5;
+  --color-muted: rgb(244 244 245 / 0.55);
+  --color-border: #2c2e35;
+  --color-border-strong: #3f414a;
+  --color-border-hover: #5e6064;
+  --color-fill-hover: rgb(255 255 255 / 0.06);
+  --color-fill-active: rgb(255 255 255 / 0.1);
+  --color-grid: #2f5c9c;
+  /* brighter status colors so text stays readable on dark surfaces */
+  --color-danger: #f2602b;
+  --color-warning-strong: var(--color-warning);
+  --color-success: #5cb82e;
+}

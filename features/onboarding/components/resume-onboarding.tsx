@@ -9,13 +9,15 @@ import { useOnboardingStatus } from '../hooks';
 import { isJiraSkipped } from '../jira-skip';
 import { currentStep } from '../steps';
 
-/** /onboarding sends the user to the step they're on. */
+/** /onboarding sends the user to the step they're on, or to the dashboard once onboarding is done. */
 export default function ResumeOnboarding() {
   const router = useRouter();
   const status = useOnboardingStatus();
 
   useEffect(() => {
-    if (status.data) router.replace(`/onboarding/${currentStep(status.data, isJiraSkipped())}`);
+    if (!status.data) return;
+    const step = currentStep(status.data, isJiraSkipped());
+    router.replace(step === 'ready' ? '/dashboard' : `/onboarding/${step}`);
   }, [status.data, router]);
 
   if (status.isError) {

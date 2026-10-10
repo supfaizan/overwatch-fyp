@@ -32,7 +32,7 @@ http.interceptors.response.use(undefined, async (error: AxiosError<ApiEnvelope<n
 });
 
 /** Send a request and return the envelope's `data`. */
-export async function request<T>(config: AxiosRequestConfig): Promise<T> {
+async function request<T>(config: AxiosRequestConfig): Promise<T> {
   const { data } = await http.request<ApiEnvelope<T>>(config);
   return data.data;
 }
@@ -42,5 +42,3 @@ export const api = {
   post: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'POST', url, data: body }),
   delete: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'DELETE', url }),
 };
-
-export { ApiError, type ApiEnvelope } from './envelope';

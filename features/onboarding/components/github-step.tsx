@@ -3,7 +3,7 @@
 import { ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { API_URL } from '@/shared/api/envelope';
+import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
@@ -27,7 +27,7 @@ export default function GithubStep() {
   if (status.data && !status.data.github.authorized) {
     return (
       <StepCard title="Reconnect GitHub" description="Your GitHub authorization expired or was revoked.">
-        <Banner type="error" action={<Button size="sm" asChild><a href={`${API_URL}/auth/github/login`}>Sign in again</a></Button>}>
+        <Banner type="error" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
           Sign in with GitHub again to keep going.
         </Banner>
       </StepCard>

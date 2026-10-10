@@ -20,6 +20,8 @@ export class ApiError extends Error {
 }
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+/** A browser navigation, not a fetch: the backend redirects to GitHub and back. */
+export const GITHUB_SIGN_IN_URL = `${API_URL}/auth/github/login`;
 
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;

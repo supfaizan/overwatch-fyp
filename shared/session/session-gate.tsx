@@ -12,7 +12,7 @@ export default function SessionGate({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'guest') router.replace(`/sign-in?from=${encodeURIComponent(pathname)}`);
+    if (status === 'guest') router.replace(`/sign-in?from=${encodeURIComponent(pathname + window.location.search)}`);
   }, [status, pathname, router]);
 
   if (status !== 'authenticated') {

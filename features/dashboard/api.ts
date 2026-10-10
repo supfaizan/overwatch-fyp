@@ -1,7 +1,5 @@
 import { api } from '@/shared/api/client';
-import type { ConnectedRepo, GraphView, ViewOptions, ViewQuery } from './types';
-
-export const getConnectedRepos = () => api.get<ConnectedRepo[]>('/github/repos/connected');
+import type { GraphView, ViewOptions, ViewQuery } from './types';
 
 // a POST because the body carries the open containers; it reads and changes nothing
 export const getGraphView = (repoFullName: string, query: ViewQuery) =>

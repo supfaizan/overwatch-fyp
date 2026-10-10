@@ -14,6 +14,7 @@ import {
   type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import Banner from '@/shared/components/banner';
@@ -73,7 +74,17 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
     );
   }
   if (data.nodes.length === 0) {
-    const indexing = data.view.parse_status === 'pending' || data.view.parse_status === 'in_progress';
+    const status = data.view.parse_status;
+    if (status === 'failed') {
+      return (
+        <Notice>
+          <Banner type="error" action={<Button size="sm" asChild><Link href="/settings/repositories">Repositories</Link></Button>}>
+            Indexing this repository failed. Retry it from Settings.
+          </Banner>
+        </Notice>
+      );
+    }
+    const indexing = status === 'pending' || status === 'in_progress';
     return (
       <Notice>
         {indexing && <Spinner className="size-5 text-muted" />}

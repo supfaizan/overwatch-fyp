@@ -1,17 +1,8 @@
 import type { Edge, Node } from '@xyflow/react';
 
-// mirrors the backend schemas (app/github, app/graph)
+// mirrors the backend schemas (app/graph)
 
 export type ParseStatus = 'pending' | 'in_progress' | 'done' | 'failed';
-
-export type ConnectedRepo = {
-  repo_full_name: string;
-  default_branch: string;
-  access_status: 'active' | 'revoked' | 'needs_install';
-  parse_status: ParseStatus;
-  parse_error: string | null;
-  indexed_at: string | null;
-};
 
 /** `Repository` is the root of the tree: always drawn and always open. */
 export type NodeLabel = 'Repository' | 'Module' | 'File' | 'Symbol' | 'Package' | 'Route' | 'Channel';

@@ -7,16 +7,11 @@ import { toCanvas } from './lib/canvas';
 import { useViewStore } from './store';
 
 const keys = {
-  connectedRepos: ['github', 'repos', 'connected'] as const,
   viewOptions: ['graph', 'view-options'] as const,
   view: (repo: string, expand: string[], reveal: string[]) => ['graph', 'view', repo, { expand, reveal }] as const,
 };
 
 const POLL_MS = 4_000;
-
-export function useConnectedRepos() {
-  return useQuery({ queryKey: keys.connectedRepos, queryFn: dashboardApi.getConnectedRepos });
-}
 
 /** The filter vocabulary and page size; only changes with the backend. */
 export function useViewOptions() {

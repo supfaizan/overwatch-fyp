@@ -1,28 +1,43 @@
 'use client';
 
 import { ReactFlowProvider } from '@xyflow/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
+import { useConnectedRepos } from '@/shared/repos/hooks';
+import { pickRepo, readLastRepo, saveLastRepo } from '@/shared/repos/lib';
+import { useSession } from '@/shared/session/store';
 import DiagramCanvas from './components/diagram-canvas';
-import { useConnectedRepos } from './hooks';
-import { pickRepo } from './lib/repos';
 import { useViewStore } from './store';
 
-/** The architecture dashboard for `?repo=owner/name`, falling back to the first repo with a graph. */
+/** The architecture dashboard for `?repo=owner/name`, else the last repo used, else the first with a graph. */
 export default function Dashboard() {
   const router = useRouter();
-  const requested = useSearchParams().get('repo');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get('repo');
+  const userId = useSession((state) => state.user?.id ?? '');
+  const [lastUsed] = useState(() => readLastRepo(userId));
   const repos = useConnectedRepos();
-  const repo = repos.data ? pickRepo(repos.data, requested) : null;
-  const repoName = repo?.repo_full_name;
+  const repoName = repos.data ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name : undefined;
 
-  // nothing indexed yet: onboarding knows which step comes next
   useEffect(() => {
-    if (repos.data && !repoName) router.replace('/onboarding');
-  }, [repos.data, repoName, router]);
+    if (!repos.data) return;
+    // nothing to show yet: onboarding knows which step comes next
+    if (!repoName) {
+      router.replace('/onboarding');
+      return;
+    }
+    saveLastRepo(userId, repoName);
+    // keep the URL naming what's on screen, so it can be shared; only when it differs, or this would loop
+    if (repoName !== requested) {
+      const params = new URLSearchParams(searchParams);
+      params.set('repo', repoName);
+      router.replace(`${pathname}?${params}`);
+    }
+  }, [repos.data, repoName, requested, searchParams, pathname, userId, router]);
 
   // open folders belong to one repo's ids
   useEffect(() => {

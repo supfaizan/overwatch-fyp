@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Button from '@/shared/components/button';
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import { useConnectJiraProject, useDisconnectJira, useJiraProjects, useOnboardingStatus, useStartJiraAuthorization } from '../hooks';
 import { skipJira } from '../jira-skip';
+import ConfirmDisconnect from './confirm-disconnect';
 import StatusTag from './status-tag';
 import StepCard from './step-card';
 
@@ -129,34 +129,15 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
 }
 
 function DisconnectJira() {
-  const [open, setOpen] = useState(false);
   const disconnect = useDisconnectJira();
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="tertiary">Disconnect Jira</Button>
-      </DialogTrigger>
-      <DialogContent
-        title="Disconnect Jira?"
-        description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
-        footer={
-          <>
-            <DialogClose asChild>
-              <Button>Cancel</Button>
-            </DialogClose>
-            <Button
-              variant="primary"
-              bg="var(--color-danger)"
-              border="#9e2804"
-              edge="#9e2804"
-              loading={disconnect.isPending}
-              onClick={() => disconnect.mutate(undefined, { onSuccess: () => setOpen(false) })}
-            >
-              Disconnect Jira
-            </Button>
-          </>
-        }
-      />
-    </Dialog>
+    <ConfirmDisconnect
+      trigger={<Button variant="tertiary">Disconnect Jira</Button>}
+      title="Disconnect Jira?"
+      description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
+      confirmLabel="Disconnect Jira"
+      pending={disconnect.isPending}
+      onConfirm={(close) => disconnect.mutate(undefined, { onSuccess: close })}
+    />
   );
 }

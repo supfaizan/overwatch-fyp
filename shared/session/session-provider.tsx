@@ -1,7 +1,6 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { api } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/envelope';
 import { endSession, expiresIn, onSessionBroadcast, refreshSession } from './refresh';
@@ -10,11 +9,8 @@ import { useSession, type User } from './store';
 // refresh this long before the access token expires
 const REFRESH_EARLY_MS = 60_000;
 
-/** React Query plus the session lifecycle: restore on load, refresh ahead of expiry, follow other tabs. */
+/** The session lifecycle: restore on load, refresh ahead of expiry, follow other tabs. */
 export default function SessionProvider({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } } }),
-  );
   const token = useSession((state) => state.token);
 
   useEffect(() => {
@@ -30,7 +26,7 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [token]);
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return children;
 }
 
 async function restore(): Promise<void> {

@@ -28,9 +28,11 @@ export default function SignIn({ error, from }: { error?: string; from?: string 
       <Button
         variant="primary"
         size="lg"
-        bg="#111"
-        border="#000"
-        edge="#000"
+        // GitHub's own button: the foreground color, so it flips with the theme
+        bg="var(--color-foreground)"
+        border="var(--color-foreground)"
+        edge="var(--color-foreground)"
+        text="var(--color-background)"
         loading={leaving || status === 'loading'}
         onClick={() => {
           setLeaving(true);

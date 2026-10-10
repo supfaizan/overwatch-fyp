@@ -24,6 +24,7 @@
   --color-grid: #7fb0f3;
 
   --color-danger: #db3707;
+  --color-danger-strong: #9e2804;
   --color-warning: #f7a501;
   /* warning is too light for text on white, use -strong for text/icons */
   --color-warning-strong: #a36500;
@@ -64,6 +65,7 @@
   --color-grid: #2f5c9c;
   /* brighter status colors so text stays readable on dark surfaces */
   --color-danger: #f2602b;
+  --color-danger-strong: #b8400f;
   --color-warning-strong: var(--color-warning);
   --color-success: #5cb82e;
 }

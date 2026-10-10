@@ -10,7 +10,8 @@ const buttonVariants = cva(
     variants: {
       // --btn-* vars hold the defaults; the matching props override them via inline style
       /**
-       * Visual weight: `primary` for the one main action, `secondary` for the rest, `tertiary` for low-emphasis/toolbar actions.
+       * Visual weight: `primary` for the one main action, `secondary` for the rest, `tertiary` for low-emphasis/toolbar actions,
+       * `danger` for a destructive action (usually the confirm button of a dialog).
        * @default 'secondary'
        */
       variant: {
@@ -20,6 +21,8 @@ const buttonVariants = cva(
         secondary:
           '[--btn-bg:var(--color-surface)] [--btn-border:var(--color-border-strong)] [--btn-edge:var(--color-border-strong)] [--btn-text:var(--color-foreground)] hover:[--btn-border:var(--color-border-hover)]',
         tertiary: 'hover:bg-fill-hover active:bg-fill-active',
+        danger:
+          '[--btn-bg:var(--color-danger)] [--btn-border:var(--color-danger-strong)] [--btn-edge:var(--color-danger-strong)] [--btn-text:var(--color-white)]',
       },
       /** @default 'md' */
       size: {
@@ -28,7 +31,7 @@ const buttonVariants = cva(
         lg: 'h-11 px-4 text-base',
       },
       /**
-       * PostHog's 3D edge (primary/secondary only): lifts on hover, sinks on press. `false` gives a flat button.
+       * PostHog's 3D edge (not on `tertiary`): lifts on hover, sinks on press. `false` gives a flat button.
        * @default true
        */
       raised: { true: '', false: '' },
@@ -37,12 +40,12 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       {
-        variant: ['primary', 'secondary'],
+        variant: ['primary', 'secondary', 'danger'],
         class: 'border border-(--btn-border) bg-(--btn-bg) text-(--btn-text)',
       },
       // PostHog's 3D look: bottom edge always visible, lifts on hover, sinks on press (edge bottom stays put)
       {
-        variant: ['primary', 'secondary'],
+        variant: ['primary', 'secondary', 'danger'],
         raised: true,
         class:
           'shadow-chrome shadow-(color:--btn-edge) hover:-translate-y-px hover:shadow-chrome-hover active:translate-y-0.75 active:shadow-chrome-press',
@@ -58,13 +61,13 @@ type ButtonProps = ComponentProps<'button'> &
     asChild?: boolean;
     /** Disables the button and shows a spinner. Ignored with `asChild` (Slot needs a single child). */
     loading?: boolean;
-    /** Background color override, any CSS color (`'var(--color-success)'`, `'#0a0'`). Primary/secondary only. */
+    /** Background color override, any CSS color (`'var(--color-success)'`, `'#0a0'`). Not for `tertiary`. */
     bg?: string;
-    /** Border color override. Primary/secondary only. */
+    /** Border color override. Not for `tertiary`. */
     border?: string;
-    /** Bottom 3D edge color override. Primary/secondary only. */
+    /** Bottom 3D edge color override. Not for `tertiary`. */
     edge?: string;
-    /** Text color override. Primary/secondary only. */
+    /** Text color override. Not for `tertiary`. */
     text?: string;
   };
 

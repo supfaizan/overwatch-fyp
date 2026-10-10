@@ -7,6 +7,7 @@ export function Variants() {
       <Button variant="primary">Create dashboard</Button>
       <Button>Share</Button>
       <Button variant="tertiary">Cancel</Button>
+      <Button variant="danger">Delete dashboard</Button>
     </>
   );
 }

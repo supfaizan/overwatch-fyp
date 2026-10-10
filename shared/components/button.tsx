@@ -104,9 +104,15 @@ export default function Button({
       aria-busy={busy || undefined}
       {...props}
     >
-      {/* aria-busy already announces loading; icon-only buttons swap their icon for the spinner */}
-      {busy && <Spinner aria-hidden />}
-      {!(busy && iconOnly) && children}
+      {/* Slot needs a single child; aria-busy already announces loading; icon-only buttons swap their icon for the spinner */}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {busy && <Spinner aria-hidden />}
+          {!(busy && iconOnly) && children}
+        </>
+      )}
     </Comp>
   );
 }

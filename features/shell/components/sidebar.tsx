@@ -3,7 +3,7 @@
 import { MagnifyingGlass, SidebarSimple } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import Kbd from '@/shared/components/kbd';
@@ -12,6 +12,7 @@ import { cn } from '@/shared/lib/cn';
 import { useSession } from '@/shared/session/store';
 import { isActive } from '../lib';
 import { PAGES, SETTINGS_ICON } from '../nav';
+import RepoSwitcher from './repo-switcher';
 
 type SidebarProps = {
   /** Icons only: labels are kept for screen readers and shown as tooltips. */
@@ -19,10 +20,11 @@ type SidebarProps = {
   /** Absent on phones, where icons are all there's room for. */
   onToggle?: () => void;
   onSearch: () => void;
+  onAddRepo: () => void;
   shortcut: string;
 };
 
-export default function Sidebar({ collapsed, onToggle, onSearch, shortcut }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, shortcut }: SidebarProps) {
   const pathname = usePathname();
   const user = useSession((state) => state.user);
   const name = user?.name ?? user?.github_login ?? '';
@@ -49,6 +51,11 @@ export default function Sidebar({ collapsed, onToggle, onSearch, shortcut }: Sid
           )}
         </div>
       )}
+
+      {/* it reads ?repo=, which needs a Suspense boundary */}
+      <Suspense>
+        <RepoSwitcher collapsed={collapsed} onAddRepo={onAddRepo} />
+      </Suspense>
 
       <Hint label={`Search (${shortcut})`} show={collapsed}>
         <button type="button" onClick={onSearch} className={cn(item, 'mb-2 cursor-pointer border border-border text-muted hover:border-border-hover')}>

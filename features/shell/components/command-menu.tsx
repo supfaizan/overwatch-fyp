@@ -1,10 +1,11 @@
 'use client';
 
-import { Monitor, Moon, SignOut, Sun } from '@phosphor-icons/react/ssr';
+import { GitBranch, Monitor, Moon, Plus, SignOut, Sun } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect } from 'react';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/components/command';
+import { useConnectedRepos } from '@/shared/repos/hooks';
 import { signOut } from '@/shared/session/sign-out';
 import { isCommandShortcut } from '../lib';
 import { PAGES, SETTINGS_PAGES } from '../nav';
@@ -15,9 +16,12 @@ const THEMES = [
   { value: 'system', label: 'System', icon: Monitor, color: 'text-accent-slate' },
 ];
 
-/** The ⌘K / Ctrl+K palette: go anywhere, switch theme, sign out. */
-export default function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+type CommandMenuProps = { open: boolean; onOpenChange: (open: boolean) => void; onAddRepo: () => void };
+
+/** The ⌘K / Ctrl+K palette: go anywhere, switch repo or theme, sign out. */
+export default function CommandMenu({ open, onOpenChange, onAddRepo }: CommandMenuProps) {
   const router = useRouter();
+  const repos = useConnectedRepos();
   const { setTheme } = useTheme();
 
   useEffect(() => {
@@ -47,6 +51,23 @@ export default function CommandMenu({ open, onOpenChange }: { open: boolean; onO
               <Icon weight="fill" className={color} /> {label}
             </CommandItem>
           ))}
+        </CommandGroup>
+        <CommandGroup heading="Repositories">
+          {repos.data
+            ?.filter((repo) => repo.access_status === 'active')
+            .map((repo) => (
+              <CommandItem
+                key={repo.repo_full_name}
+                value={`Switch to ${repo.repo_full_name}`}
+                keywords={['repo', 'repository', 'switch']}
+                onSelect={run(() => router.push(`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`))}
+              >
+                <GitBranch weight="fill" className="text-accent-blue" /> {repo.repo_full_name}
+              </CommandItem>
+            ))}
+          <CommandItem keywords={['repo', 'repository', 'connect']} onSelect={run(onAddRepo)}>
+            <Plus /> Add repository…
+          </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Settings">
           {SETTINGS_PAGES.map(({ href, label, icon: Icon, color }) => (

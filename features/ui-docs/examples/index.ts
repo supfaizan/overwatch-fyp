@@ -11,6 +11,7 @@ import * as dropdownMenu from './dropdown-menu';
 import * as githubMark from './github-mark';
 import * as input from './input';
 import * as kbd from './kbd';
+import * as repoPicker from './repo-picker';
 import * as segmentedButton from './segmented-button';
 import * as select from './select';
 import * as skeleton from './skeleton';
@@ -36,6 +37,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   'github-mark': githubMark,
   input,
   kbd,
+  'repo-picker': repoPicker,
   'segmented-button': segmentedButton,
   select,
   skeleton,

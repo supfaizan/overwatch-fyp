@@ -1,1 +1,18 @@
 @import "tailwindcss";
+@source inline("motion-safe:animate-grid-drift");
+
+@theme {
+  --color-background: #f3f4f0;
+  --color-primary: #1d72e8;
+  --color-grid: #7fb0f3;
+  --animate-grid-drift: grid-drift 12s linear infinite;
+
+  @keyframes grid-drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(84px);
+    }
+  }
+}

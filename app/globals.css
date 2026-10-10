@@ -30,6 +30,13 @@
   --color-warning-strong: #a36500;
   --color-success: #388600;
 
+  /* icon accents, so nav icons can be told apart at a glance */
+  --color-accent-blue: #1d72e8;
+  --color-accent-orange: #e8590c;
+  --color-accent-purple: #7c4dff;
+  --color-accent-amber: #d99a00;
+  --color-accent-slate: #5f6b7a;
+
   /* PostHog's raised "chrome" edge; pair with a shadow color, e.g. `shadow-chrome shadow-primary-strong` */
   --shadow-chrome: 0 4px 0 #000;
   --shadow-chrome-hover: 0 5px 0 #000;
@@ -68,4 +75,9 @@
   --color-danger-strong: #b8400f;
   --color-warning-strong: var(--color-warning);
   --color-success: #5cb82e;
+  --color-accent-blue: #4b93f5;
+  --color-accent-orange: #ff8a47;
+  --color-accent-purple: #a78bfa;
+  --color-accent-amber: #f5c542;
+  --color-accent-slate: #9aa6b5;
 }

@@ -1,25 +1,39 @@
 'use client';
 
-import { ArrowSquareOut, ArrowsClockwise } from '@phosphor-icons/react/ssr';
+import { ArrowSquareOut, ArrowsClockwise, GitBranch, LinkBreak, Plus, SquaresFour } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
-import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import Tag from '@/shared/components/tag';
-import { useConnectedRepos, useDisconnectRepo, useInstallations, useReindexRepo } from '../hooks';
-import type { ConnectedRepo } from '../types';
+import Tooltip from '@/shared/components/tooltip';
+import AddRepoDialog from '@/shared/repos/add-repo-dialog';
+import { useConnectedRepos, useInstallations } from '@/shared/repos/hooks';
+import type { ConnectedRepo } from '@/shared/repos/types';
+import { useDisconnectRepo, useReindexRepo } from '../hooks';
 import { SettingsSection } from './settings-layout';
 
 export default function RepositoriesSection() {
+  const router = useRouter();
   const repos = useConnectedRepos();
   const installations = useInstallations();
+  const [adding, setAdding] = useState(false);
 
   return (
-    <SettingsSection title="Repositories" description="The repositories Overwatch indexes and keeps in sync on every push.">
+    <SettingsSection
+      title="Repositories"
+      description="The repositories Overwatch indexes and keeps in sync on every push."
+      action={
+        <Button variant="primary" size="sm" onClick={() => setAdding(true)}>
+          <Plus /> Add repository
+        </Button>
+      }
+    >
       {repos.isPending && <Skeleton className="h-32 w-full" />}
       {repos.isError && (
         <Banner type="error" action={<Button size="sm" onClick={() => repos.refetch()}>Retry</Button>}>
@@ -40,10 +54,11 @@ export default function RepositoriesSection() {
         </Card>
       )}
       {installations.data && (
-        <a href={installations.data.install_url} className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
-          Add repositories on GitHub <ArrowSquareOut className="size-3.5" />
+        <a href={installations.data.install_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
+          Configure the GitHub App <ArrowSquareOut className="size-3.5" />
         </a>
       )}
+      <AddRepoDialog open={adding} onOpenChange={setAdding} onConnected={(repo) => router.push(`/dashboard?repo=${encodeURIComponent(repo)}`)} />
     </SettingsSection>
   );
 }
@@ -56,7 +71,7 @@ function RepoRow({ repo }: { repo: ConnectedRepo }) {
 
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
-      <GithubMark className="text-muted" />
+      <GitBranch weight="fill" className="size-4 shrink-0 text-accent-blue" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{repo.repo_full_name}</p>
         <p className="truncate text-xs text-muted">
@@ -68,26 +83,37 @@ function RepoRow({ repo }: { repo: ConnectedRepo }) {
       {repo.access_status === 'active' ? <StatusTag status={repo.parse_status} /> : <Tag variant="warning">No access</Tag>}
       <div className="flex gap-1">
         {repo.indexed_at && (
-          <Button size="sm" variant="tertiary" asChild>
-            <Link href={`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`}>Open</Link>
-          </Button>
+          <Tooltip content="Open in dashboard">
+            <Button size="sm" variant="tertiary" iconOnly asChild>
+              <Link href={`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`} aria-label={`Open ${repo.repo_full_name} in the dashboard`}>
+                <SquaresFour />
+              </Link>
+            </Button>
+          </Tooltip>
         )}
-        <Button
-          size="sm"
-          variant="tertiary"
-          iconOnly
-          aria-label={`Re-index ${repo.repo_full_name}`}
-          disabled={running || repo.access_status !== 'active'}
-          loading={reindex.isPending}
-          onClick={() => reindex.mutate(repo.repo_full_name)}
-        >
-          <ArrowsClockwise />
-        </Button>
+        <Tooltip content={running ? 'Indexing…' : 'Re-index'}>
+          {/* a disabled button fires no pointer events, so the span carries the tooltip */}
+          <span className="inline-flex">
+            <Button
+              size="sm"
+              variant="tertiary"
+              iconOnly
+              aria-label={`Re-index ${repo.repo_full_name}`}
+              disabled={running || repo.access_status !== 'active'}
+              loading={reindex.isPending}
+              onClick={() => reindex.mutate(repo.repo_full_name)}
+            >
+              <ArrowsClockwise />
+            </Button>
+          </span>
+        </Tooltip>
         <ConfirmDialog
           trigger={
-            <Button size="sm" variant="tertiary">
-              Disconnect
-            </Button>
+            <Tooltip content="Disconnect">
+              <Button size="sm" variant="tertiary" iconOnly aria-label={`Disconnect ${repo.repo_full_name}`} className="hover:text-danger">
+                <LinkBreak />
+              </Button>
+            </Tooltip>
           }
           title={`Disconnect ${repo.repo_full_name}?`}
           description="Overwatch stops tracking it and deletes its copy of the code and its graph."

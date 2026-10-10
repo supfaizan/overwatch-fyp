@@ -1,9 +1,8 @@
 import { api } from '@/shared/api/client';
-import type { ConnectedRepo, ConnectionStatus, Installations } from './types';
+import type { ConnectedRepo } from '@/shared/repos/types';
+import type { ConnectionStatus } from './types';
 
 export const getConnectionStatus = () => api.get<ConnectionStatus>('/onboarding/status');
-export const getConnectedRepos = () => api.get<ConnectedRepo[]>('/github/repos/connected');
-export const getInstallations = () => api.get<Installations>('/github/installations');
 
 export const reindexRepo = (repoFullName: string) => api.post<ConnectedRepo>(`/github/repos/${repoFullName}/index`);
 export const disconnectRepo = (repoFullName: string) => api.delete<null>(`/github/repos/${repoFullName}`);

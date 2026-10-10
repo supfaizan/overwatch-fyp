@@ -11,7 +11,8 @@ import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import Tag from '@/shared/components/tag';
-import { useConnectionStatus, useDisconnectJira, useInstallations, useStartJiraAuthorization } from '../hooks';
+import { useInstallations } from '@/shared/repos/hooks';
+import { useConnectionStatus, useDisconnectJira, useStartJiraAuthorization } from '../hooks';
 import type { ConnectionStatus } from '../types';
 import { SettingsSection } from './settings-layout';
 
@@ -81,7 +82,7 @@ function SourceControl({ needsReauth }: { needsReauth: boolean }) {
         </ul>
       )}
       {installations.data && (
-        <a href={installations.data.install_url} className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
+        <a href={installations.data.install_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
           Manage the GitHub App <ArrowSquareOut className="size-3.5" />
         </a>
       )}

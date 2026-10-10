@@ -57,13 +57,16 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   );
 }
 
-/** A settings page's heading and body. */
-export function SettingsSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+/** A settings page's heading, an optional action beside it, and the body. */
+export function SettingsSection({ title, description, action, children }: { title: string; description: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-lg font-bold">{title}</h1>
-        <p className="text-sm text-muted">{description}</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-bold">{title}</h1>
+          <p className="text-sm text-muted">{description}</p>
+        </div>
+        {action}
       </header>
       {children}
     </section>

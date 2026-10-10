@@ -5,11 +5,9 @@ import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
 import * as settingsApi from './api';
 
-// same keys as onboarding and the dashboard, so a change here refreshes them too
+// same key as onboarding, so a change here refreshes it too
 const keys = {
   status: ['onboarding', 'status'] as const,
-  connectedRepos: ['github', 'repos', 'connected'] as const,
-  installations: ['github', 'installations'] as const,
 };
 
 const POLL_MS = 3_000;
@@ -22,18 +20,6 @@ export function useConnectionStatus() {
     queryFn: settingsApi.getConnectionStatus,
     refetchInterval: ({ state }) => (isRunning(state.data?.jira.project?.sync_status) ? POLL_MS : false),
   });
-}
-
-export function useConnectedRepos() {
-  return useQuery({
-    queryKey: keys.connectedRepos,
-    queryFn: settingsApi.getConnectedRepos,
-    refetchInterval: ({ state }) => (state.data?.some((repo) => isRunning(repo.parse_status)) ? POLL_MS : false),
-  });
-}
-
-export function useInstallations() {
-  return useQuery({ queryKey: keys.installations, queryFn: settingsApi.getInstallations });
 }
 
 function useSettingsMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise<TResult>, success: (arg: TArg) => string) {

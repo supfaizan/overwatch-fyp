@@ -1,11 +1,11 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
 
-// shared field chrome; focus/invalid/disabled are read off the inner control via has-*
-const field =
+// shared field chrome (also used by Select); focus/invalid/disabled are read off the inner control via has-*
+export const field =
   'rounded-md border border-border-strong bg-surface transition-[border-color,box-shadow] hover:border-border-hover focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15 has-disabled:opacity-60 has-[[aria-invalid=true]]:border-danger has-[[aria-invalid=true]]:ring-danger/15';
 
-const sizes = {
+export const fieldSizes = {
   sm: 'h-8 px-2 text-xs',
   md: 'h-9 px-2.5 text-sm',
   lg: 'h-11 px-3 text-base',
@@ -16,7 +16,7 @@ type InputProps = Omit<ComponentProps<'input'>, 'size' | 'prefix'> & {
    * Matches the Button heights, so inputs and buttons line up in a row.
    * @default 'md'
    */
-  size?: keyof typeof sizes;
+  size?: keyof typeof fieldSizes;
   /** Rendered inside the field before the text, e.g. a search icon. SVGs are sized and muted for you. */
   prefix?: ReactNode;
   /** Rendered inside the field after the text, e.g. a `<Kbd>` hint or a clear button. */
@@ -31,7 +31,7 @@ type InputProps = Omit<ComponentProps<'input'>, 'size' | 'prefix'> & {
  */
 export function Input({ className, size = 'md', prefix, suffix, ...props }: InputProps) {
   return (
-    <div className={cn(field, sizes[size], 'flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted', className)}>
+    <div className={cn(field, fieldSizes[size], 'flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted', className)}>
       {prefix}
       <input
         className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted disabled:cursor-not-allowed"

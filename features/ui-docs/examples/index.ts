@@ -1,15 +1,19 @@
 import type { ComponentType } from 'react';
+import * as avatar from './avatar';
 import * as banner from './banner';
 import * as button from './button';
 import * as card from './card';
 import * as checkbox from './checkbox';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
+import * as githubMark from './github-mark';
 import * as input from './input';
 import * as kbd from './kbd';
 import * as segmentedButton from './segmented-button';
+import * as select from './select';
 import * as skeleton from './skeleton';
 import * as spinner from './spinner';
+import * as steps from './steps';
 import * as switchExamples from './switch';
 import * as tag from './tag';
 import * as toaster from './toaster';
@@ -17,17 +21,21 @@ import * as tooltip from './tooltip';
 
 // keyed by the shared/components file name; one file per component, each export is one example
 export const examples: Record<string, Record<string, ComponentType>> = {
+  avatar,
   banner,
   button,
   card,
   checkbox,
   dialog,
   'dropdown-menu': dropdownMenu,
+  'github-mark': githubMark,
   input,
   kbd,
   'segmented-button': segmentedButton,
+  select,
   skeleton,
   spinner,
+  steps,
   switch: switchExamples,
   tag,
   toaster,

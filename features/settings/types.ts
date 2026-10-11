@@ -1,4 +1,6 @@
-// mirrors the backend schemas (app/onboarding)
+// mirrors the backend schemas (app/onboarding, app/workspaces)
+
+import type { Role } from '@/shared/workspaces/types';
 
 export type JobStatus = 'pending' | 'in_progress' | 'done' | 'failed';
 
@@ -11,3 +13,24 @@ export type ConnectionStatus = {
     project: { key: string; sync_status: JobStatus; sync_error: string | null } | null;
   };
 };
+
+export type Member = {
+  user_id: string;
+  github_login: string;
+  name: string | null;
+  avatar_url: string | null;
+  role: Role;
+  joined_at: string;
+};
+
+export type InviteRole = Exclude<Role, 'owner'>;
+
+export type Invite = {
+  id: string;
+  role: InviteRole;
+  github_login: string | null;
+  created_at: string;
+  expires_at: string;
+};
+
+export type InviteCreated = Invite & { url: string };

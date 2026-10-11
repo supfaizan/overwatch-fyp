@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
 
-// grouped so workspace settings can join the second group later
 const GROUPS = [
   {
     label: 'Account',
@@ -17,6 +16,8 @@ const GROUPS = [
   {
     label: 'Workspace',
     pages: [
+      { href: '/settings/workspace', label: 'General' },
+      { href: '/settings/members', label: 'Members' },
       { href: '/settings/repositories', label: 'Repositories' },
       { href: '/settings/integrations', label: 'Integrations' },
       { href: '/settings/billing', label: 'Billing' },

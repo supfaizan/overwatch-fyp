@@ -15,6 +15,8 @@ import Tooltip from '@/shared/components/tooltip';
 import AddRepoDialog from '@/shared/repos/add-repo-dialog';
 import { useConnectedRepos, useInstallations } from '@/shared/repos/hooks';
 import type { ConnectedRepo } from '@/shared/repos/types';
+import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { hasRole } from '@/shared/workspaces/lib';
 import { useDisconnectRepo, useReindexRepo } from '../hooks';
 import { SettingsSection } from './settings-layout';
 
@@ -23,15 +25,19 @@ export default function RepositoriesSection() {
   const repos = useConnectedRepos();
   const installations = useInstallations();
   const [adding, setAdding] = useState(false);
+  // only admins connect and disconnect; members still view and re-index
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, 'admin');
 
   return (
     <SettingsSection
       title="Repositories"
       description="The repositories Overwatch indexes and keeps in sync on every push."
       action={
-        <Button variant="primary" size="sm" onClick={() => setAdding(true)}>
-          <Plus /> Add repository
-        </Button>
+        isAdmin && (
+          <Button variant="primary" size="sm" onClick={() => setAdding(true)}>
+            <Plus /> Add repository
+          </Button>
+        )
       }
     >
       {repos.isPending && <Skeleton className="h-32 w-full" />}
@@ -47,7 +53,7 @@ export default function RepositoriesSection() {
           ) : (
             <ul className="divide-y divide-border">
               {repos.data.map((repo) => (
-                <RepoRow key={repo.repo_full_name} repo={repo} />
+                <RepoRow key={repo.repo_full_name} repo={repo} canDisconnect={isAdmin} />
               ))}
             </ul>
           )}
@@ -63,7 +69,7 @@ export default function RepositoriesSection() {
   );
 }
 
-function RepoRow({ repo }: { repo: ConnectedRepo }) {
+function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: boolean }) {
   const reindex = useReindexRepo();
   const disconnect = useDisconnectRepo();
   const running = repo.parse_status === 'pending' || repo.parse_status === 'in_progress';
@@ -107,20 +113,22 @@ function RepoRow({ repo }: { repo: ConnectedRepo }) {
             </Button>
           </span>
         </Tooltip>
-        <ConfirmDialog
-          trigger={
-            <Tooltip content="Disconnect">
-              <Button size="sm" variant="tertiary" iconOnly aria-label={`Disconnect ${repo.repo_full_name}`} className="hover:text-danger">
-                <LinkBreak />
-              </Button>
-            </Tooltip>
-          }
-          title={`Disconnect ${repo.repo_full_name}?`}
-          description="Overwatch stops tracking it and deletes its copy of the code and its graph."
-          confirmLabel="Disconnect repository"
-          pending={disconnect.isPending}
-          onConfirm={(close) => disconnect.mutate(repo.repo_full_name, { onSuccess: close })}
-        />
+        {canDisconnect && (
+          <ConfirmDialog
+            trigger={
+              <Tooltip content="Disconnect">
+                <Button size="sm" variant="tertiary" iconOnly aria-label={`Disconnect ${repo.repo_full_name}`} className="hover:text-danger">
+                  <LinkBreak />
+                </Button>
+              </Tooltip>
+            }
+            title={`Disconnect ${repo.repo_full_name}?`}
+            description="Overwatch stops tracking it for this workspace. Its copy of the code and its graph are deleted once no other workspace uses them."
+            confirmLabel="Disconnect repository"
+            pending={disconnect.isPending}
+            onConfirm={(close) => disconnect.mutate(repo.repo_full_name, { onSuccess: close })}
+          />
+        )}
       </div>
     </li>
   );

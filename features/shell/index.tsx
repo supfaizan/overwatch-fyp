@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import AddRepoDialog from '@/shared/repos/add-repo-dialog';
 import CommandMenu from './components/command-menu';
+import CreateWorkspaceDialog from './components/create-workspace-dialog';
 import Sidebar from './components/sidebar';
 import { readCollapsed, saveCollapsed, shortcutLabel } from './lib';
 
@@ -23,6 +24,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [searching, setSearching] = useState(false);
   // held here, not in the menus that open it, so a closing menu can't take the dialog's focus with it
   const [adding, setAdding] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [shortcut] = useState(() => shortcutLabel(/Mac|iPhone|iPad/.test(navigator.userAgent)));
 
   const toggle = () => {
@@ -37,10 +39,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onToggle={isDesktop ? toggle : undefined}
         onSearch={() => setSearching(true)}
         onAddRepo={() => setAdding(true)}
+        onCreateWorkspace={() => setCreating(true)}
         shortcut={shortcut}
       />
       <main className="min-w-0 flex-1">{children}</main>
-      <CommandMenu open={searching} onOpenChange={setSearching} onAddRepo={() => setAdding(true)} />
+      <CommandMenu open={searching} onOpenChange={setSearching} onAddRepo={() => setAdding(true)} onCreateWorkspace={() => setCreating(true)} />
+      <CreateWorkspaceDialog open={creating} onOpenChange={setCreating} />
       <AddRepoDialog open={adding} onOpenChange={setAdding} onConnected={(repo) => router.push(`/dashboard?repo=${encodeURIComponent(repo)}`)} />
     </div>
   );

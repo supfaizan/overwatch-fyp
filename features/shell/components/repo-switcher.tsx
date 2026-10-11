@@ -10,15 +10,20 @@ import { cn } from '@/shared/lib/cn';
 import { useConnectedRepos } from '@/shared/repos/hooks';
 import { isRunning, pickRepo, readLastRepo } from '@/shared/repos/lib';
 import { useSession } from '@/shared/session/store';
+import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { hasRole } from '@/shared/workspaces/lib';
+import { useWorkspace } from '@/shared/workspaces/store';
 
 /** Which repo the app is looking at; switching opens it on the dashboard. */
 export default function RepoSwitcher({ collapsed, onAddRepo }: { collapsed: boolean; onAddRepo: () => void }) {
   const router = useRouter();
   const requested = useSearchParams().get('repo');
   const userId = useSession((state) => state.user?.id ?? '');
+  const workspaceId = useWorkspace((state) => state.id ?? '');
   const repos = useConnectedRepos();
-  const current = repos.data ? pickRepo(repos.data, requested, readLastRepo(userId))?.repo_full_name : undefined;
+  const current = repos.data ? pickRepo(repos.data, requested, readLastRepo(userId, workspaceId))?.repo_full_name : undefined;
   const label = current ?? 'Choose a repository';
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, 'admin');
 
   const trigger = (
     <DropdownMenuTrigger
@@ -62,9 +67,11 @@ export default function RepoSwitcher({ collapsed, onAddRepo }: { collapsed: bool
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onAddRepo}>
-          <Plus /> Add repository…
-        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onSelect={onAddRepo}>
+            <Plus /> Add repository…
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={() => router.push('/settings/repositories')}>
           <GearSix /> Manage repositories
         </DropdownMenuItem>

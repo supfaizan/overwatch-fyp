@@ -13,6 +13,7 @@ import { useSession } from '@/shared/session/store';
 import { isActive } from '../lib';
 import { PAGES, SETTINGS_ICON } from '../nav';
 import RepoSwitcher from './repo-switcher';
+import WorkspaceSwitcher from './workspace-switcher';
 
 type SidebarProps = {
   /** Icons only: labels are kept for screen readers and shown as tooltips. */
@@ -21,10 +22,11 @@ type SidebarProps = {
   onToggle?: () => void;
   onSearch: () => void;
   onAddRepo: () => void;
+  onCreateWorkspace: () => void;
   shortcut: string;
 };
 
-export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, shortcut }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, onCreateWorkspace, shortcut }: SidebarProps) {
   const pathname = usePathname();
   const user = useSession((state) => state.user);
   const name = user?.name ?? user?.github_login ?? '';
@@ -37,20 +39,16 @@ export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, shor
 
   return (
     <nav aria-label="Main" className={cn('flex h-full shrink-0 flex-col gap-1 rounded-lg border border-border bg-surface p-2', collapsed ? 'w-fit' : 'w-60')}>
-      {onToggle && (
-        <div className="flex items-center gap-2 pb-1">
+      <div className={cn('flex gap-1 pb-1', collapsed ? 'flex-col' : 'items-center')}>
+        {onToggle && (
           <Tooltip content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} side="right">
             <Button variant="tertiary" size="sm" iconOnly aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} onClick={onToggle}>
               <SidebarSimple />
             </Button>
           </Tooltip>
-          {!collapsed && (
-            <Link href="/dashboard" className="text-sm font-bold">
-              Overwatch
-            </Link>
-          )}
-        </div>
-      )}
+        )}
+        <WorkspaceSwitcher collapsed={collapsed} onCreate={onCreateWorkspace} />
+      </div>
 
       {/* it reads ?repo=, which needs a Suspense boundary */}
       <Suspense>

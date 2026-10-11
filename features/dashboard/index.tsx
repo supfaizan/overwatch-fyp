@@ -2,13 +2,14 @@
 
 import { ReactFlowProvider } from '@xyflow/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
 import { useConnectedRepos } from '@/shared/repos/hooks';
 import { pickRepo, readLastRepo, saveLastRepo } from '@/shared/repos/lib';
 import { useSession } from '@/shared/session/store';
+import { useWorkspace } from '@/shared/workspaces/store';
 import DiagramCanvas from './components/diagram-canvas';
 import { useViewStore } from './store';
 
@@ -19,7 +20,8 @@ export default function Dashboard() {
   const searchParams = useSearchParams();
   const requested = searchParams.get('repo');
   const userId = useSession((state) => state.user?.id ?? '');
-  const [lastUsed] = useState(() => readLastRepo(userId));
+  const workspaceId = useWorkspace((state) => state.id ?? '');
+  const lastUsed = readLastRepo(userId, workspaceId);
   const repos = useConnectedRepos();
   const repoName = repos.data ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name : undefined;
 
@@ -30,14 +32,14 @@ export default function Dashboard() {
       router.replace('/onboarding');
       return;
     }
-    saveLastRepo(userId, repoName);
+    saveLastRepo(userId, workspaceId, repoName);
     // keep the URL naming what's on screen, so it can be shared; only when it differs, or this would loop
     if (repoName !== requested) {
       const params = new URLSearchParams(searchParams);
       params.set('repo', repoName);
       router.replace(`${pathname}?${params}`);
     }
-  }, [repos.data, repoName, requested, searchParams, pathname, userId, router]);
+  }, [repos.data, repoName, requested, searchParams, pathname, userId, workspaceId, router]);
 
   // open folders belong to one repo's ids
   useEffect(() => {

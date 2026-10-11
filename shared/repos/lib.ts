@@ -31,20 +31,20 @@ export function groupByOwner<T extends { full_name: string }>(repos: T[]): { own
     .map(([owner, list]) => ({ owner, repos: list.sort((a, b) => byName(a.full_name, b.full_name)) }));
 }
 
-// keyed by user: browsers get shared and accounts switched
-const lastRepoKey = (userId: string) => `ow_last_repo:${userId}`;
+// keyed by user (browsers get shared) and workspace (each has its own repos)
+const lastRepoKey = (userId: string, workspaceId: string) => `ow_last_repo:${userId}:${workspaceId}`;
 
-export function readLastRepo(userId: string): string | null {
+export function readLastRepo(userId: string, workspaceId: string): string | null {
   try {
-    return localStorage.getItem(lastRepoKey(userId));
+    return localStorage.getItem(lastRepoKey(userId, workspaceId));
   } catch {
     return null;
   }
 }
 
-export function saveLastRepo(userId: string, repoFullName: string): void {
+export function saveLastRepo(userId: string, workspaceId: string, repoFullName: string): void {
   try {
-    localStorage.setItem(lastRepoKey(userId), repoFullName);
+    localStorage.setItem(lastRepoKey(userId, workspaceId), repoFullName);
   } catch {
     // storage blocked: the dashboard just opens the first repo next time
   }

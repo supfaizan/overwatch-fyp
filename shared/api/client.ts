@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { endSession, refreshSession } from '@/shared/session/refresh';
 import { useSession } from '@/shared/session/store';
+import { useWorkspace } from '@/shared/workspaces/store';
 import { API_URL, ApiError, toApiError, type ApiEnvelope } from './envelope';
 
 const http = axios.create({ baseURL: API_URL, withCredentials: true });
@@ -8,6 +9,8 @@ const http = axios.create({ baseURL: API_URL, withCredentials: true });
 http.interceptors.request.use((config) => {
   const token = useSession.getState().token;
   if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`;
+  const workspaceId = useWorkspace.getState().id;
+  if (workspaceId && !config.headers['X-Workspace-Id']) config.headers['X-Workspace-Id'] = workspaceId;
   return config;
 });
 
@@ -40,5 +43,6 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'GET', url }),
   post: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'POST', url, data: body }),
+  patch: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PATCH', url, data: body }),
   delete: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'DELETE', url }),
 };

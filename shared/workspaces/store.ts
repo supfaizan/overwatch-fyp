@@ -1,0 +1,12 @@
+import { create } from 'zustand';
+
+type WorkspaceState = {
+  /** Sent as X-Workspace-Id on every request; null until WorkspaceGate picks one. */
+  id: string | null;
+  setId: (id: string | null) => void;
+};
+
+export const useWorkspace = create<WorkspaceState>()((set) => ({
+  id: null,
+  setId: (id) => set({ id }),
+}));

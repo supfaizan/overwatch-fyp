@@ -1,5 +1,7 @@
 // mirrors the backend schemas (app/github, app/jira, app/onboarding)
 
+import type { Role } from '@/shared/workspaces/types';
+
 export type ParseStatus = 'pending' | 'in_progress' | 'done' | 'failed';
 export type AccessStatus = 'active' | 'revoked' | 'needs_install';
 
@@ -12,6 +14,8 @@ export type OnboardingRepo = {
 };
 
 export type OnboardingStatus = {
+  /** Only admins and owners connect repos and Jira. */
+  role: Role;
   github: {
     authorized: boolean;
     needs_reauth: boolean;

@@ -9,10 +9,10 @@ export const STEPS = [
 
 export type StepSlug = (typeof STEPS)[number]['slug'];
 
-/** Where onboarding should resume. Jira is optional, so a skipped Jira counts as done. */
+/** Where onboarding should resume. Jira is optional, so a skipped Jira counts as done; only admins connect it. */
 export function currentStep(status: OnboardingStatus, jiraSkipped: boolean): StepSlug {
   if (!status.github.authorized || status.github.repos.length === 0) return 'github';
-  if (!status.jira.project && !jiraSkipped) return 'jira';
+  if (!status.jira.project && !jiraSkipped && status.role !== 'member') return 'jira';
   return status.ready ? 'ready' : 'indexing';
 }
 

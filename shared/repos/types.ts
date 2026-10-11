@@ -1,11 +1,15 @@
 // mirrors the backend schemas (app/github)
 
-export type JobStatus = 'pending' | 'in_progress' | 'done' | 'failed';
+import type { JobStatus } from '@/shared/lib/job-status';
+
+export const ACCESS_STATUS = { active: 'active', revoked: 'revoked', needsInstall: 'needs_install' } as const;
+
+export type AccessStatus = (typeof ACCESS_STATUS)[keyof typeof ACCESS_STATUS];
 
 export type ConnectedRepo = {
   repo_full_name: string;
   default_branch: string;
-  access_status: 'active' | 'revoked' | 'needs_install';
+  access_status: AccessStatus;
   parse_status: JobStatus;
   parse_error: string | null;
   indexed_at: string | null;

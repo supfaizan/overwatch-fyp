@@ -1,17 +1,35 @@
-// mirrors the backend schemas (app/onboarding, app/workspaces)
+// mirrors the backend schemas (app/onboarding, app/connectors, app/workspaces)
 
-import type { Role } from '@/shared/workspaces/types';
+import type { ConnectionStatus as TrackerStatus } from '@/shared/connections/constants';
+import type { JobStatus } from '@/shared/lib/job-status';
+import type { ROLE, Role } from '@/shared/workspaces/types';
 
-export type JobStatus = 'pending' | 'in_progress' | 'done' | 'failed';
-
-/** Only the connection state settings shows; the full shape lives in the backend's onboarding schema. */
+/** Only the GitHub state settings shows; the full shape lives in the backend's onboarding schema. */
 export type ConnectionStatus = {
   github: { authorized: boolean; needs_reauth: boolean };
-  jira: {
-    connected: boolean;
-    needs_reauth: boolean;
-    project: { key: string; sync_status: JobStatus; sync_error: string | null } | null;
-  };
+};
+
+export type SyncTarget = {
+  key: string;
+  name: string | null;
+  sync_status: JobStatus;
+  sync_error: string | null;
+  last_synced_at: string | null;
+};
+
+/** A project (list, board) a tracker account can sync. */
+export type Target = { key: string; name: string | null; id: string | null };
+
+/** A tracker connector (Jira, ...) and this workspace's state for it. */
+export type Connection = {
+  provider: string;
+  name: string;
+  status: TrackerStatus;
+  /** False for grants made before board edits were written back: reconnect to edit. */
+  can_write: boolean;
+  external_account: { id: string; name: string | null; url: string | null } | null;
+  connected_at: string | null;
+  targets: SyncTarget[];
 };
 
 export type Member = {
@@ -23,7 +41,7 @@ export type Member = {
   joined_at: string;
 };
 
-export type InviteRole = Exclude<Role, 'owner'>;
+export type InviteRole = Exclude<Role, typeof ROLE.owner>;
 
 export type Invite = {
   id: string;

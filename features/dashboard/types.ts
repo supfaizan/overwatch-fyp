@@ -1,8 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
+import type { JobStatus } from '@/shared/lib/job-status';
 
 // mirrors the backend schemas (app/graph)
-
-export type ParseStatus = 'pending' | 'in_progress' | 'done' | 'failed';
 
 /** `Repository` is the root of the tree: always drawn and always open. */
 export type NodeLabel = 'Repository' | 'Module' | 'File' | 'Symbol' | 'Package' | 'Route' | 'Channel';
@@ -44,7 +43,7 @@ export type Overflow = { id: string; container_id: string; container_name: strin
 
 export type GraphView = {
   repo_full_name: string;
-  parse_status: ParseStatus;
+  parse_status: JobStatus;
   graph_version: string | null;
   nodes: ViewNode[];
   edges: ViewEdge[];

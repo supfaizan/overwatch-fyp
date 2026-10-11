@@ -7,6 +7,8 @@ import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import { useInstallations } from '@/shared/repos/hooks';
+import { JOB_STATUS } from '@/shared/lib/job-status';
+import { ACCESS_STATUS } from '@/shared/repos/types';
 import { useOnboardingStatus, useReindexRepo } from '../hooks';
 import type { OnboardingRepo } from '../types';
 import StepCard from './step-card';
@@ -45,13 +47,13 @@ function RepoProgress({ repo }: { repo: OnboardingRepo }) {
       <div className="flex items-center gap-3">
         <GithubMark className="text-muted" />
         <span className="flex-1 truncate font-medium">{repo.repo_full_name}</span>
-        {repo.parse_status === 'done' && typeof files === 'number' && <span className="text-muted">{files} files</span>}
+        {repo.parse_status === JOB_STATUS.done && typeof files === 'number' && <span className="text-muted">{files} files</span>}
         <StatusTag status={repo.parse_status} />
       </div>
-      {repo.access_status !== 'active' ? (
+      {repo.access_status !== ACCESS_STATUS.active ? (
         <AccessLost />
       ) : (
-        repo.parse_status === 'failed' && (
+        repo.parse_status === JOB_STATUS.failed && (
           <Banner
             type="error"
             action={

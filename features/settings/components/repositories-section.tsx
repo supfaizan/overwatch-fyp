@@ -14,9 +14,11 @@ import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
 import AddRepoDialog from '@/shared/repos/add-repo-dialog';
 import { useConnectedRepos, useInstallations } from '@/shared/repos/hooks';
-import type { ConnectedRepo } from '@/shared/repos/types';
+import { ACCESS_STATUS, type ConnectedRepo } from '@/shared/repos/types';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
+import { isRunning } from '@/shared/lib/job-status';
+import { ROLE } from '@/shared/workspaces/types';
 import { useDisconnectRepo, useReindexRepo } from '../hooks';
 import { SettingsSection } from './settings-layout';
 
@@ -26,7 +28,7 @@ export default function RepositoriesSection() {
   const installations = useInstallations();
   const [adding, setAdding] = useState(false);
   // only admins connect and disconnect; members still view and re-index
-  const isAdmin = hasRole(useCurrentWorkspace()?.role, 'admin');
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
 
   return (
     <SettingsSection
@@ -72,7 +74,7 @@ export default function RepositoriesSection() {
 function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: boolean }) {
   const reindex = useReindexRepo();
   const disconnect = useDisconnectRepo();
-  const running = repo.parse_status === 'pending' || repo.parse_status === 'in_progress';
+  const running = isRunning(repo.parse_status);
   const files = repo.graph_stats?.files;
 
   return (
@@ -86,7 +88,7 @@ function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: 
           {repo.parse_error && ` · ${repo.parse_error}`}
         </p>
       </div>
-      {repo.access_status === 'active' ? <StatusTag status={repo.parse_status} /> : <Tag variant="warning">No access</Tag>}
+      {repo.access_status === ACCESS_STATUS.active ? <StatusTag status={repo.parse_status} /> : <Tag variant="warning">No access</Tag>}
       <div className="flex gap-1">
         {repo.indexed_at && (
           <Tooltip content="Open in dashboard">
@@ -105,7 +107,7 @@ function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: 
               variant="tertiary"
               iconOnly
               aria-label={`Re-index ${repo.repo_full_name}`}
-              disabled={running || repo.access_status !== 'active'}
+              disabled={running || repo.access_status !== ACCESS_STATUS.active}
               loading={reindex.isPending}
               onClick={() => reindex.mutate(repo.repo_full_name)}
             >

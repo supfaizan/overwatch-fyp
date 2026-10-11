@@ -2,6 +2,7 @@
 
 import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
 import { ApiError, GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
+import { ERROR_CODE } from '@/shared/api/error-codes';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { Dialog, DialogContent } from '@/shared/components/dialog';
@@ -49,7 +50,7 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
           )
         }
       >
-        {error instanceof ApiError && error.errorCode === 'github_needs_reauth' ? (
+        {error instanceof ApiError && error.errorCode === ERROR_CODE.githubNeedsReauth ? (
           <Banner type="warning" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
             Your GitHub authorization expired or was revoked.
           </Banner>

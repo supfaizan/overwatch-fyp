@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { isRunning, JOB_POLL_MS } from '@/shared/lib/job-status';
 import * as dashboardApi from './api';
 import { toCanvas } from './lib/canvas';
 import { useViewStore } from './store';
@@ -10,8 +11,6 @@ const keys = {
   viewOptions: ['graph', 'view-options'] as const,
   view: (repo: string, expand: string[], reveal: string[]) => ['graph', 'view', repo, { expand, reveal }] as const,
 };
-
-const POLL_MS = 4_000;
 
 /** The filter vocabulary and page size; only changes with the backend. */
 export function useViewOptions() {
@@ -30,8 +29,7 @@ export function useGraphView(repo: string) {
     placeholderData: (previous) => (previous?.view.repo_full_name === repo ? previous : undefined),
     // a repo being re-indexed is worth polling until its new graph lands
     refetchInterval: ({ state }) => {
-      const status = state.data?.view.parse_status;
-      return status === 'pending' || status === 'in_progress' ? POLL_MS : false;
+      return isRunning(state.data?.view.parse_status) ? JOB_POLL_MS : false;
     },
   });
 

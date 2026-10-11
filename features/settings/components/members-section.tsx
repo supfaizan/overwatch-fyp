@@ -16,7 +16,7 @@ import Tooltip from '@/shared/components/tooltip';
 import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
-import type { Role, Workspace } from '@/shared/workspaces/types';
+import { ROLE, type Role, type Workspace } from '@/shared/workspaces/types';
 import { useCreateInvite, useInvites, useMembers, useRemoveMember, useRevokeInvite, useUpdateMember } from '../hooks';
 import type { InviteRole, Member } from '../types';
 import { SettingsSection } from './settings-layout';
@@ -26,7 +26,7 @@ const ROLE_LABELS: Record<Role, string> = { owner: 'Owner', admin: 'Admin', memb
 export default function MembersSection() {
   const workspace = useCurrentWorkspace();
   if (!workspace) return null;
-  const isAdmin = hasRole(workspace.role, 'admin');
+  const isAdmin = hasRole(workspace.role, ROLE.admin);
 
   return (
     <SettingsSection title="Members" description="Admins connect repositories and integrations and manage people; members can view and re-index.">
@@ -65,7 +65,7 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
   const name = member.name ?? member.github_login;
   const isSelf = member.user_id === userId;
   // nobody changes a role above their own; the backend also keeps one owner
-  const canManage = !isSelf && hasRole(workspace.role, 'admin') && hasRole(workspace.role, member.role);
+  const canManage = !isSelf && hasRole(workspace.role, ROLE.admin) && hasRole(workspace.role, member.role);
   const roles = (Object.keys(ROLE_LABELS) as Role[]).filter((role) => hasRole(workspace.role, role));
 
   return (
@@ -115,7 +115,7 @@ function Invites({ workspace }: { workspace: Workspace }) {
   const invites = useInvites(workspace.id, true);
   const create = useCreateInvite();
   const revoke = useRevokeInvite();
-  const [role, setRole] = useState<InviteRole>('member');
+  const [role, setRole] = useState<InviteRole>(ROLE.member);
   const [githubLogin, setGithubLogin] = useState('');
   const [url, setUrl] = useState<string | null>(null);
 

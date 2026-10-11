@@ -3,6 +3,7 @@ import { endSession, refreshSession } from '@/shared/session/refresh';
 import { useSession } from '@/shared/session/store';
 import { useWorkspace } from '@/shared/workspaces/store';
 import { API_URL, ApiError, toApiError, type ApiEnvelope } from './envelope';
+import { ERROR_CODE } from './error-codes';
 
 const http = axios.create({ baseURL: API_URL, withCredentials: true });
 
@@ -15,7 +16,7 @@ http.interceptors.request.use((config) => {
 });
 
 // a missing or expired access token is recoverable while the refresh cookie is still good
-const RECOVERABLE = new Set(['invalid_token', 'missing_token']);
+const RECOVERABLE = new Set<string>([ERROR_CODE.invalidToken, ERROR_CODE.missingToken]);
 
 http.interceptors.response.use(undefined, async (error: AxiosError<ApiEnvelope<null>>) => {
   const request = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;

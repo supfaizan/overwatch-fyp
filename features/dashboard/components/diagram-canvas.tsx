@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
+import { isRunning, JOB_STATUS } from '@/shared/lib/job-status';
 import { useGraphView } from '../hooks';
 import { FOCUS_STROKE, TREE_STROKE, edgeStyle } from '../lib/appearance';
 import { describeEdge, neighbourhood, relationTo } from '../lib/edges';
@@ -75,7 +76,7 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
   }
   if (data.nodes.length === 0) {
     const status = data.view.parse_status;
-    if (status === 'failed') {
+    if (status === JOB_STATUS.failed) {
       return (
         <Notice>
           <Banner type="error" action={<Button size="sm" asChild><Link href="/settings/repositories">Repositories</Link></Button>}>
@@ -84,7 +85,7 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
         </Notice>
       );
     }
-    const indexing = status === 'pending' || status === 'in_progress';
+    const indexing = isRunning(status);
     return (
       <Notice>
         {indexing && <Spinner className="size-5 text-muted" />}

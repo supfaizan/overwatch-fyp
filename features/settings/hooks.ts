@@ -3,23 +3,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
-import { workspaceKeys } from '@/shared/workspaces/hooks';
+import { queryKeys } from '@/shared/api/query-keys';
+import { isRunning, JOB_POLL_MS } from '@/shared/lib/job-status';
 import * as settingsApi from './api';
 
-// same key as onboarding, so a change here refreshes it too
 const keys = {
-  status: ['onboarding', 'status'] as const,
+  available: (provider: string) => [...queryKeys.connections, provider, 'available'] as const,
+  workspace: (id: string, part: 'members' | 'invites') => [...queryKeys.workspaces, id, part] as const,
 };
-
-const POLL_MS = 3_000;
-const isRunning = (status: string | undefined) => status === 'pending' || status === 'in_progress';
 const showError = (error: ApiError) => toast.error(error.message);
 
-export function useConnectionStatus() {
+export const useConnectionStatus = () => useQuery({ queryKey: queryKeys.onboardingStatus, queryFn: settingsApi.getConnectionStatus });
+
+export function useConnections() {
   return useQuery({
-    queryKey: keys.status,
-    queryFn: settingsApi.getConnectionStatus,
-    refetchInterval: ({ state }) => (isRunning(state.data?.jira.project?.sync_status) ? POLL_MS : false),
+    queryKey: queryKeys.connections,
+    queryFn: settingsApi.getConnections,
+    refetchInterval: ({ state }) =>
+      state.data?.some((c) => c.targets.some((t) => isRunning(t.sync_status))) ? JOB_POLL_MS : false,
   });
 }
 
@@ -28,7 +29,7 @@ function useSettingsMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise<T
   return useMutation<TResult, ApiError, TArg>({
     mutationFn,
     onSuccess: (_, arg) => {
-      for (const queryKey of [['onboarding'], ['github'], ['jira']]) void queryClient.invalidateQueries({ queryKey });
+      for (const queryKey of [queryKeys.onboardingStatus, queryKeys.github, queryKeys.connections, queryKeys.workItems]) void queryClient.invalidateQueries({ queryKey });
       toast.success(success(arg));
     },
     onError: showError,
@@ -37,21 +38,24 @@ function useSettingsMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise<T
 
 export const useReindexRepo = () => useSettingsMutation(settingsApi.reindexRepo, (repo) => `Re-indexing ${repo}.`);
 export const useDisconnectRepo = () => useSettingsMutation(settingsApi.disconnectRepo, (repo) => `Disconnected ${repo}.`);
-export const useDisconnectJira = () => useSettingsMutation(settingsApi.disconnectJira, () => 'Jira disconnected. Imported tickets are kept.');
+export const useAvailableTargets = (provider: string) =>
+  useQuery({ queryKey: keys.available(provider), queryFn: () => settingsApi.getAvailableTargets(provider) });
+export const useAddTarget = () => useSettingsMutation(settingsApi.addTarget, ({ target }) => `Syncing ${target.key}.`);
+export const useDisconnect = (name: string) =>
+  useSettingsMutation(settingsApi.disconnect, () => `${name} disconnected. Imported tickets are kept.`);
+export const useSyncNow = (name: string) => useSettingsMutation(settingsApi.syncNow, () => `Syncing ${name}.`);
 
-export function useStartJiraAuthorization() {
-  return useMutation<{ authorization_url: string }, ApiError>({
-    mutationFn: settingsApi.startJiraAuthorization,
+export function useStartAuthorization() {
+  return useMutation<{ authorization_url: string }, ApiError, string>({
+    mutationFn: settingsApi.startAuthorization,
     onSuccess: ({ authorization_url }) => window.location.assign(authorization_url),
     onError: showError,
   });
 }
 
-const workspaceKey = (id: string, part: 'members' | 'invites') => [...workspaceKeys.all, id, part] as const;
-
-export const useMembers = (id: string) => useQuery({ queryKey: workspaceKey(id, 'members'), queryFn: () => settingsApi.getMembers(id) });
+export const useMembers = (id: string) => useQuery({ queryKey: keys.workspace(id, 'members'), queryFn: () => settingsApi.getMembers(id) });
 export const useInvites = (id: string, enabled: boolean) =>
-  useQuery({ queryKey: workspaceKey(id, 'invites'), queryFn: () => settingsApi.getInvites(id), enabled });
+  useQuery({ queryKey: keys.workspace(id, 'invites'), queryFn: () => settingsApi.getInvites(id), enabled });
 
 /** A workspace change: refreshes the workspace list and its members and invites. */
 function useWorkspaceMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise<TResult>, success?: (result: TResult, arg: TArg) => string) {
@@ -59,7 +63,7 @@ function useWorkspaceMutation<TArg, TResult>(mutationFn: (arg: TArg) => Promise<
   return useMutation<TResult, ApiError, TArg>({
     mutationFn,
     onSuccess: (result, arg) => {
-      void queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
       if (success) toast.success(success(result, arg));
     },
     onError: showError,

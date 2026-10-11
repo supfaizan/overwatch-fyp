@@ -7,6 +7,7 @@ import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
 import { useCurrentWorkspace, useSwitchWorkspace, useWorkspaces } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
+import { ROLE } from '@/shared/workspaces/types';
 
 function Initial({ name }: { name: string }) {
   return (
@@ -65,7 +66,7 @@ export default function WorkspaceSwitcher({ collapsed, onCreate }: { collapsed: 
         <DropdownMenuItem onSelect={onCreate}>
           <Plus /> Create workspace…
         </DropdownMenuItem>
-        {hasRole(current.role, 'admin') && (
+        {hasRole(current.role, ROLE.admin) && (
           <DropdownMenuItem onSelect={() => router.push('/settings/members')}>
             <UserPlus /> Invite people
           </DropdownMenuItem>

@@ -13,6 +13,9 @@ import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { useWorkspace } from '@/shared/workspaces/store';
+import { JOB_STATUS } from '@/shared/lib/job-status';
+import { ACCESS_STATUS } from '@/shared/repos/types';
+import { ROLE } from '@/shared/workspaces/types';
 
 /** Which repo the app is looking at; switching opens it on the dashboard. */
 export default function RepoSwitcher({ collapsed, onAddRepo }: { collapsed: boolean; onAddRepo: () => void }) {
@@ -23,7 +26,7 @@ export default function RepoSwitcher({ collapsed, onAddRepo }: { collapsed: bool
   const repos = useConnectedRepos();
   const current = repos.data ? pickRepo(repos.data, requested, readLastRepo(userId, workspaceId))?.repo_full_name : undefined;
   const label = current ?? 'Choose a repository';
-  const isAdmin = hasRole(useCurrentWorkspace()?.role, 'admin');
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
 
   const trigger = (
     <DropdownMenuTrigger
@@ -59,10 +62,10 @@ export default function RepoSwitcher({ collapsed, onAddRepo }: { collapsed: bool
           <DropdownMenuItem key={repo.repo_full_name} onSelect={() => router.push(`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`)}>
             <Check className={cn(repo.repo_full_name !== current && 'invisible')} />
             <span className="min-w-0 flex-1 truncate">{repo.repo_full_name}</span>
-            {repo.access_status !== 'active' ? (
+            {repo.access_status !== ACCESS_STATUS.active ? (
               <Tag variant="warning">No access</Tag>
             ) : (
-              (isRunning(repo) || repo.parse_status === 'failed') && <StatusTag status={repo.parse_status} />
+              (isRunning(repo) || repo.parse_status === JOB_STATUS.failed) && <StatusTag status={repo.parse_status} />
             )}
           </DropdownMenuItem>
         ))}

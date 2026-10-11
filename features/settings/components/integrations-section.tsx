@@ -1,23 +1,44 @@
 'use client';
 
 import { ArrowSquareOut, Kanban } from '@phosphor-icons/react/ssr';
-import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { type ReactNode, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
 import GithubMark from '@/shared/components/github-mark';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import Tag from '@/shared/components/tag';
 import { useInstallations } from '@/shared/repos/hooks';
-import { useConnectionStatus, useDisconnectJira, useStartJiraAuthorization } from '../hooks';
-import type { ConnectionStatus } from '../types';
+import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { hasRole } from '@/shared/workspaces/lib';
+import { CONNECTION_STATUS } from '@/shared/connections/constants';
+import { ROLE } from '@/shared/workspaces/types';
+import { useAddTarget, useAvailableTargets, useConnections, useConnectionStatus, useDisconnect, useStartAuthorization, useSyncNow } from '../hooks';
+import type { Connection } from '../types';
 import { SettingsSection } from './settings-layout';
 
-export default function IntegrationsSection() {
+// what a tracker's OAuth callback reports, e.g. ?jira=connected
+const OUTCOMES: Record<string, () => void> = {
+  connected: () => toast.success('Connected.'),
+  denied: () => toast.error('Authorization was cancelled.'),
+  error: () => toast.error("Couldn't connect. Please try again."),
+};
+
+export default function IntegrationsSection({ outcome }: { outcome?: string }) {
+  const router = useRouter();
   const status = useConnectionStatus();
+
+  useEffect(() => {
+    if (!outcome) return;
+    OUTCOMES[outcome]?.();
+    router.replace('/settings/integrations'); // drop the outcome so a refresh doesn't toast again
+  }, [outcome, router]);
 
   return (
     <SettingsSection title="Integrations" description="The tools Overwatch reads from to understand your project.">
@@ -30,7 +51,7 @@ export default function IntegrationsSection() {
       {status.isSuccess && (
         <>
           <SourceControl needsReauth={!status.data.github.authorized || status.data.github.needs_reauth} />
-          <IssueTracker jira={status.data.jira} />
+          <IssueTrackers />
         </>
       )}
     </SettingsSection>
@@ -90,39 +111,116 @@ function SourceControl({ needsReauth }: { needsReauth: boolean }) {
   );
 }
 
-function IssueTracker({ jira }: { jira: ConnectionStatus['jira'] }) {
-  const connect = useStartJiraAuthorization();
-  const disconnect = useDisconnectJira();
+function IssueTrackers() {
+  const connections = useConnections();
+
+  if (connections.isPending) return <Skeleton className="h-32 w-full" />;
+  if (connections.isError) {
+    return (
+      <Banner type="error" action={<Button size="sm" onClick={() => connections.refetch()}>Retry</Button>}>
+        {connections.error.message}
+      </Banner>
+    );
+  }
+  return connections.data.map((connection) => <IssueTracker key={connection.provider} connection={connection} />);
+}
+
+function IssueTracker({ connection }: { connection: Connection }) {
+  const { provider, name, status, can_write, external_account, targets } = connection;
+  const connect = useStartAuthorization();
+  const disconnect = useDisconnect(name);
+  const sync = useSyncNow(name);
+  const connected = status === CONNECTION_STATUS.active;
+  // only admins connect, sync and disconnect; members see the state
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
 
   return (
     <IntegrationCard
       icon={<Kanban />}
       category="Issue tracker"
-      name="Jira"
-      state={jira.project ? <StatusTag status={jira.project.sync_status} done="Synced" /> : <Tag>Not connected</Tag>}
+      name={name}
+      state={
+        status === CONNECTION_STATUS.needsReauth ? <Tag variant="warning">Needs reconnect</Tag> : connected ? <Tag variant="success">Connected</Tag> : <Tag>Not connected</Tag>
+      }
     >
-      {jira.project && (
-        <p className="text-sm">
-          Project <span className="font-medium">{jira.project.key}</span>
-          {jira.project.sync_error && <span className="text-danger"> · {jira.project.sync_error}</span>}
+      {isAdmin && connected && !can_write && (
+        <Banner type="warning" action={<Button size="sm" loading={connect.isPending} onClick={() => connect.mutate(provider)}>Reconnect</Button>}>
+          Reconnect {name} to edit, move and create its tickets from the board.
+        </Banner>
+      )}
+      {external_account?.name && (
+        <p className="text-sm text-muted">
+          Site <span className="text-foreground">{external_account.name}</span>
         </p>
       )}
-      <div className="flex gap-2">
-        {jira.connected && !jira.needs_reauth ? (
-          <ConfirmDialog
-            trigger={<Button size="sm">Disconnect</Button>}
-            title="Disconnect Jira?"
-            description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
-            confirmLabel="Disconnect Jira"
-            pending={disconnect.isPending}
-            onConfirm={(close) => disconnect.mutate(undefined, { onSuccess: close })}
-          />
-        ) : (
-          <Button size="sm" variant="primary" loading={connect.isPending} onClick={() => connect.mutate()}>
-            {jira.needs_reauth ? 'Reconnect Jira' : 'Connect Jira'}
-          </Button>
-        )}
-      </div>
+      {targets.length > 0 && (
+        <ul className="flex flex-col gap-1.5 text-sm">
+          {targets.map((target) => (
+            <li key={target.key} className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate">
+                <span className="font-medium">{target.key}</span>
+                {target.name && <span className="text-muted"> · {target.name}</span>}
+                {target.sync_error && <span className="text-danger"> · {target.sync_error}</span>}
+              </span>
+              <StatusTag status={target.sync_status} done="Synced" />
+            </li>
+          ))}
+        </ul>
+      )}
+      {isAdmin && connected && <AddTarget provider={provider} synced={targets.map((t) => t.key)} />}
+      {isAdmin && (
+        <div className="flex gap-2">
+          {connected ? (
+            <>
+              {targets.length > 0 && (
+                <Button size="sm" loading={sync.isPending} onClick={() => sync.mutate(provider)}>
+                  Sync now
+                </Button>
+              )}
+              <ConfirmDialog
+                trigger={<Button size="sm">Disconnect</Button>}
+                title={`Disconnect ${name}?`}
+                description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
+                confirmLabel={`Disconnect ${name}`}
+                pending={disconnect.isPending}
+                onConfirm={(close) => disconnect.mutate(provider, { onSuccess: close })}
+              />
+            </>
+          ) : (
+            <Button size="sm" variant="primary" loading={connect.isPending} onClick={() => connect.mutate(provider)}>
+              {status === CONNECTION_STATUS.needsReauth ? `Reconnect ${name}` : `Connect ${name}`}
+            </Button>
+          )}
+        </div>
+      )}
     </IntegrationCard>
+  );
+}
+
+function AddTarget({ provider, synced }: { provider: string; synced: string[] }) {
+  const available = useAvailableTargets(provider);
+  const add = useAddTarget();
+  const [selected, setSelected] = useState('');
+  const options = (available.data ?? []).filter((target) => !synced.includes(target.key));
+  const target = options.find((option) => option.key === selected);
+
+  if (available.isPending) return <Skeleton className="h-9 w-full" />;
+  if (options.length === 0) return null;
+  return (
+    <div className="flex gap-2">
+      <Select value={selected} onValueChange={setSelected}>
+        <SelectTrigger className="flex-1" size="sm" aria-label="Project to sync" placeholder="Add a project to sync" />
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.key} value={option.key}>
+              {option.name ? `${option.key} · ${option.name}` : option.key}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button size="sm" disabled={!target} loading={add.isPending} onClick={() => target && add.mutate({ provider, target }, { onSuccess: () => setSelected('') })}>
+        Add
+      </Button>
+    </div>
   );
 }

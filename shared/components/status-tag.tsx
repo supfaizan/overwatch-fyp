@@ -1,9 +1,9 @@
+import { JOB_STATUS, type JobStatus } from '@/shared/lib/job-status';
 import Spinner from './spinner';
 import Tag from './tag';
 
-type Status = 'pending' | 'in_progress' | 'done' | 'failed';
 
-const labels: Record<Status, { text: string; variant: 'default' | 'primary' | 'success' | 'danger' }> = {
+const labels: Record<JobStatus, { text: string; variant: 'default' | 'primary' | 'success' | 'danger' }> = {
   pending: { text: 'Queued', variant: 'default' },
   in_progress: { text: 'Indexing', variant: 'primary' },
   done: { text: 'Indexed', variant: 'success' },
@@ -12,7 +12,7 @@ const labels: Record<Status, { text: string; variant: 'default' | 'primary' | 's
 
 type StatusTagProps = {
   /** A background job's status, as the backend reports it (`parse_status`, `sync_status`). */
-  status: Status;
+  status: JobStatus;
   /**
    * Label for a finished job, e.g. "Synced" for a tracker.
    * @default 'Indexed'
@@ -28,8 +28,8 @@ export default function StatusTag({ status, done = 'Indexed' }: StatusTagProps) 
   const { text, variant } = labels[status];
   return (
     <Tag variant={variant}>
-      {status === 'in_progress' && <Spinner className="size-3" />}
-      {status === 'done' ? done : text}
+      {status === JOB_STATUS.inProgress && <Spinner className="size-3" />}
+      {status === JOB_STATUS.done ? done : text}
     </Tag>
   );
 }

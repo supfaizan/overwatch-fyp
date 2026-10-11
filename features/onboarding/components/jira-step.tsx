@@ -28,6 +28,7 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
   const next = () => router.push('/onboarding/indexing');
   const connect = useConnectJiraProject(next);
   const [selected, setSelected] = useState('');
+  const selectedProject = projects.data?.find((project) => project.key === selected);
 
   useEffect(() => {
     if (!outcome) return;
@@ -98,7 +99,7 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
           <Button variant="tertiary" onClick={skip}>
             Skip for now
           </Button>
-          <Button variant="primary" disabled={!selected} loading={connect.isPending} onClick={() => connect.mutate(selected)}>
+          <Button variant="primary" disabled={!selectedProject} loading={connect.isPending} onClick={() => selectedProject && connect.mutate(selectedProject)}>
             Connect project
           </Button>
         </>

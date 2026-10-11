@@ -9,7 +9,7 @@ import { Input } from '@/shared/components/input';
 import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace, useSwitchWorkspace, useWorkspaces } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
-import type { Workspace } from '@/shared/workspaces/types';
+import { ROLE, type Workspace } from '@/shared/workspaces/types';
 import { useDeleteWorkspace, useRemoveMember, useRenameWorkspace } from '../hooks';
 import { SettingsSection } from './settings-layout';
 
@@ -29,7 +29,7 @@ export default function WorkspaceSection() {
 function NameCard({ workspace }: { workspace: Workspace }) {
   const [name, setName] = useState(workspace.name);
   const rename = useRenameWorkspace();
-  const canEdit = hasRole(workspace.role, 'admin');
+  const canEdit = hasRole(workspace.role, ROLE.admin);
   const trimmed = name.trim();
 
   const submit = (event: FormEvent) => {
@@ -90,7 +90,7 @@ function DangerCard({ workspace }: { workspace: Workspace }) {
           pending={leave.isPending}
           onConfirm={(close) => leave.mutate({ id: workspace.id, userId }, { onSuccess: () => leaveFor(close) })}
         />
-        {hasRole(workspace.role, 'owner') && (
+        {hasRole(workspace.role, ROLE.owner) && (
           <ConfirmDialog
             trigger={
               <Button variant="danger">

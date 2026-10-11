@@ -3,24 +3,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
+import { queryKeys } from '@/shared/api/query-keys';
+import { JOB_POLL_MS } from '@/shared/lib/job-status';
 import * as reposApi from './api';
 import { isRunning } from './lib';
 import type { ConnectedRepo } from './types';
 
 export const repoKeys = {
-  connected: ['github', 'repos', 'connected'] as const,
-  available: ['github', 'repos'] as const,
-  installations: ['github', 'installations'] as const,
+  connected: [...queryKeys.github, 'repos', 'connected'] as const,
+  available: [...queryKeys.github, 'repos'] as const,
+  installations: [...queryKeys.github, 'installations'] as const,
 };
-
-const POLL_MS = 4_000;
 
 /** The user's connected repos; polls while any is indexing. */
 export function useConnectedRepos() {
   return useQuery({
     queryKey: repoKeys.connected,
     queryFn: reposApi.getConnectedRepos,
-    refetchInterval: ({ state }) => (state.data?.some(isRunning) ? POLL_MS : false),
+    refetchInterval: ({ state }) => (state.data?.some(isRunning) ? JOB_POLL_MS : false),
   });
 }
 
@@ -42,8 +42,8 @@ export function useConnectRepo(onConnected: (repo: ConnectedRepo) => void) {
       queryClient.setQueryData<ConnectedRepo[]>(repoKeys.connected, (repos) =>
         repos && !repos.some((known) => known.repo_full_name === repo.repo_full_name) ? [...repos, repo] : repos,
       );
-      void queryClient.invalidateQueries({ queryKey: ['github'] });
-      void queryClient.invalidateQueries({ queryKey: ['onboarding'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.github });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingStatus });
       toast.success(`Connected ${repo.repo_full_name}. Indexing has started.`);
       onConnected(repo);
     },

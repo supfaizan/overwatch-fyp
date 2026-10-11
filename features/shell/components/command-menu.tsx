@@ -9,6 +9,8 @@ import { useConnectedRepos } from '@/shared/repos/hooks';
 import { signOut } from '@/shared/session/sign-out';
 import { useCurrentWorkspace, useSwitchWorkspace, useWorkspaces } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
+import { ACCESS_STATUS } from '@/shared/repos/types';
+import { ROLE } from '@/shared/workspaces/types';
 import { isCommandShortcut } from '../lib';
 import { PAGES, SETTINGS_PAGES } from '../nav';
 
@@ -59,7 +61,7 @@ export default function CommandMenu({ open, onOpenChange, onAddRepo, onCreateWor
         </CommandGroup>
         <CommandGroup heading="Repositories">
           {repos.data
-            ?.filter((repo) => repo.access_status === 'active')
+            ?.filter((repo) => repo.access_status === ACCESS_STATUS.active)
             .map((repo) => (
               <CommandItem
                 key={repo.repo_full_name}
@@ -70,7 +72,7 @@ export default function CommandMenu({ open, onOpenChange, onAddRepo, onCreateWor
                 <GitBranch weight="fill" className="text-accent-blue" /> {repo.repo_full_name}
               </CommandItem>
             ))}
-          {hasRole(current?.role, 'admin') && (
+          {hasRole(current?.role, ROLE.admin) && (
             <CommandItem keywords={['repo', 'repository', 'connect']} onSelect={run(onAddRepo)}>
               <Plus /> Add repository…
             </CommandItem>

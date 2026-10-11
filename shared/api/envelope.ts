@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ERROR_CODE } from './error-codes';
 
 /** Every backend response has this shape; see the BE README "API responses". */
 export type ApiEnvelope<T> = {
@@ -31,6 +32,6 @@ export function toApiError(error: unknown): ApiError {
     const code = typeof meta?.error_code === 'string' ? meta.error_code : 'unknown';
     return new ApiError(message, error.response.status, code);
   }
-  return new ApiError("Can't reach the server. Check your connection and try again.", 0, 'network_error');
+  return new ApiError("Can't reach the server. Check your connection and try again.", 0, ERROR_CODE.networkError);
 }
 

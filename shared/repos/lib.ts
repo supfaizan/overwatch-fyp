@@ -1,8 +1,9 @@
-import type { ConnectedRepo } from './types';
+import { isRunning as isJobRunning } from '@/shared/lib/job-status';
+import { ACCESS_STATUS, type ConnectedRepo } from './types';
 
-export const isRunning = (repo: Pick<ConnectedRepo, 'parse_status'>) => repo.parse_status === 'pending' || repo.parse_status === 'in_progress';
+export const isRunning = (repo: Pick<ConnectedRepo, 'parse_status'>) => isJobRunning(repo.parse_status);
 
-const isReachable = (repo: ConnectedRepo) => repo.access_status === 'active';
+const isReachable = (repo: ConnectedRepo) => repo.access_status === ACCESS_STATUS.active;
 
 /** Repos with a graph to show: indexed at least once (a re-index keeps the old graph) and still reachable. */
 export function viewableRepos(repos: ConnectedRepo[]): ConnectedRepo[] {

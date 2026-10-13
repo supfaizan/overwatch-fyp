@@ -2,6 +2,12 @@
 
 import { ToggleGroup } from 'radix-ui';
 import { useState, type ReactNode } from 'react';
+import { cn } from '@/shared/lib/cn';
+
+const sizes = {
+  sm: 'h-6 px-2 text-xs [&_svg]:size-3.5',
+  md: 'h-8 px-2.5 text-sm [&_svg]:size-4',
+};
 
 type Option<T extends string> = { value: T; label: ReactNode; icon?: ReactNode };
 
@@ -19,12 +25,18 @@ type SegmentedButtonProps<T extends string> = {
   onValueChange?: (value: T) => void;
   /** Required: names the group for screen readers. */
   'aria-label': string;
+  /**
+   * `sm` for a secondary switch that shouldn't draw the eye.
+   * @default 'md'
+   */
+  size?: keyof typeof sizes;
 };
 
 /**
  * Pick one of a few views, e.g. Apps / Files / Chat (Radix ToggleGroup). One option is always selected.
  * - Two to four short options. For more, use a dropdown or tabs.
  * - Use it to switch views or modes, not to trigger actions.
+ * - `size="sm"` when the switch is secondary to what's around it.
  */
 export default function SegmentedButton<T extends string>({
   options,
@@ -32,6 +44,7 @@ export default function SegmentedButton<T extends string>({
   defaultValue,
   onValueChange,
   'aria-label': ariaLabel,
+  size = 'md',
 }: SegmentedButtonProps<T>) {
   const [current, setCurrent] = useState(defaultValue ?? options[0]?.value);
 
@@ -53,7 +66,10 @@ export default function SegmentedButton<T extends string>({
         <ToggleGroup.Item
           key={option.value}
           value={option.value}
-          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-transparent px-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm [&_svg]:size-4"
+          className={cn(
+            'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-transparent font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm',
+            sizes[size],
+          )}
         >
           {option.icon}
           {option.label}

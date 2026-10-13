@@ -2,6 +2,8 @@
 /* enter/exit utilities (animate-in, fade-in-0...) for Radix popovers and dialogs */
 @import "tw-animate-css";
 @source inline("motion-safe:animate-grid-drift");
+/* Streamdown (chat answers) styles its markdown with utilities from its own bundle */
+@source "../node_modules/streamdown/dist/*.js";
 
 /* next-themes toggles `.dark` on <html>, so `dark:` follows it instead of the OS */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -24,10 +26,18 @@
   --color-grid: #7fb0f3;
 
   --color-danger: #db3707;
+  --color-danger-strong: #9e2804;
   --color-warning: #f7a501;
   /* warning is too light for text on white, use -strong for text/icons */
   --color-warning-strong: #a36500;
   --color-success: #388600;
+
+  /* icon accents, so nav icons can be told apart at a glance */
+  --color-accent-blue: #1d72e8;
+  --color-accent-orange: #e8590c;
+  --color-accent-purple: #7c4dff;
+  --color-accent-amber: #d99a00;
+  --color-accent-slate: #5f6b7a;
 
   /* PostHog's raised "chrome" edge; pair with a shadow color, e.g. `shadow-chrome shadow-primary-strong` */
   --shadow-chrome: 0 4px 0 #000;
@@ -64,6 +74,12 @@
   --color-grid: #2f5c9c;
   /* brighter status colors so text stays readable on dark surfaces */
   --color-danger: #f2602b;
+  --color-danger-strong: #b8400f;
   --color-warning-strong: var(--color-warning);
   --color-success: #5cb82e;
+  --color-accent-blue: #4b93f5;
+  --color-accent-orange: #ff8a47;
+  --color-accent-purple: #a78bfa;
+  --color-accent-amber: #f5c542;
+  --color-accent-slate: #9aa6b5;
 }

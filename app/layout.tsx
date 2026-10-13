@@ -18,9 +18,10 @@ export default function RootLayout({
   return (
     // next-themes sets the class before hydration, so the mismatch warning is expected
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="bg-background text-foreground antialiased px-4 py-2">
+      <body className="bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" disableTransitionOnChange>
-          {children}
+          {/* padding lives here, not on body: Radix's scroll lock overrides body padding while a menu or dialog is open */}
+          <div className="px-4 py-2">{children}</div>
           <Toaster />
         </ThemeProvider>
       </body>

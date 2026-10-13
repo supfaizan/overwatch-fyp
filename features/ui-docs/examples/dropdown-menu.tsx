@@ -1,4 +1,4 @@
-import { ChevronDown, Copy, Pin, Share2, Trash2 } from 'lucide-react';
+import { CaretDown, Copy, PushPin, ShareNetwork, Trash } from '@phosphor-icons/react/ssr';
 import Button from '@/shared/components/button';
 import {
   DropdownMenu,
@@ -15,23 +15,23 @@ export function Actions() {
       <DropdownMenuTrigger asChild>
         <Button>
           Actions
-          <ChevronDown />
+          <CaretDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuLabel>Dashboard</DropdownMenuLabel>
         <DropdownMenuItem>
-          <Pin /> Pin
+          <PushPin /> Pin
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Share2 /> Share
+          <ShareNetwork /> Share
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <Copy /> Duplicate
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem danger>
-          <Trash2 /> Delete
+          <Trash /> Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

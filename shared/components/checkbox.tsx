@@ -1,4 +1,4 @@
-import { Check, Minus } from 'lucide-react';
+import { Check, Minus } from '@phosphor-icons/react/ssr';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
@@ -18,8 +18,8 @@ export default function Checkbox({ className, ...props }: ComponentProps<typeof 
       {...props}
     >
       <CheckboxPrimitive.Indicator>
-        <Check className="size-3.5 group-data-[state=indeterminate]:hidden" strokeWidth={3} />
-        <Minus className="hidden size-3.5 group-data-[state=indeterminate]:block" strokeWidth={3} />
+        <Check className="size-3.5 group-data-[state=indeterminate]:hidden" weight="bold" />
+        <Minus className="hidden size-3.5 group-data-[state=indeterminate]:block" weight="bold" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );

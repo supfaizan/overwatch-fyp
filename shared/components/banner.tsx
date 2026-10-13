@@ -1,15 +1,15 @@
 'use client';
 
-import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react';
+import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react/ssr';
 import { useState, type ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
 import Button from './button';
 
 const types = {
   info: { icon: Info, box: 'border-border bg-surface', tone: 'text-foreground' },
-  success: { icon: CircleCheck, box: 'border-success/40 bg-success/10', tone: 'text-success' },
-  warning: { icon: TriangleAlert, box: 'border-warning/50 bg-warning/10', tone: 'text-warning-strong' },
-  error: { icon: CircleAlert, box: 'border-danger/40 bg-danger/10', tone: 'text-danger' },
+  success: { icon: CheckCircle, box: 'border-success/40 bg-success/10', tone: 'text-success' },
+  warning: { icon: Warning, box: 'border-warning/50 bg-warning/10', tone: 'text-warning-strong' },
+  error: { icon: WarningCircle, box: 'border-danger/40 bg-danger/10', tone: 'text-danger' },
 };
 
 type BannerProps = {

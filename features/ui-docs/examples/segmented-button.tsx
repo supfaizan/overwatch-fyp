@@ -1,4 +1,4 @@
-import { FolderOpen, LayoutGrid, MessageSquare } from 'lucide-react';
+import { ChatCircle, FolderOpen, SquaresFour } from '@phosphor-icons/react/ssr';
 import SegmentedButton from '@/shared/components/segmented-button';
 
 export function Views() {
@@ -6,9 +6,22 @@ export function Views() {
     <SegmentedButton
       aria-label="Sidebar view"
       options={[
-        { value: 'apps', label: 'Apps', icon: <LayoutGrid /> },
+        { value: 'apps', label: 'Apps', icon: <SquaresFour /> },
         { value: 'files', label: 'Files', icon: <FolderOpen /> },
-        { value: 'chat', label: 'Chat', icon: <MessageSquare /> },
+        { value: 'chat', label: 'Chat', icon: <ChatCircle /> },
+      ]}
+    />
+  );
+}
+
+export function Small() {
+  return (
+    <SegmentedButton
+      size="sm"
+      aria-label="Board view"
+      options={[
+        { value: 'board', label: 'Board' },
+        { value: 'backlog', label: 'Backlog' },
       ]}
     />
   );

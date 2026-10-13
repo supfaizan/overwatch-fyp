@@ -1,0 +1,97 @@
+'use client';
+
+import { ReactFlowProvider } from '@xyflow/react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ChatCircleDots } from '@phosphor-icons/react/ssr';
+import { useEffect } from 'react';
+import Banner from '@/shared/components/banner';
+import Button from '@/shared/components/button';
+import Spinner from '@/shared/components/spinner';
+import { useConnectedRepos } from '@/shared/repos/hooks';
+import { pickRepo, readLastRepo, saveLastRepo } from '@/shared/repos/lib';
+import { useSession } from '@/shared/session/store';
+import { useWorkspace } from '@/shared/workspaces/store';
+import ChatPanel from './chat';
+import ChatDock from './chat/components/chat-dock';
+import DiagramCanvas from './components/diagram-canvas';
+import { useViewStore } from './store';
+
+const CHAT_PARAM = 'chat';
+const CHAT_OPEN = 'open';
+
+/**
+ * The architecture dashboard for `?repo=owner/name`, else the last repo used, else the first with a graph.
+ * `?chat=open` opens the chat beside it (⌘K links here).
+ */
+export default function Dashboard() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get('repo');
+  const userId = useSession((state) => state.user?.id ?? '');
+  const workspaceId = useWorkspace((state) => state.id ?? '');
+  const lastUsed = readLastRepo(userId, workspaceId);
+  const repos = useConnectedRepos();
+  const repoName = repos.data ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name : undefined;
+  const chatOpen = searchParams.get(CHAT_PARAM) === CHAT_OPEN;
+
+  const setChatOpen = (open: boolean) => {
+    const params = new URLSearchParams(searchParams);
+    if (open) params.set(CHAT_PARAM, CHAT_OPEN);
+    else params.delete(CHAT_PARAM);
+    router.replace(`${pathname}?${params}`);
+  };
+
+  useEffect(() => {
+    if (!repos.data) return;
+    // nothing to show yet: onboarding knows which step comes next
+    if (!repoName) {
+      router.replace('/onboarding');
+      return;
+    }
+    saveLastRepo(userId, workspaceId, repoName);
+    // keep the URL naming what's on screen, so it can be shared; only when it differs, or this would loop
+    if (repoName !== requested) {
+      const params = new URLSearchParams(searchParams);
+      params.set('repo', repoName);
+      router.replace(`${pathname}?${params}`);
+    }
+  }, [repos.data, repoName, requested, searchParams, pathname, userId, workspaceId, router]);
+
+  // open folders belong to one repo's ids
+  useEffect(() => {
+    useViewStore.getState().reset();
+  }, [repoName]);
+
+  if (repos.isError) {
+    return (
+      <Banner type="error" className="mx-auto mt-10 max-w-xl" action={<Button size="sm" onClick={() => repos.refetch()}>Retry</Button>}>
+        {repos.error.message}
+      </Banner>
+    );
+  }
+  if (!repoName) return <Spinner className="mx-auto mt-10 size-6 text-muted" />;
+
+  return (
+    <div className="flex h-full flex-col gap-2">
+      <header className="flex items-center gap-2">
+        <h1 className="flex-1 truncate font-mono text-sm font-medium">{repoName}</h1>
+        <Button size="sm" variant={chatOpen ? 'secondary' : 'primary'} aria-pressed={chatOpen} onClick={() => setChatOpen(!chatOpen)}>
+          <ChatCircleDots /> Ask
+        </Button>
+      </header>
+      <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-md border border-border bg-surface">
+        <div className="min-w-0 flex-1">
+          <ReactFlowProvider>
+            <DiagramCanvas key={repoName} repo={repoName} />
+          </ReactFlowProvider>
+        </div>
+        {chatOpen && (
+          <ChatDock>
+            <ChatPanel key={repoName} repo={repoName} onClose={() => setChatOpen(false)} />
+          </ChatDock>
+        )}
+      </div>
+    </div>
+  );
+}

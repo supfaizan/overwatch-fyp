@@ -1,4 +1,4 @@
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react/ssr';
 import { Input, TextArea } from '@/shared/components/input';
 import Kbd from '@/shared/components/kbd';
 
@@ -16,7 +16,7 @@ export function WithLabel() {
 export function PrefixAndSuffix() {
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
-      <Input aria-label="Search dashboards" placeholder="Search for dashboards" prefix={<Search />} suffix={<Kbd>⌘K</Kbd>} />
+      <Input aria-label="Search dashboards" placeholder="Search for dashboards" prefix={<MagnifyingGlass />} suffix={<Kbd>⌘K</Kbd>} />
       <Input
         size="lg"
         aria-label="Ask"

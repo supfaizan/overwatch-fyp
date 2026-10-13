@@ -13,6 +13,7 @@ import * as input from './input';
 import * as kbd from './kbd';
 import * as markdown from './markdown';
 import * as repoPicker from './repo-picker';
+import * as richTextEditor from './rich-text-editor';
 import * as segmentedButton from './segmented-button';
 import * as select from './select';
 import * as skeleton from './skeleton';
@@ -40,6 +41,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   kbd,
   markdown,
   'repo-picker': repoPicker,
+  'rich-text-editor': richTextEditor,
   'segmented-button': segmentedButton,
   select,
   skeleton,

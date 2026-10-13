@@ -20,6 +20,8 @@ type DialogContentProps = {
   /** Action row, right-aligned: secondary actions first, the primary action last. */
   footer?: ReactNode;
   className?: string;
+  /** Esc was pressed inside; call `event.preventDefault()` to keep the dialog open (e.g. Esc cancels an edit instead). */
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
 };
 
 /**
@@ -30,7 +32,7 @@ type DialogContentProps = {
  * - Control it with `open`/`onOpenChange` on `Dialog` when an async action must finish before closing.
  * - Fixed height: pass `flex h-… flex-col` in `className`; the body then fills what's left, so its parts can scroll inside.
  */
-export function DialogContent({ title, description, children, footer, className }: DialogContentProps) {
+export function DialogContent({ title, description, children, footer, className, onEscapeKeyDown }: DialogContentProps) {
   return (
     <DialogPrimitive.Portal>
       {/* the overlay doubles as the centering + scroll container, so tall dialogs scroll */}
@@ -38,6 +40,7 @@ export function DialogContent({ title, description, children, footer, className 
         <DialogPrimitive.Content
           // without a description Radix warns unless this is explicitly undefined
           {...(!description && { 'aria-describedby': undefined })}
+          onEscapeKeyDown={onEscapeKeyDown}
           className={cn('w-full max-w-lg rounded-xl border border-border bg-surface shadow-chrome shadow-border outline-none', popIn, className)}
         >
           <div className="flex items-start gap-3 px-5 pt-4">

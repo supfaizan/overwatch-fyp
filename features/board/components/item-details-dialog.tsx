@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowSquareOut, PencilSimple, Trash } from '@phosphor-icons/react/ssr';
+import dynamic from 'next/dynamic';
 import { useState, type ReactNode } from 'react';
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
@@ -21,6 +22,14 @@ import { COLOR_CLASSES, columnColor } from '../lib';
 import { BOARD_KIND, NATIVE_SOURCE, STATUS_CATEGORY, type Board, type Comment, type LinkedItem, type Sprint, type WorkItem, type WorkItemChanges } from '../types';
 import PriorityIcon from './priority-icon';
 
+// heavy, and only needed once someone edits
+const RichTextEditor = dynamic(() => import('@/shared/components/rich-text-editor'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-32 w-full" />,
+});
+
+/** How the backend shows media embedded in a Jira description; they can't be written back from here. */
+const JIRA_ATTACHMENT = '_[attachment in Jira]_';
 const NONE = 'none';
 const BACKLOG = 'backlog';
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -62,6 +71,10 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
           </span>
         }
         description={readOnly ? `Read-only: reconnect ${trackerName} in Settings → Integrations to edit it here.` : undefined}
+        // Esc inside the description editor cancels the edit rather than closing the ticket
+        onEscapeKeyDown={(event) => {
+          if (event.target instanceof Element && event.target.closest('[contenteditable="true"]')) event.preventDefault();
+        }}
       >
         <div className="grid h-full gap-6 overflow-y-auto md:grid-cols-3 md:grid-rows-1 md:overflow-hidden">
           <div className="flex min-h-0 min-w-0 flex-col gap-6 md:col-span-2 md:overflow-y-auto md:pr-2">
@@ -254,7 +267,19 @@ function DescriptionField({ item, disabled, saving, onSave }: { item: WorkItem; 
       </header>
       {editing ? (
         <>
-          <TextArea aria-label="Description" rows={10} className="max-h-[45dvh]" maxLength={20_000} value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus />
+          <RichTextEditor
+            aria-label="Description"
+            className="max-h-[45dvh] shrink-0"
+            value={draft}
+            onChange={setDraft}
+            onSubmit={saveDraft}
+            onCancel={() => setEditing(false)}
+            placeholder="Describe the work… Markdown shortcuts work."
+            autoFocus
+          />
+          {draft.includes(JIRA_ATTACHMENT) && (
+            <p className="text-xs text-warning-strong">Saving removes the attachments embedded in this description; they stay attached to the ticket in Jira.</p>
+          )}
           <div className="flex justify-end gap-2">
             <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
             <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>

@@ -17,7 +17,7 @@ const SafeLink: Components['a'] = ({ href, children }) => (
 const ImagePlaceholder: Components['img'] = ({ alt }) => <span className="text-xs text-muted">[image{alt ? `: ${alt}` : ''}]</span>;
 
 /** `code` in a sentence: a light primary tint, readable in both themes (Streamdown's default is a dark block). */
-/** The inline-code look. */
+/** The inline-code look; `rich-text-editor.tsx` spells out the same classes, so keep the two in step. */
 const INLINE_CODE_CLASS = 'rounded bg-primary/10 px-1 py-0.5 font-mono text-[0.85em] text-primary-strong dark:text-primary';
 
 export function InlineCode({ children, className, node: _node, ...props }: ComponentProps<'code'> & { node?: unknown }) {

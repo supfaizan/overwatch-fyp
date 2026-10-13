@@ -46,10 +46,10 @@ function NameCard({ workspace }: { workspace: Workspace }) {
           </label>
           <p className="text-sm text-muted">{canEdit ? 'Shown in the sidebar and on invites.' : 'Only admins can rename the workspace.'}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Input id="workspace-name" className="max-w-xs" maxLength={60} value={name} disabled={!canEdit} onChange={(event) => setName(event.target.value)} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Input id="workspace-name" className="max-w-md flex-1" maxLength={60} value={name} disabled={!canEdit} onChange={(event) => setName(event.target.value)} />
           {canEdit && (
-            <Button type="submit" variant="primary" loading={rename.isPending} disabled={!trimmed || trimmed === workspace.name}>
+            <Button type="submit" variant="primary" className="ml-auto" loading={rename.isPending} disabled={!trimmed || trimmed === workspace.name}>
               Save
             </Button>
           )}

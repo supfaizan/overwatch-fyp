@@ -144,7 +144,7 @@ function Invites({ workspace }: { workspace: Workspace }) {
         <p className="text-sm font-medium">Invite people</p>
         <p className="text-sm text-muted">Each link works once and expires in 7 days. Lock it to a GitHub username so only that account can use it.</p>
       </div>
-      <form onSubmit={submit} className="flex flex-wrap gap-2">
+      <form onSubmit={submit} className="flex flex-wrap items-center gap-2">
         <Select value={role} onValueChange={(value) => setRole(value as InviteRole)}>
           <SelectTrigger className="w-28" aria-label="Invite as" />
           <SelectContent>
@@ -153,14 +153,14 @@ function Invites({ workspace }: { workspace: Workspace }) {
           </SelectContent>
         </Select>
         <Input
-          className="max-w-56"
+          className="max-w-sm flex-1"
           aria-label="GitHub username (optional)"
           placeholder="GitHub username (optional)"
           maxLength={39}
           value={githubLogin}
           onChange={(event) => setGithubLogin(event.target.value)}
         />
-        <Button type="submit" variant="primary" loading={create.isPending}>
+        <Button type="submit" variant="primary" className="ml-auto" loading={create.isPending}>
           <LinkSimple /> Create link
         </Button>
       </form>

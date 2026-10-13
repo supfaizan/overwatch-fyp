@@ -2,6 +2,7 @@
 
 import { ReactFlowProvider } from '@xyflow/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ChatCircleDots } from '@phosphor-icons/react/ssr';
 import { useEffect } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
@@ -10,10 +11,18 @@ import { useConnectedRepos } from '@/shared/repos/hooks';
 import { pickRepo, readLastRepo, saveLastRepo } from '@/shared/repos/lib';
 import { useSession } from '@/shared/session/store';
 import { useWorkspace } from '@/shared/workspaces/store';
+import ChatPanel from './chat';
+import ChatDock from './chat/components/chat-dock';
 import DiagramCanvas from './components/diagram-canvas';
 import { useViewStore } from './store';
 
-/** The architecture dashboard for `?repo=owner/name`, else the last repo used, else the first with a graph. */
+const CHAT_PARAM = 'chat';
+const CHAT_OPEN = 'open';
+
+/**
+ * The architecture dashboard for `?repo=owner/name`, else the last repo used, else the first with a graph.
+ * `?chat=open` opens the chat beside it (⌘K links here).
+ */
 export default function Dashboard() {
   const router = useRouter();
   const pathname = usePathname();
@@ -24,6 +33,14 @@ export default function Dashboard() {
   const lastUsed = readLastRepo(userId, workspaceId);
   const repos = useConnectedRepos();
   const repoName = repos.data ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name : undefined;
+  const chatOpen = searchParams.get(CHAT_PARAM) === CHAT_OPEN;
+
+  const setChatOpen = (open: boolean) => {
+    const params = new URLSearchParams(searchParams);
+    if (open) params.set(CHAT_PARAM, CHAT_OPEN);
+    else params.delete(CHAT_PARAM);
+    router.replace(`${pathname}?${params}`);
+  };
 
   useEffect(() => {
     if (!repos.data) return;
@@ -57,11 +74,23 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-full flex-col gap-2">
-      <h1 className="truncate font-mono text-sm font-medium">{repoName}</h1>
-      <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-border bg-surface">
-        <ReactFlowProvider>
-          <DiagramCanvas key={repoName} repo={repoName} />
-        </ReactFlowProvider>
+      <header className="flex items-center gap-2">
+        <h1 className="flex-1 truncate font-mono text-sm font-medium">{repoName}</h1>
+        <Button size="sm" variant={chatOpen ? 'secondary' : 'primary'} aria-pressed={chatOpen} onClick={() => setChatOpen(!chatOpen)}>
+          <ChatCircleDots /> Ask
+        </Button>
+      </header>
+      <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-md border border-border bg-surface">
+        <div className="min-w-0 flex-1">
+          <ReactFlowProvider>
+            <DiagramCanvas key={repoName} repo={repoName} />
+          </ReactFlowProvider>
+        </div>
+        {chatOpen && (
+          <ChatDock>
+            <ChatPanel key={repoName} repo={repoName} onClose={() => setChatOpen(false)} />
+          </ChatDock>
+        )}
       </div>
     </div>
   );

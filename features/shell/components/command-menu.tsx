@@ -1,6 +1,6 @@
 'use client';
 
-import { Buildings, GitBranch, Monitor, Moon, Plus, SignOut, Sun } from '@phosphor-icons/react/ssr';
+import { Buildings, ChatCircleDots, GitBranch, Monitor, Moon, Plus, SignOut, Sun } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect } from 'react';
@@ -22,7 +22,7 @@ const THEMES = [
 
 type CommandMenuProps = { open: boolean; onOpenChange: (open: boolean) => void; onAddRepo: () => void; onCreateWorkspace: () => void };
 
-/** The ⌘K / Ctrl+K palette: go anywhere, switch workspace, repo or theme, sign out. */
+/** The ⌘K / Ctrl+K palette: go anywhere, ask about the repo, switch workspace, repo or theme, sign out. */
 export default function CommandMenu({ open, onOpenChange, onAddRepo, onCreateWorkspace }: CommandMenuProps) {
   const router = useRouter();
   const repos = useConnectedRepos();
@@ -58,6 +58,10 @@ export default function CommandMenu({ open, onOpenChange, onAddRepo, onCreateWor
               <Icon weight="fill" className={color} /> {label}
             </CommandItem>
           ))}
+          {/* features/dashboard opens its chat for this param; the URL is the contract between the two */}
+          <CommandItem keywords={['chat', 'ai', 'question', 'ask']} onSelect={run(() => router.push('/dashboard?chat=open'))}>
+            <ChatCircleDots weight="fill" className="text-accent-blue" /> Ask about this repository
+          </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Repositories">
           {repos.data

@@ -10,6 +10,10 @@ type ViewState = {
   revealed: string[];
   hovered: string | null;
   selected: string | null;
+  /** nodes the chat is pointing at; anything drawn that holds one is lit */
+  highlighted: string[];
+  /** a node to select and pan to once the folders holding it are drawn (a chat reference click) */
+  focusRequest: { nodeId: string; ancestors: string[] } | null;
   open: (nodeId: string) => void;
   /** also closes and un-reveals everything inside, or those ids would reopen with the parent */
   close: (nodeId: string) => void;
@@ -18,6 +22,10 @@ type ViewState = {
   adopt: (nodeIds: string[]) => void;
   hover: (nodeId: string | null) => void;
   select: (nodeId: string | null) => void;
+  highlight: (nodeIds: string[]) => void;
+  /** open what holds a node, then let the canvas select it, or the nearest folder it could draw */
+  focus: (nodeId: string, ancestors: string[]) => void;
+  settleFocus: (nodeId: string | null) => void;
   /** back to the closed view, for a repo none of these ids belong to */
   reset: () => void;
 };
@@ -36,6 +44,8 @@ export const useViewStore = create<ViewState>((set) => ({
   revealed: [],
   hovered: null,
   selected: null,
+  highlighted: [],
+  focusRequest: null,
   open: (nodeId) => set((state) => (state.expanded.includes(nodeId) ? state : { expanded: [...state.expanded, nodeId] })),
   close: (nodeId) =>
     set((state) => ({
@@ -46,5 +56,12 @@ export const useViewStore = create<ViewState>((set) => ({
   adopt: (nodeIds) => set((state) => (sameIds(state.expanded, nodeIds) ? state : { expanded: nodeIds })),
   hover: (hovered) => set((state) => (state.hovered === hovered ? state : { hovered })),
   select: (selected) => set({ selected }),
-  reset: () => set({ expanded: [], revealed: [], hovered: null, selected: null }),
+  highlight: (highlighted) => set((state) => (sameIds(state.highlighted, highlighted) ? state : { highlighted })),
+  focus: (nodeId, ancestors) =>
+    set((state) => ({
+      expanded: [...state.expanded, ...ancestors.filter((id) => !state.expanded.includes(id))],
+      focusRequest: { nodeId, ancestors },
+    })),
+  settleFocus: (selected) => set({ selected, focusRequest: null }),
+  reset: () => set({ expanded: [], revealed: [], hovered: null, selected: null, highlighted: [], focusRequest: null }),
 }));

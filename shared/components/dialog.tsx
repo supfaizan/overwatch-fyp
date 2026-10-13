@@ -28,6 +28,7 @@ type DialogContentProps = {
  * - For confirmations, name the action in the button ("Delete dashboard", not "OK").
  * - Keep it to one task. Long forms belong on a page.
  * - Control it with `open`/`onOpenChange` on `Dialog` when an async action must finish before closing.
+ * - Fixed height: pass `flex h-… flex-col` in `className`; the body then fills what's left, so its parts can scroll inside.
  */
 export function DialogContent({ title, description, children, footer, className }: DialogContentProps) {
   return (
@@ -52,7 +53,7 @@ export function DialogContent({ title, description, children, footer, className 
               </Button>
             </DialogPrimitive.Close>
           </div>
-          {children && <div className="px-5 py-4 text-sm">{children}</div>}
+          {children && <div className="min-h-0 flex-1 px-5 py-4 text-sm">{children}</div>}
           {footer && (
             <div className={cn('flex justify-end gap-2 rounded-b-xl border-t border-border bg-background px-5 py-3', !children && 'mt-4')}>
               {footer}

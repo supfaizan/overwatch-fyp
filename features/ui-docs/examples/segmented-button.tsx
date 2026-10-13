@@ -13,3 +13,16 @@ export function Views() {
     />
   );
 }
+
+export function Small() {
+  return (
+    <SegmentedButton
+      size="sm"
+      aria-label="Board view"
+      options={[
+        { value: 'board', label: 'Board' },
+        { value: 'backlog', label: 'Backlog' },
+      ]}
+    />
+  );
+}

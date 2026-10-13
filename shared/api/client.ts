@@ -41,8 +41,15 @@ async function request<T>(config: AxiosRequestConfig): Promise<T> {
   return data.data;
 }
 
+/** Send a request and return the envelope's `data` with its `meta` (totals and paging). */
+async function requestWithMeta<T>(config: AxiosRequestConfig): Promise<{ data: T; meta: Record<string, unknown> }> {
+  const { data } = await http.request<ApiEnvelope<T>>(config);
+  return { data: data.data, meta: data.meta };
+}
+
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'GET', url }),
+  getWithMeta: <T>(url: string, config?: AxiosRequestConfig) => requestWithMeta<T>({ ...config, method: 'GET', url }),
   post: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'POST', url, data: body }),
   patch: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PATCH', url, data: body }),
   delete: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'DELETE', url }),

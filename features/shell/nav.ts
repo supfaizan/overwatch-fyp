@@ -1,5 +1,5 @@
 import type { Icon } from '@phosphor-icons/react';
-import { Buildings, CreditCard, GearSix, GitBranch, Kanban, Palette, PlugsConnected, SquaresFour, UserCircle, UsersThree } from '@phosphor-icons/react/ssr';
+import { Buildings, CreditCard, Files, GearSix, GitBranch, Kanban, Palette, PlugsConnected, SquaresFour, UserCircle, UsersThree } from '@phosphor-icons/react/ssr';
 
 type Page = { href: string; label: string; icon: Icon; color: string };
 
@@ -7,6 +7,7 @@ type Page = { href: string; label: string; icon: Icon; color: string };
 export const PAGES: Page[] = [
   { href: '/dashboard', label: 'Dashboard', icon: SquaresFour, color: 'text-accent-blue' },
   { href: '/board', label: 'Board', icon: Kanban, color: 'text-accent-orange' },
+  { href: '/documents', label: 'Docs', icon: Files, color: 'text-accent-purple' },
 ];
 
 export const SETTINGS_ICON = { icon: GearSix, color: 'text-accent-slate' };

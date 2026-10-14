@@ -6,6 +6,7 @@ import * as card from './card';
 import * as checkbox from './checkbox';
 import * as command from './command';
 import * as confirmDialog from './confirm-dialog';
+import * as contextMenu from './context-menu';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
 import * as githubMark from './github-mark';
@@ -34,6 +35,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   checkbox,
   command,
   'confirm-dialog': confirmDialog,
+  'context-menu': contextMenu,
   dialog,
   'dropdown-menu': dropdownMenu,
   'github-mark': githubMark,

@@ -8,7 +8,8 @@ import Skeleton from '@/shared/components/skeleton';
 import { cn } from '@/shared/lib/cn';
 import type { ArchiveChoice } from '../api';
 import { useArchiveDocument, useChildren } from '../hooks';
-import { DOCUMENT_KIND, type DocumentSummary } from '../types';
+import { sourceName } from '../lib';
+import { DOCUMENT_KIND, type DocumentSummary, NATIVE_SOURCE } from '../types';
 
 const CHOICE = { archive: 'archive', top: 'top', folder: 'folder' } as const;
 type Choice = (typeof CHOICE)[keyof typeof CHOICE];
@@ -24,6 +25,7 @@ type ArchiveDialogProps = {
 /**
  * Archives a page or folder. One with nothing inside just confirms; otherwise what's inside can go
  * with it, or move to the top level or another folder first. Archived docs can be restored.
+ * A page from a source (Confluence) is archived there too, with what's under it.
  */
 export default function ArchiveDialog({ node, open, onOpenChange, onArchived }: ArchiveDialogProps) {
   const [choice, setChoice] = useState<Choice>(CHOICE.archive);
@@ -31,6 +33,7 @@ export default function ArchiveDialog({ node, open, onOpenChange, onArchived }: 
   const archive = useArchiveDocument();
   const name = node.title || 'Untitled';
   const noun = node.kind === DOCUMENT_KIND.folder ? 'folder' : 'page';
+  const source = node.source === NATIVE_SOURCE ? null : sourceName(node.source);
 
   const submit = () => {
     const request: ArchiveChoice =
@@ -48,9 +51,11 @@ export default function ArchiveDialog({ node, open, onOpenChange, onArchived }: 
       <DialogContent
         title={`Archive “${name}”?`}
         description={
-          node.has_children
-            ? `This ${noun} has pages inside it. Choose what happens to them. You can restore anything archived from Archive.`
-            : `It moves to Archive, where you can restore it.`
+          source
+            ? `It's archived in ${source} too${node.has_children ? ', with the pages under it' : ''}. To bring it back, restore it in ${source}.`
+            : node.has_children
+              ? `This ${noun} has pages inside it. Choose what happens to them. You can restore anything archived from Archive.`
+              : `It moves to Archive, where you can restore it.`
         }
         footer={
           <>
@@ -61,7 +66,7 @@ export default function ArchiveDialog({ node, open, onOpenChange, onArchived }: 
           </>
         }
       >
-        {node.has_children && (
+        {node.has_children && !source && (
           <div role="radiogroup" aria-label="What happens to what's inside" className="flex flex-col gap-2">
             <Option checked={choice === CHOICE.archive} onSelect={() => setChoice(CHOICE.archive)} title="Archive everything inside too" detail="They go to Archive with it and come back together on restore." />
             <Option checked={choice === CHOICE.top} onSelect={() => setChoice(CHOICE.top)} title="Move what's inside to the top level" detail="They stay in Docs, at the top of the sidebar." />

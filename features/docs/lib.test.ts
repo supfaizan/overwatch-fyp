@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SAVE_STATUS, createAutosave, readingMinutes, timeAgo, withImageLinks, type SaveStatus } from './lib';
+import { SAVE_STATUS, createAutosave, readingMinutes, sourceName, syncLabel, withImageLinks, type SaveStatus } from './lib';
 
 const CONFLICT = new Error('conflict');
 
@@ -105,18 +105,6 @@ describe('readingMinutes', () => {
   });
 });
 
-describe('timeAgo', () => {
-  const now = Date.parse('2026-10-14T12:00:00Z');
-  it('reads like Confluence', () => {
-    expect(timeAgo('2026-10-14T11:59:30Z', now)).toBe('just now');
-    expect(timeAgo('2026-10-14T11:55:00Z', now)).toBe('5 minutes ago');
-    expect(timeAgo('2026-10-14T09:00:00Z', now)).toBe('3 hours ago');
-    expect(timeAgo('2026-10-13T12:00:00Z', now)).toBe('yesterday');
-    expect(timeAgo('2026-09-30T12:00:00Z', now)).toBe('2 weeks ago');
-    expect(timeAgo('2026-08-01T12:00:00Z', now)).toBe('Aug 1, 2026');
-  });
-});
-
 describe('withImageLinks', () => {
   it('gives uploaded images fresh links and drops ones that never finished uploading', () => {
     const doc = {
@@ -134,5 +122,25 @@ describe('withImageLinks', () => {
 
     expect(out.content?.map((n) => n.attrs?.src ?? n.type)).toEqual(['https://fresh', 'https://pasted.example/a.png', 'blockquote']);
     expect(out.content?.[2].content?.[0].attrs?.src).toBe('https://fresh');
+  });
+});
+
+describe('syncLabel', () => {
+  const now = Date.parse('2026-10-14T12:00:00Z');
+  const mirrored = { source: 'confluence', push_state: 'none' as const, push_error: null, synced_at: '2026-10-14T11:55:00Z' };
+
+  it('says how a mirrored page stands with its source', () => {
+    expect(syncLabel({ ...mirrored, source: 'native', push_state: null }, now)).toBeNull();
+    expect(syncLabel(mirrored, now)).toBe('Synced with Confluence 5 minutes ago');
+    expect(syncLabel({ ...mirrored, synced_at: null }, now)).toBe('From Confluence');
+    expect(syncLabel({ ...mirrored, push_state: 'pending' }, now)).toBe('Saving to Confluence shortly');
+    expect(syncLabel({ ...mirrored, push_state: 'pending', push_error: 'Confluence isn\'t connected for editing' }, now)).toBe(
+      "Not saved to Confluence yet: Confluence isn't connected for editing",
+    );
+    expect(syncLabel({ ...mirrored, push_state: 'conflict' }, now)).toBe('Changed in Confluence too');
+  });
+
+  it('names sources it has no name for by their id', () => {
+    expect(sourceName('notion')).toBe('Notion');
   });
 });

@@ -14,12 +14,21 @@ import {
   placement,
   priorityLevel,
   sectionDrop,
+  dropHint,
+  movesFrom,
+  presetNext,
+  presetOf,
+  unreachableColumns,
+  deadEndColumns,
+  type DraftColumn,
+  parseZoneId,
+  zoneId,
 } from './lib';
 import type { Board, Column, WorkItem } from './types';
 
 const item = (id: string, column_id: string | null, rank: number, sprint_id: string | null = null): WorkItem => ({
   id, source: 'native', key: id, title: id, description: null, description_md: null, status: null, status_category: 'todo', column_id, sprint_id, rank,
-  assignee: null, priority: null, issue_type: null, reporter: null, labels: [], parent: null, due_date: null, story_points: null,
+  assignee: null, priority: null, type_id: null, issue_type: null, reporter: null, labels: [], parent: null, due_date: null, story_points: null,
   subtasks: [], links: [], target_key: null, external_url: null, editable: true,
   created_at: '', updated_at: '',
 });
@@ -197,5 +206,82 @@ describe('swimlanes', () => {
 
   it('moves a card down its own cell after the card it lands on', () => {
     expect(laneDropTarget(laned, columns, 'assignee', 'b', 'd')).toEqual({ lane: 'amy', columnId: 'todo', index: 1 });
+  });
+});
+
+describe('movesFrom and dropHint', () => {
+  const trackerColumns: Column[] = [
+    { id: 'c-todo', name: 'To Do', status_category: 'todo', status_ids: ['1'] },
+    { id: 'c-doing', name: 'Doing', status_category: 'in_progress', status_ids: ['2', '4'] },
+    { id: 'c-review', name: 'Review', status_category: 'in_progress', status_ids: ['3'] },
+  ];
+  const tracker: Board = {
+    id: 'b', source: 'jira', target_key: 'OVR', name: 'OVR', kind: 'kanban', column_mode: 'tracker', columns: trackerColumns,
+    column_prompt: { status: 'none', columns: [] }, editable: true,
+    workflow: {
+      statuses: { '1': { name: 'To Do', category: 'todo' }, '2': { name: 'In Progress', category: 'in_progress' }, '3': { name: 'In Review', category: 'in_progress' }, '4': { name: 'Blocked', category: 'in_progress' } },
+      workflows: { w: { name: 'Dev', transitions: [
+        { id: '11', name: 'Start', from: ['1'], to: '2' },
+        { id: '12', name: 'Park', from: ['1'], to: '4' },
+        { id: '21', name: 'Send to review', from: ['2'], to: '3' },
+        { id: '31', name: 'To Do', from: null, to: '1' },
+      ] } },
+      by_issue_type: { '10001': 'w' },
+    },
+  };
+  const card = { ...item('OVR-1', 'c-todo', 1), source: 'jira', status: 'To Do', status_id: '1', issue_type_id: '10001' };
+
+  it('reads where a card can go from its tracker workflow, one landing spot per status', () => {
+    const moves = movesFrom(tracker, card);
+    expect(dropHint(moves, card, trackerColumns[0], trackerColumns)).toBeUndefined(); // its own column
+    expect(dropHint(moves, card, trackerColumns[1], trackerColumns)).toEqual({ allowed: true, zones: [
+      { statusId: '2', label: 'To Do → In Progress', detail: 'Start' },
+      { statusId: '4', label: 'To Do → Blocked', detail: 'Park' },
+    ] });
+    expect(dropHint(moves, card, trackerColumns[2], trackerColumns)).toEqual({ allowed: false });
+  });
+
+  it('prefers the tracker’s live answer, and says nothing when there are no rules', () => {
+    const live = { basis: 'live' as const, targets: [{ column_id: 'c-review', status_id: '3', status: 'In Review', transition_name: 'In Review' }] };
+    expect(dropHint(movesFrom(tracker, card, live), card, trackerColumns[2], trackerColumns)).toEqual({ allowed: true, zones: [{ statusId: '3', label: 'To Do → In Review', detail: null }] });
+    expect(movesFrom(tracker, card, { basis: 'open', targets: [] })).toBeNull();
+    expect(movesFrom({ ...tracker, workflow: null }, card)).toBeNull();
+  });
+
+  it('follows a native board’s per-column rules, open when it has none', () => {
+    const columns: Column[] = [
+      { id: 'todo', name: 'To do', status_category: 'todo', next: ['doing'] },
+      { id: 'doing', name: 'Doing', status_category: 'in_progress', next: null },
+      { id: 'done', name: 'Done', status_category: 'done', next: [] },
+    ];
+    const native: Board = { ...tracker, source: 'native', column_mode: 'default', columns, workflow: null };
+    const task = item('OW-1', 'todo', 1);
+    const moves = movesFrom(native, task);
+    expect(dropHint(moves, task, columns[1], columns)).toEqual({ allowed: true, zones: [{ statusId: null, label: 'To do → Doing', detail: null }] });
+    expect(dropHint(moves, task, columns[2], columns)).toEqual({ allowed: false });
+    expect(movesFrom({ ...native, columns: columns.map((column) => ({ ...column, next: null })) }, task)).toBeNull();
+  });
+
+  it('round-trips a drop zone id', () => {
+    expect(parseZoneId(zoneId('c-doing', '4'))).toEqual({ columnId: 'c-doing', statusId: '4' });
+    expect(parseZoneId('c-doing')).toBeNull();
+  });
+});
+
+describe('workflow presets', () => {
+  const column = (id: string, status_category: DraftColumn['status_category'] = 'in_progress'): DraftColumn => ({ id, name: id, status_category, color: null, next: null });
+  const columns = [column('todo', 'todo'), column('doing'), column('done', 'done')];
+
+  it('opens every move, or allows only the next and previous column', () => {
+    expect(presetNext(columns, 'step').map((c) => c.next)).toEqual([['doing'], ['todo', 'done'], ['doing']]);
+    expect(presetOf(presetNext(columns, 'step'))).toBe('step');
+    expect(presetOf(columns)).toBe('open');
+    expect(presetOf([{ ...columns[0], next: ['done'] }, columns[1], columns[2]])).toBe('custom');
+  });
+
+  it('warns about columns nothing reaches and columns cards can’t leave', () => {
+    const custom = [{ ...columns[0], next: ['doing'] }, { ...columns[1], next: [] }, { ...columns[2], next: [] }];
+    expect(unreachableColumns(custom).map((c) => c.id)).toEqual(['todo', 'done']);
+    expect(deadEndColumns(custom).map((c) => c.id)).toEqual(['doing']);
   });
 });

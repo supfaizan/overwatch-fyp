@@ -1,19 +1,29 @@
 'use client';
 
-import { Archive, ArrowCounterClockwise, FileText, Folder } from '@phosphor-icons/react/ssr';
+import { Archive, ArrowCounterClockwise, FileText, Folder, Trash } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import ConfirmDialog from '@/shared/components/confirm-dialog';
 import Skeleton from '@/shared/components/skeleton';
-import { useArchived, useRestoreDocument } from '../hooks';
-import { DOCUMENT_KIND } from '../types';
+import { useArchived, useDeleteArchived, useRestoreDocument } from '../hooks';
+import { sourceName } from '../lib';
+import { DOCUMENT_KIND, NATIVE_SOURCE } from '../types';
+
+// mirrors the backend's DOC_ARCHIVE_RETENTION_DAYS
+const RETENTION_DAYS = 30;
 
 const archivedOn = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
-/** Everything archived, newest first; restoring brings an archive back with whatever went with it. */
+/**
+ * Everything archived, newest first; restoring brings an archive back with whatever went with it.
+ * Archives are deleted for good after a while, or now with Delete. One from a source (Confluence) is
+ * restored there; deleting one archived from here deletes it there too.
+ */
 export default function ArchiveList() {
   const { items, isPending, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useArchived();
   const restore = useRestoreDocument();
+  const remove = useDeleteArchived();
   const router = useRouter();
 
   return (
@@ -22,7 +32,9 @@ export default function ArchiveList() {
         <Archive aria-hidden weight="fill" className="size-7 text-accent-slate" />
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Archive</h2>
-          <p className="text-sm text-muted">Archived pages and folders. Restore one to put it back where it was.</p>
+          <p className="text-sm text-muted">
+            Archived pages and folders. Restore one to put it back where it was. Archives are deleted for good after {RETENTION_DAYS} days.
+          </p>
         </div>
       </header>
       {isPending ? (
@@ -41,14 +53,30 @@ export default function ArchiveList() {
                   {item.archived_with > 0 && ` · with ${item.archived_with} ${item.archived_with === 1 ? 'item' : 'items'} inside`}
                 </span>
               </div>
-              <Button
-                size="sm"
-                disabled={restore.isPending && restore.variables === item.id}
-                onClick={() => restore.mutate(item.id, { onSuccess: (doc) => router.push(`/documents/${doc.id}`) })}
-              >
-                <ArrowCounterClockwise aria-hidden />
-                Restore
-              </Button>
+              {item.source === NATIVE_SOURCE ? (
+                <Button
+                  size="sm"
+                  disabled={restore.isPending && restore.variables === item.id}
+                  onClick={() => restore.mutate(item.id, { onSuccess: (doc) => router.push(`/documents/${doc.id}`) })}
+                >
+                  <ArrowCounterClockwise aria-hidden />
+                  Restore
+                </Button>
+              ) : (
+                <span className="text-xs text-muted">Restore it in {sourceName(item.source)}</span>
+              )}
+              <ConfirmDialog
+                trigger={<Button size="sm" iconOnly variant="tertiary" aria-label="Delete for good"><Trash aria-hidden /></Button>}
+                title={`Delete “${item.title || 'Untitled'}” for good?`}
+                description={
+                  item.source === NATIVE_SOURCE
+                    ? 'It and everything archived with it are deleted, with their images. This can\'t be undone.'
+                    : `It and everything archived with it are deleted, here and, for pages archived from Overwatch, in ${sourceName(item.source)}. This can't be undone.`
+                }
+                confirmLabel="Delete for good"
+                pending={remove.isPending && remove.variables === item.id}
+                onConfirm={(close) => remove.mutate(item.id, { onSuccess: close })}
+              />
             </li>
           ))}
           {hasNextPage && (

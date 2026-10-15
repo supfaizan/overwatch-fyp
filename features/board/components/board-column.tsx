@@ -3,10 +3,12 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Lock } from '@phosphor-icons/react/ssr';
 import { useEffect, useRef } from 'react';
 import Spinner from '@/shared/components/spinner';
 import { cn } from '@/shared/lib/cn';
-import { COLOR_CLASSES, columnColor, columnSortId } from '../lib';
+import { useCardOver } from '../hooks';
+import { BLOCKED_MESSAGE, COLOR_CLASSES, type DropHint, columnColor, columnSortId, zoneId } from '../lib';
 import type { Column, WorkItem } from '../types';
 import WorkItemCard from './work-item-card';
 
@@ -22,11 +24,14 @@ type BoardColumnProps = {
   onLoadMore: (columnId: string) => void;
   onOpen: (item: WorkItem) => void;
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** While a card is dragged: where it may land in this column, or that it can't. */
+  hint?: DropHint;
 };
 
 /** A board column, about four cards tall: drag its header to reorder columns; its cards load more as it's scrolled. */
-export default function BoardColumn({ column, items, columns, total, hasMore, loadingMore, onLoadMore, onOpen, onMoveTo }: BoardColumnProps) {
-  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: column.id });
+export default function BoardColumn({ column, items, columns, total, hasMore, loadingMore, onLoadMore, onOpen, onMoveTo, hint }: BoardColumnProps) {
+  const { setNodeRef: setDropRef } = useDroppable({ id: column.id });
+  const isOver = useCardOver(column.id) && hint?.allowed !== false;
   const sortable = useSortable({ id: columnSortId(column.id), data: { type: 'column' } });
   const list = useRef<HTMLUListElement | null>(null);
   const sentinel = useRef<HTMLLIElement>(null);
@@ -56,12 +61,14 @@ export default function BoardColumn({ column, items, columns, total, hasMore, lo
         <span className="text-xs text-muted">{total}</span>
       </h2>
       <SortableContext id={column.id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+        <div className="relative flex min-h-0 flex-col">
+        {hint?.allowed && hint.zones.length === 1 && <ZoneLabel zone={hint.zones[0]} className="mb-2" />}
         <ul
           ref={(node) => {
             setDropRef(node);
             list.current = node;
           }}
-          className={cn('flex max-h-176 min-h-24 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active')}
+          className={cn('flex max-h-176 min-h-24 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active ring-2 ring-primary', hint?.allowed === false && 'opacity-40')}
         >
           {items.map((item) => (
             <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} />
@@ -72,7 +79,48 @@ export default function BoardColumn({ column, items, columns, total, hasMore, lo
             </li>
           )}
         </ul>
+        {hint && !hint.allowed && <Blocked />}
+        {hint?.allowed && hint.zones.length > 1 && (
+          // a column it can enter in several statuses: one landing spot each, as Jira shows them
+          <div className="absolute inset-0 flex flex-col gap-2 rounded-lg bg-background/90 p-2">
+            {hint.zones.map((zone) => <DropZone key={zone.statusId ?? zone.label} columnId={column.id} zone={zone} />)}
+          </div>
+        )}
+        </div>
       </SortableContext>
     </section>
+  );
+}
+
+type Zone = Extract<DropHint, { allowed: true }>['zones'][number];
+
+/** Where a drop here takes the card: "In Review → In Progress", and the move's name when it's different. */
+function ZoneLabel({ zone, className }: { zone: Zone; className?: string }) {
+  return (
+    <p className={cn('rounded-md border border-primary/40 bg-primary/10 px-2 py-1 text-xs font-medium text-foreground', className)}>
+      {zone.label}
+      {zone.detail && <span className="block font-normal text-muted">{zone.detail}</span>}
+    </p>
+  );
+}
+
+/** One of several statuses a column can take the card into, each its own drop target. */
+function DropZone({ columnId, zone }: { columnId: string; zone: Zone }) {
+  const { setNodeRef, isOver } = useDroppable({ id: zoneId(columnId, zone.statusId) });
+  return (
+    <div ref={setNodeRef} className={cn('flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-border p-2 transition-colors', isOver && 'border-primary bg-primary/10')}>
+      <ZoneLabel zone={zone} className="border-0 bg-transparent text-center" />
+    </div>
+  );
+}
+
+/** A column the card can't go to, and why, in Jira's words. */
+function Blocked() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg bg-background/80 p-4 text-center">
+      <Lock aria-hidden className="size-5 text-muted" />
+      <p className="text-sm font-semibold">Can&apos;t move here</p>
+      <p className="text-xs text-muted">{BLOCKED_MESSAGE}</p>
+    </div>
   );
 }

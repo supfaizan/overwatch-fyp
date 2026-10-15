@@ -7,6 +7,7 @@ import {
   PointerSensor,
   closestCenter,
   closestCorners,
+  pointerWithin,
   useSensor,
   useSensors,
   type CollisionDetection,
@@ -14,16 +15,20 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { DotsThree, Kanban, Plus, SlidersHorizontal } from '@phosphor-icons/react/ssr';
+import { ArrowsClockwise, DotsThree, Kanban, Plus, SlidersHorizontal } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
 import SegmentedButton from '@/shared/components/segmented-button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
+import Tooltip from '@/shared/components/tooltip';
+import { JOB_STATUS } from '@/shared/lib/job-status';
+import { timeAgo } from '@/shared/lib/time';
 import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
@@ -35,8 +40,9 @@ import ItemDetailsDialog from './components/item-details-dialog';
 import SwimlaneBoard from './components/swimlane-board';
 import { CardBody } from './components/work-item-card';
 import WorkItemDialog from './components/work-item-dialog';
-import { useBoardItems, useBoards, useColumnChoice, useColumnSettings, useMoveWorkItem, usePriorities, useSprints, useSwimlaneItems, useTrackers } from './hooks';
+import { syncTargetOf, useBoardItems, useBoardSync, useDropHints, useBoards, useColumnChoice, useColumnSettings, useMoveWorkItem, usePriorities, useSprints, useSwimlaneItems, useTrackers } from './hooks';
 import {
+  BLOCKED_MESSAGE,
   COLOR_CLASSES,
   NO_LANE,
   columnColor,
@@ -48,6 +54,7 @@ import {
   laneOf,
   moveItem,
   orderLanes,
+  parseZoneId,
   placement,
 } from './lib';
 import { GROUP_BY, GROUP_BY_OPTIONS, useBoardViews, viewOf, type GroupBy } from './store';
@@ -70,7 +77,10 @@ function pickBoard(boards: BoardType[], requested: string | null) {
 const collisions: CollisionDetection = (args) => {
   const draggingColumn = columnFromSortId(String(args.active.id)) !== null;
   const droppableContainers = args.droppableContainers.filter((container) => (columnFromSortId(String(container.id)) !== null) === draggingColumn);
-  return draggingColumn ? closestCenter({ ...args, droppableContainers }) : closestCorners({ ...args, droppableContainers });
+  if (draggingColumn) return closestCenter({ ...args, droppableContainers });
+  // a column split into status zones takes the drop in the zone under the pointer
+  const zones = pointerWithin({ ...args, droppableContainers: droppableContainers.filter((container) => parseZoneId(String(container.id))) });
+  return zones.length ? zones : closestCorners({ ...args, droppableContainers: droppableContainers.filter((container) => !parseZoneId(String(container.id))) });
 };
 
 export default function Board() {
@@ -98,10 +108,13 @@ export default function Board() {
   const swimlanes = useSwimlaneItems(board, lanesBy ? shownColumns : [], lanesBy, sprint);
   const priorities = usePriorities(board?.id ?? '', groupBy === GROUP_BY.priority);
   const trackers = useTrackers();
+  const syncTarget = syncTargetOf(trackers.data, board);
+  const boardSync = useBoardSync(board, syncTarget);
   const move = useMoveWorkItem();
   const columnSettings = useColumnSettings();
   const currentRole = useCurrentWorkspace()?.role;
   const [dragging, setDragging] = useState<{ card?: WorkItem; column?: Column } | null>(null);
+  const hintFor = useDropHints(board, dragging?.card, shownColumns);
   const [settingsOpen, setSettingsOpen] = useState(false);
   // a fresh key per open, so the dialog's form starts from the item every time
   const [dialog, setDialog] = useState<{ key: number; item?: WorkItem } | null>(null);
@@ -113,10 +126,10 @@ export default function Board() {
   const openDialog = useCallback((item?: WorkItem) => setDialog({ key: Date.now(), item }), []);
   // computed on the loaded cards, so the neighbours sent are ones the user actually dropped between
   const moveTo = useCallback(
-    (item: WorkItem, columnId: string, index?: number) => {
+    (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => {
       const { boardId, visible, columns, grouped } = latest.current;
       const { move: body, rank } = moveItem(visible, columns, item.id, columnId, index ?? grouped[columnId]?.length ?? 0);
-      move.mutate({ boardId, id: item.id, move: body, rank });
+      move.mutate({ boardId, id: item.id, move: { ...body, ...(statusId ? { status_id: statusId } : {}) }, rank });
     },
     [move],
   );
@@ -127,7 +140,9 @@ export default function Board() {
   );
 
   const loading = lanesBy ? swimlanes.isPending : items.isPending;
-  if (boards.isPending || (board && (loading || sprints.isPending)) || trackers.isPending) {
+  // a tracker board that has never synced has nothing to show until its first sync lands
+  const firstSync = Boolean(syncTarget && !syncTarget.last_synced_at && boardSync.syncing);
+  if (boards.isPending || (board && (loading || sprints.isPending)) || trackers.isPending || firstSync) {
     return (
       <main className="flex h-full gap-4 p-6">
         {[0, 1, 2].map((index) => <Skeleton key={index} className="h-full flex-1" />)}
@@ -192,8 +207,17 @@ export default function Board() {
       return;
     }
     const item = visible.find((candidate) => candidate.id === active.id);
-    const target = over && item && dropTarget(visible, shownColumns, item.id, String(over.id));
-    if (item && target) moveTo(item, target.columnId, target.index);
+    if (!item || !over) return;
+    const zone = parseZoneId(String(over.id));
+    const target = zone ? { columnId: zone.columnId, index: grouped[zone.columnId]?.length ?? 0 } : dropTarget(visible, shownColumns, item.id, String(over.id));
+    if (!target) return;
+    const column = shownColumns.find((candidate) => candidate.id === target.columnId);
+    const hint = column && hintFor(column);
+    if (hint && !hint.allowed) {
+      toast.error(BLOCKED_MESSAGE);
+      return;
+    }
+    moveTo(item, target.columnId, target.index, zone?.statusId ?? (hint?.allowed && hint.zones.length === 1 ? hint.zones[0].statusId : null));
   };
 
   /** A swimlane drop: the card's column and place, and its assignee (or priority) when it changed lane. */
@@ -246,6 +270,22 @@ export default function Board() {
           </Select>
         )}
         <span className="flex-1" />
+        {name && syncTarget && (
+          <span className="flex items-center gap-2">
+            {syncTarget.sync_status === JOB_STATUS.failed ? (
+              <Tooltip content={syncTarget.sync_error ?? 'The last sync failed'}>
+                <span className="text-xs text-warning-strong">Sync failed</span>
+              </Tooltip>
+            ) : (
+              syncTarget.last_synced_at && <span className="text-xs text-muted">Synced {timeAgo(syncTarget.last_synced_at)}</span>
+            )}
+            <Tooltip content={`Sync with ${name}`}>
+              <Button iconOnly aria-label={`Sync with ${name}`} loading={boardSync.syncing} onClick={boardSync.sync}>
+                <ArrowsClockwise />
+              </Button>
+            </Tooltip>
+          </span>
+        )}
         <Button variant="primary" onClick={() => openDialog()} disabled={!board.editable}>
           <Plus /> New item
         </Button>
@@ -313,6 +353,7 @@ export default function Board() {
           onOpen={openDialog}
           onMoveTo={moveTo}
           onDrop={onLaneDrop}
+          board={board}
         />
       ) : (
         <DndContext sensors={sensors} collisionDetection={collisions} onDragStart={onDragStart} onDragCancel={() => setDragging(null)} onDragEnd={onDragEnd}>
@@ -330,6 +371,7 @@ export default function Board() {
                   onLoadMore={items.loadMore}
                   onOpen={openDialog}
                   onMoveTo={moveTo}
+                  hint={hintFor(column)}
                 />
               ))}
             </div>
@@ -362,6 +404,7 @@ export default function Board() {
         view={boardView}
         onHiddenChange={(columnId, hidden) => setHidden(viewKey, columnId, hidden)}
         onGroupByChange={(value) => setGroupBy(viewKey, value)}
+        canEditColumns={isAdmin && board.source === NATIVE_SOURCE}
       />
       {dialog?.item ? (
         <ItemDetailsDialog

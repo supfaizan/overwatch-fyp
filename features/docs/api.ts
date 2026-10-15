@@ -1,5 +1,5 @@
 import { api } from '@/shared/api/client';
-import type { ArchivedDocument, ChildPage, ContentSave, CreateDocument, Document, UploadTarget } from './types';
+import type { ArchivedDocument, ChildPage, ConflictAction, ContentSave, CreateDocument, Document, LinkPreview, UploadTarget } from './types';
 
 /** How many of a folder's children load at a time. */
 export const CHILD_PAGE_SIZE = 100;
@@ -21,6 +21,13 @@ export type ArchiveChoice = { children: 'archive' } | { children: 'move'; move_t
 
 export const archiveDocument = ({ id, ...choice }: ArchiveChoice & { id: string }) => api.post<null>(`/documents/${id}/archive`, choice);
 export const restoreDocument = (id: string) => api.post<Document>(`/documents/${id}/restore`, {});
+/** Deletes an archive for good (and at its source, for pages archived from here). */
+export const deleteArchived = (id: string) => api.delete<null>(`/documents/${id}`);
+export const resolveConflict = ({ id, ...body }: { id: string; action: ConflictAction; base_version: number }) =>
+  api.post<Document>(`/documents/${id}/resolve-conflict`, body);
+
+/** What a link shows as a card; read by the server, which only reaches public sites. */
+export const getLinkPreview = (url: string) => api.get<LinkPreview>('/link-previews', { params: { url } });
 
 export const ARCHIVE_PAGE_SIZE = 50;
 

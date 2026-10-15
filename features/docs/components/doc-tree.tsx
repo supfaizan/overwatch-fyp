@@ -14,7 +14,8 @@ import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
 import { useChildren, useCreateDocument, useDocument, useRenameDocument } from '../hooks';
 import ArchiveDialog from './archive-dialog';
-import { DOCUMENT_KIND, type DocumentKind, type DocumentSummary } from '../types';
+import { sourceName } from '../lib';
+import { DOCUMENT_KIND, type DocumentKind, type DocumentSummary, NATIVE_SOURCE } from '../types';
 
 const INDENT = 14;
 
@@ -103,12 +104,14 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
   const expanded = expandable && isOpen(node.id);
   const FolderIcon = expanded ? FolderOpen : Folder;
 
-  const actions: NodeAction[] = [
-    { label: 'Rename', icon: PencilSimple, onSelect: () => setRenaming(true) },
-    { label: 'New page inside', icon: FilePlus, onSelect: () => add(DOCUMENT_KIND.page) },
-    { label: 'New folder inside', icon: FolderPlus, onSelect: () => add(DOCUMENT_KIND.folder) },
-    { label: 'Archive', icon: Archive, onSelect: () => setArchiving(true), danger: true },
-  ];
+  const native = node.source === NATIVE_SOURCE;
+  // a mirrored node takes new pages (made at its source) but not folders, and only its pages change here
+  const actions = [
+    node.editable && { label: 'Rename', icon: PencilSimple, onSelect: () => setRenaming(true) },
+    node.can_add_pages && { label: 'New page inside', icon: FilePlus, onSelect: () => add(DOCUMENT_KIND.page) },
+    native && { label: 'New folder inside', icon: FolderPlus, onSelect: () => add(DOCUMENT_KIND.folder) },
+    node.editable && { label: 'Archive', icon: Archive, onSelect: () => setArchiving(true), danger: true },
+  ].filter((action): action is NodeAction => Boolean(action));
   // the open page goes away with what's archived around it
   const leaveIfGone = () => (node.id === activeId || activeAncestors.includes(node.id)) && router.push('/documents');
 
@@ -134,9 +137,10 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
         <Link href={`/documents/${node.id}`} className="flex min-w-0 flex-1 items-center gap-2">
           <NodeIcon folder={folder} Icon={FolderIcon} />
           <span className={cn('truncate', !node.title && 'text-muted')}>{node.title || 'Untitled'}</span>
+          {!native && !node.parent_id && <span className="shrink-0 text-xs text-muted">{sourceName(node.source)}</span>}
         </Link>
       )}
-      {node.editable && !renaming && (
+      {actions.length > 0 && !renaming && (
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="tertiary" size="sm" iconOnly aria-label="More actions" className="size-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100">
@@ -158,7 +162,7 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
 
   return (
     <li role="treeitem" aria-expanded={expandable ? expanded : undefined} aria-selected={node.id === activeId}>
-      {node.editable ? (
+      {actions.length > 0 ? (
         <ContextMenu modal={false}>
           <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
           <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>
@@ -235,8 +239,11 @@ function useAddDocument(parentId: string | null, onCreated?: () => void) {
   return { add, pending: create.isPending };
 }
 
-/** "New page / New folder", at the top of the tree or in a folder; `iconOnly` for the collapsed sidebar. */
-export function NewMenu({ parentId, iconOnly = false }: { parentId: string | null; iconOnly?: boolean }) {
+/**
+ * "New page / New folder", at the top of the tree or in a folder; `iconOnly` for the collapsed sidebar,
+ * `pagesOnly` inside a mirrored folder (its source makes the page; folders stay the source's own).
+ */
+export function NewMenu({ parentId, iconOnly = false, pagesOnly = false }: { parentId: string | null; iconOnly?: boolean; pagesOnly?: boolean }) {
   const { add, pending } = useAddDocument(parentId);
   const button = iconOnly ? (
     <Button variant="tertiary" size="sm" iconOnly aria-label="New page or folder" disabled={pending}>
@@ -260,7 +267,7 @@ export function NewMenu({ parentId, iconOnly = false }: { parentId: string | nul
       )}
       <DropdownMenuContent align={iconOnly ? 'start' : 'end'} side={iconOnly ? 'right' : 'bottom'}>
         <DropdownMenuItem onSelect={() => add(DOCUMENT_KIND.page)}><FileText aria-hidden />Page</DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => add(DOCUMENT_KIND.folder)}><Folder aria-hidden />Folder</DropdownMenuItem>
+        {!pagesOnly && <DropdownMenuItem onSelect={() => add(DOCUMENT_KIND.folder)}><Folder aria-hidden />Folder</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   );

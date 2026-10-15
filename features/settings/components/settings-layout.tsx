@@ -20,6 +20,7 @@ const GROUPS = [
       { href: '/settings/members', label: 'Members' },
       { href: '/settings/repositories', label: 'Repositories' },
       { href: '/settings/integrations', label: 'Integrations' },
+      { href: '/settings/work-item-types', label: 'Work item types' },
       { href: '/settings/billing', label: 'Billing' },
     ],
   },

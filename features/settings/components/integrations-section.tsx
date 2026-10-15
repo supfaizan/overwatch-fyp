@@ -4,7 +4,6 @@ import { ArrowSquareOut, BookOpen, Kanban } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
@@ -14,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/compo
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import Tag from '@/shared/components/tag';
+import ConnectGithubButton, { useGithubLinkResult } from '@/shared/repos/connect-github-button';
 import { useInstallations } from '@/shared/repos/hooks';
+import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { CONNECTION_STATUS, CONNECTOR_CATEGORY, type ConnectorCategory } from '@/shared/connections/constants';
@@ -50,7 +51,7 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
       )}
       {status.isSuccess && (
         <>
-          <SourceControl needsReauth={!status.data.github.authorized || status.data.github.needs_reauth} />
+          <SourceControl authorized={status.data.github.authorized} needsReauth={status.data.github.needs_reauth} />
           <Connectors />
         </>
       )}
@@ -74,21 +75,32 @@ function IntegrationCard({ icon, category, name, state, children }: { icon: Reac
   );
 }
 
-function SourceControl({ needsReauth }: { needsReauth: boolean }) {
-  const installations = useInstallations();
+function SourceControl({ authorized, needsReauth }: { authorized: boolean; needsReauth: boolean }) {
+  const installations = useInstallations(authorized);
   const accounts = installations.data?.installations ?? [];
+  const hasGithub = useSession((state) => Boolean(state.user?.github_login));
+  useGithubLinkResult();
 
   return (
     <IntegrationCard
       icon={<GithubMark />}
       category="Source control"
       name="GitHub"
-      state={needsReauth ? <Tag variant="warning">Needs sign-in</Tag> : <Tag variant="success">Connected</Tag>}
+      state={
+        !authorized && !hasGithub ? <Tag>Not connected</Tag> : needsReauth || !authorized ? <Tag variant="warning">Needs reconnecting</Tag> : <Tag variant="success">Connected</Tag>
+      }
     >
-      {needsReauth && (
-        <Banner type="warning" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
-          Your GitHub authorization expired or was revoked.
-        </Banner>
+      {!authorized && !hasGithub ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted">Connect your GitHub account to add repositories.</p>
+          <ConnectGithubButton returnTo="settings" />
+        </div>
+      ) : (
+        (needsReauth || !authorized) && (
+          <Banner type="warning" action={<ConnectGithubButton returnTo="settings" reconnect />}>
+            Your GitHub authorization expired or was revoked.
+          </Banner>
+        )
       )}
       {accounts.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm">

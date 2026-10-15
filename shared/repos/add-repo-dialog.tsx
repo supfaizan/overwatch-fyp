@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
-import { ApiError, GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
+import { ApiError } from '@/shared/api/envelope';
 import { ERROR_CODE } from '@/shared/api/error-codes';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent } from '@/shared/components/dialog';
 import GithubMark from '@/shared/components/github-mark';
 import RepoPicker from '@/shared/components/repo-picker';
 import Skeleton from '@/shared/components/skeleton';
+import ConnectGithubButton from './connect-github-button';
 import { useAvailableRepos, useConnectRepo, useInstallations } from './hooks';
 
 type AddRepoDialogProps = {
@@ -51,8 +52,8 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
         }
       >
         {error instanceof ApiError && error.errorCode === ERROR_CODE.githubNeedsReauth ? (
-          <Banner type="warning" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
-            Your GitHub authorization expired or was revoked.
+          <Banner type="warning" action={<ConnectGithubButton returnTo="settings" />}>
+            Connect your GitHub account to add repositories. If it was connected, the authorization expired or was revoked.
           </Banner>
         ) : error ? (
           <Banner type="error" action={<Button size="sm" onClick={() => void (installations.isError ? installations.refetch() : available.refetch())}>Retry</Button>}>

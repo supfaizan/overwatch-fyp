@@ -2,14 +2,15 @@
 
 import { ArrowSquareOut, GitBranch } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
-import { GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
 import Skeleton from '@/shared/components/skeleton';
 import RepoPicker from '@/shared/components/repo-picker';
 import StatusTag from '@/shared/components/status-tag';
+import ConnectGithubButton, { useGithubLinkResult } from '@/shared/repos/connect-github-button';
 import { useAvailableRepos, useConnectRepo, useInstallations } from '@/shared/repos/hooks';
+import { useSession } from '@/shared/session/store';
 import { useOnboardingStatus } from '../hooks';
 import DisconnectRepo from './disconnect-repo';
 import StepCard from './step-card';
@@ -22,13 +23,23 @@ export default function GithubStep() {
   const hasInstallation = (installations.data?.installations.length ?? 0) > 0;
   const repos = useAvailableRepos(hasInstallation && connected.length === 0);
   const connect = useConnectRepo(() => router.push('/onboarding/jira'));
+  const hasGithub = useSession((state) => Boolean(state.user?.github_login));
+  useGithubLinkResult();
 
   if (status.data && !status.data.github.authorized) {
-    return (
+    return hasGithub ? (
       <StepCard title="Reconnect GitHub" description="Your GitHub authorization expired or was revoked.">
-        <Banner type="error" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
-          Sign in with GitHub again to keep going.
+        <Banner type="error" action={<ConnectGithubButton returnTo="onboarding" reconnect />}>
+          Reconnect GitHub to keep going.
         </Banner>
+      </StepCard>
+    ) : (
+      <StepCard
+        title="Connect GitHub"
+        description="Overwatch reads your repositories through GitHub. Connect your GitHub account to pick the ones to map."
+        actions={<ConnectGithubButton returnTo="onboarding" size="md" />}
+      >
+        <p className="text-sm text-muted">You&apos;ll keep signing in with your email; GitHub is only used to reach your code.</p>
       </StepCard>
     );
   }

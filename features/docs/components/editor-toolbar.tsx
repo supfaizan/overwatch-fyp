@@ -7,6 +7,8 @@ import {
   CaretDown,
   Code,
   CodeBlock,
+  Columns,
+  FrameCorners,
   Image as ImageIcon,
   LinkSimple,
   ListBullets,
@@ -32,7 +34,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from '@/shared/components/input';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
+import { EMBED_PROVIDERS, isWebLink } from '../embeds';
+import { insertColumns, LayoutSection, MAX_COLUMNS, removeColumns } from '../layout';
 import { IMAGE_TYPES } from '../lib';
+import { cardFor } from '../link-cards';
 import { pinColumnWidths, tableAtSelection } from '../table-widths';
 
 const MOD = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl+';
@@ -55,8 +60,10 @@ const ALIGNS = [
  * Everything the editor can do, named and in view (Confluence's toolbar): text style, marks, lists,
  * alignment, blocks, links, tables, undo. It re-renders only when what the selection allows changes.
  */
-export default function EditorToolbar({ editor, onImages }: { editor: Editor; onImages: (files: File[]) => void }) {
+/** `onImages` is left out where images can't be added (pages mirrored from a source). */
+export default function EditorToolbar({ editor, onImages }: { editor: Editor; onImages?: (files: File[]) => void }) {
   const [linking, setLinking] = useState(false);
+  const [embedding, setEmbedding] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
   const state = useEditorState({
     editor,
@@ -75,6 +82,7 @@ export default function EditorToolbar({ editor, onImages }: { editor: Editor; on
       codeBlock: current.isActive('codeBlock'),
       link: current.isActive('link'),
       table: current.isActive('table'),
+      columns: current.isActive(LayoutSection.name),
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
     }),
@@ -142,28 +150,35 @@ export default function EditorToolbar({ editor, onImages }: { editor: Editor; on
       <Tool icon={Quotes} label="Quote" shortcut={`${MOD}⇧B`} active={state.blockquote} onClick={() => run((chain) => chain.toggleBlockquote())} />
       <Tool icon={CodeBlock} label="Code block" shortcut={`${MOD}⌥C`} active={state.codeBlock} onClick={() => run((chain) => chain.toggleCodeBlock())} />
       <Tool icon={Minus} label="Divider" shortcut="---" onClick={() => run((chain) => chain.setHorizontalRule())} />
-      <Tool icon={ImageIcon} label="Image (or paste / drop one in)" onClick={() => picker.current?.click()} />
-      <input
-        ref={picker}
-        type="file"
-        accept={IMAGE_TYPES.join(',')}
-        multiple
-        hidden
-        onChange={(event) => {
-          onImages(Array.from(event.target.files ?? []));
-          event.target.value = '';
-        }}
-      />
+      {onImages && (
+        <>
+          <Tool icon={ImageIcon} label="Image (or paste / drop one in)" onClick={() => picker.current?.click()} />
+          <input
+            ref={picker}
+            type="file"
+            accept={IMAGE_TYPES.join(',')}
+            multiple
+            hidden
+            onChange={(event) => {
+              onImages(Array.from(event.target.files ?? []));
+              event.target.value = '';
+            }}
+          />
+        </>
+      )}
       <Tool icon={LinkSimple} label={state.link ? 'Edit link' : 'Link'} active={state.link} onClick={() => setLinking(true)} />
+      <Tool icon={FrameCorners} label="Embed or link card" onClick={() => setEmbedding(true)} />
       {state.table ? (
         <TableMenu run={run} />
       ) : (
         <Tool icon={Table} label="Table" onClick={insertTable} />
       )}
+      <ColumnsMenu editor={editor} active={state.columns} />
       <Divider />
       <Tool icon={ArrowUUpLeft} label="Undo" shortcut={`${MOD}Z`} disabled={!state.canUndo} onClick={() => run((chain) => chain.undo())} />
       <Tool icon={ArrowUUpRight} label="Redo" shortcut={`${MOD}⇧Z`} disabled={!state.canRedo} onClick={() => run((chain) => chain.redo())} />
       {linking && <LinkDialog editor={editor} onClose={() => setLinking(false)} />}
+      {embedding && <EmbedDialog editor={editor} onClose={() => setEmbedding(false)} />}
     </div>
   );
 }
@@ -225,6 +240,72 @@ function TableMenu({ run }: { run: Run }) {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+const COLUMN_COUNTS = Array.from({ length: MAX_COLUMNS - 1 }, (_, index) => index + 2);
+
+/** Lays content out in columns, or back out of them; columns don't nest. */
+function ColumnsMenu({ editor, active }: { editor: Editor; active: boolean }) {
+  return (
+    <DropdownMenu modal={false}>
+      <Tooltip content="Columns">
+        <DropdownMenuTrigger asChild>
+          <Button variant="tertiary" size="sm" aria-label="Columns" className={cn('gap-0.5 px-1.5', active && 'bg-primary/10 text-primary')}>
+            <Columns aria-hidden className="size-4" />
+            <CaretDown aria-hidden className="size-3" />
+          </Button>
+        </DropdownMenuTrigger>
+      </Tooltip>
+      <DropdownMenuContent align="start">
+        {active ? (
+          <DropdownMenuItem onSelect={() => removeColumns(editor)}>Remove columns</DropdownMenuItem>
+        ) : (
+          COLUMN_COUNTS.map((count) => (
+            <DropdownMenuItem key={count} onSelect={() => insertColumns(editor, count)}>{count} columns</DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Puts a link on its own line: playing in the page where its site allows, as a card otherwise. */
+function EmbedDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+  const [href, setHref] = useState('');
+  const [error, setError] = useState('');
+  const save = () => {
+    const value = href.trim();
+    const url = /^[a-z][a-z0-9+.-]*:/i.test(value) ? value : `https://${value}`;
+    if (!value || !isWebLink(url)) return setError('Use a web (https://) address.');
+    editor.chain().focus().insertContent(cardFor(editor.schema, url).toJSON()).run();
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        title="Embed or link card"
+        description={`Links from ${EMBED_PROVIDERS.join(', ')} play in the page; others show as a card. Select one to show it another way.`}
+        footer={
+          <>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button variant="primary" onClick={save}>Insert</Button>
+          </>
+        }
+      >
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            save();
+          }}
+          className="flex flex-col gap-1.5"
+        >
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists to type this */}
+          <Input autoFocus value={href} onChange={(event) => setHref(event.target.value)} placeholder="https://www.loom.com/share/…" aria-label="Address" aria-invalid={Boolean(error)} />
+          {error && <p className="text-xs text-danger">{error}</p>}
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

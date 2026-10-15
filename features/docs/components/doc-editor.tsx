@@ -10,19 +10,42 @@ import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useRef } from 'react';
 import { RICH_TEXT_CLASS } from '@/shared/components/rich-text-editor';
 import { cn } from '@/shared/lib/cn';
+import { Expand, Panel } from '../blocks';
+import { isWebLink } from '../embeds';
 import { DocImage } from '../image';
+import { DateNode, Emoji, Status } from '../inline-nodes';
+import { LayoutColumn, LayoutSection } from '../layout';
+import { BlockCard, cardFor, EmbedCard, InlineCard } from '../link-cards';
+import { SourceBlock, SourceInline, SourceMark } from '../source-nodes';
+import { DocTable, DocTableCell, DocTableHeader } from '../table';
 import { CELL_MIN_WIDTH, dragInnerColumnEdge, pinColumnWidths } from '../table-widths';
 
 // pages are stored as editor JSON, so they keep what Markdown can't (underline, alignment);
 // the Markdown copy, for search and AI answers, simply drops it
-const extensions = [
+const extensions = (sourceName: string) => [
   StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
   // drag a column's edge to size it; the last column's edge sizes the whole table (see `pinColumnWidths`)
-  TableKit.configure({ table: { resizable: true, cellMinWidth: CELL_MIN_WIDTH } }),
+  TableKit.configure({ table: false, tableCell: false, tableHeader: false }),
+  DocTable.configure({ resizable: true, cellMinWidth: CELL_MIN_WIDTH }),
+  DocTableCell,
+  DocTableHeader,
   TaskList,
   TaskItem.configure({ nested: true }),
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   DocImage,
+  Emoji,
+  Status,
+  DateNode,
+  LayoutSection,
+  LayoutColumn,
+  Panel,
+  Expand,
+  InlineCard,
+  BlockCard,
+  EmbedCard,
+  SourceBlock.configure({ sourceName }),
+  SourceInline.configure({ sourceName }),
+  SourceMark,
   Markdown,
   Placeholder.configure({ placeholder: "Write, or use the toolbar above. Markdown works too: '# ' heading, '- ' list, '[] ' checklist…" }),
 ];
@@ -45,6 +68,35 @@ const TABLE_CLASS = cn(
   '[&.resize-cursor]:cursor-col-resize [&_.selectedCell]:bg-primary/10',
 );
 
+// what a mirrored page has and this editor doesn't: shown, kept, not editable
+const SOURCE_CLASS = cn(
+  '[&_[data-source-block]]:my-2 [&_[data-source-block]]:rounded-md [&_[data-source-block]]:border [&_[data-source-block]]:border-dashed',
+  '[&_[data-source-block]]:border-border [&_[data-source-block]]:bg-surface [&_[data-source-block]]:px-3 [&_[data-source-block]]:py-2',
+  '[&_[data-source-block]]:text-xs [&_[data-source-block]]:text-muted',
+  '[&_[data-source-inline]]:rounded [&_[data-source-inline]]:bg-surface [&_[data-source-inline]]:px-1 [&_[data-source-inline]]:text-muted',
+  '[&_.ProseMirror-selectednode[data-source-block]]:outline-2 [&_.ProseMirror-selectednode[data-source-block]]:outline-primary',
+);
+
+// columns sit side by side from a tablet's width up, and stack on a phone
+const LAYOUT_CLASS = cn(
+  '[&_[data-layout-section]]:my-3 [&_[data-layout-section]]:flex [&_[data-layout-section]]:flex-col [&_[data-layout-section]]:gap-4',
+  'sm:[&_[data-layout-section]]:flex-row',
+  '[&_[data-layout-column]]:min-w-0 [&_[data-layout-column]]:rounded-md [&_[data-layout-column]]:border [&_[data-layout-column]]:border-dashed',
+  '[&_[data-layout-column]]:border-transparent [&_[data-layout-column]]:px-1 [&_[data-layout-column]>*:first-child]:mt-0',
+  '[&.ProseMirror[contenteditable=true]_[data-layout-column]]:border-border',
+);
+
+// emoji, status lozenges and dates inside a line
+const INLINE_CLASS = cn(
+  '[&_[data-emoji][data-custom]]:rounded [&_[data-emoji][data-custom]]:bg-surface [&_[data-emoji][data-custom]]:px-1 [&_[data-emoji][data-custom]]:text-muted',
+  '[&_[data-status]]:rounded [&_[data-status]]:px-1.5 [&_[data-status]]:py-px [&_[data-status]]:text-[0.75em] [&_[data-status]]:font-semibold [&_[data-status]]:uppercase',
+  '[&_[data-status=neutral]]:bg-fill-active [&_[data-status=blue]]:bg-accent-blue/15 [&_[data-status=blue]]:text-accent-blue',
+  '[&_[data-status=green]]:bg-success/15 [&_[data-status=green]]:text-success [&_[data-status=red]]:bg-danger/15 [&_[data-status=red]]:text-danger',
+  '[&_[data-status=yellow]]:bg-warning/20 [&_[data-status=yellow]]:text-warning-strong [&_[data-status=purple]]:bg-accent-purple/15 [&_[data-status=purple]]:text-accent-purple',
+  '[&_time[data-timestamp]]:rounded [&_time[data-timestamp]]:bg-fill-active [&_time[data-timestamp]]:px-1.5',
+  '[&_.ProseMirror-selectednode:is([data-emoji],[data-status],time)]:outline-2 [&_.ProseMirror-selectednode:is([data-emoji],[data-status],time)]:outline-primary',
+);
+
 const IMAGE_CLASS = cn(
   '[&_img]:my-2 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-border',
   '[&_img.ProseMirror-selectednode]:outline-2 [&_img.ProseMirror-selectednode]:outline-offset-2 [&_img.ProseMirror-selectednode]:outline-primary',
@@ -63,27 +115,36 @@ type DocEditorProps = {
   onChange: () => void;
   /** Image files pasted or dropped in; `at` is where they were dropped. */
   onImages: (files: File[], at?: number) => void;
+  /** For a mirrored page: where what the editor can't change is edited instead. */
+  sourceName?: string;
 };
 
 /** A page's body: full width and borderless; the toolbar above drives it. */
-export default function DocEditor({ initial, editable, onEditor, onChange, onImages }: DocEditorProps) {
+export default function DocEditor({ initial, editable, onEditor, onChange, onImages, sourceName = 'its source' }: DocEditorProps) {
   const handlers = useRef({ onEditor, onChange, onImages });
   useEffect(() => {
     handlers.current = { onEditor, onChange, onImages };
   });
   const editor = useEditor({
-    extensions,
+    extensions: extensions(sourceName),
     content: initial,
     editable,
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     editorProps: {
-      attributes: { class: cn('min-h-[60vh] pb-24 text-[15px]', RICH_TEXT_CLASS, TASK_LIST_CLASS, TABLE_CLASS, IMAGE_CLASS), 'aria-label': 'Page content', 'aria-multiline': 'true', role: 'textbox' },
-      // pasted or dropped image files upload; anything else pastes and drops as usual
-      handlePaste: (_view, event) => {
+      attributes: { class: cn('min-h-[60vh] pb-24 text-[15px]', RICH_TEXT_CLASS, TASK_LIST_CLASS, TABLE_CLASS, LAYOUT_CLASS, INLINE_CLASS, IMAGE_CLASS, SOURCE_CLASS), 'aria-label': 'Page content', 'aria-multiline': 'true', role: 'textbox' },
+      // pasted or dropped image files upload; a link pasted on an empty line becomes a card (or an
+      // embed, where its site allows); anything else pastes and drops as usual
+      handlePaste: (view, event) => {
         const files = imageFiles(event.clipboardData?.files);
-        if (!files.length) return false;
-        handlers.current.onImages(files);
+        if (files.length) {
+          handlers.current.onImages(files);
+          return true;
+        }
+        const text = event.clipboardData?.getData('text/plain') ?? '';
+        const { empty, $from } = view.state.selection;
+        if (!isWebLink(text) || !empty || $from.parent.type.name !== 'paragraph' || $from.parent.content.size) return false;
+        view.dispatch(view.state.tr.replaceSelectionWith(cardFor(view.state.schema, text.trim())).scrollIntoView());
         return true;
       },
       handleDrop: (view, event, _slice, moved) => {

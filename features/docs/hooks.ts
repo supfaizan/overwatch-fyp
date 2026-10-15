@@ -4,13 +4,14 @@ import { type QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClie
 import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
 import * as docsApi from './api';
-import type { ChildPage, Document, DocumentSummary } from './types';
+import { type ChildPage, type Document, type DocumentSummary, PUSH_STATE } from './types';
 
 const root = ['docs'] as const;
 export const keys = {
   children: (parentId: string | null) => [...root, 'children', parentId ?? 'root'] as const,
   node: (id: string) => [...root, 'node', id] as const,
   archived: [...root, 'archived'] as const,
+  linkPreview: (url: string) => [...root, 'link-preview', url] as const,
 };
 
 type ChildPages = { pages: ChildPage[]; pageParams: number[] };
@@ -36,8 +37,19 @@ export function useChildren(parentId: string | null, enabled = true) {
   return { ...query, nodes: query.data?.pages.flatMap((page) => page.nodes) ?? [] };
 }
 
+// while a mirrored page's edits are on their way to its source, check how they got on
+const PUSH_POLL_MS = 20_000;
+
 export const useDocument = (id: string | undefined) =>
-  useQuery({ queryKey: keys.node(id ?? ''), queryFn: () => docsApi.getDocument(id as string), enabled: Boolean(id) });
+  useQuery({
+    queryKey: keys.node(id ?? ''),
+    queryFn: () => docsApi.getDocument(id as string),
+    enabled: Boolean(id),
+    refetchInterval: (query) => {
+      const state = query.state.data?.push_state;
+      return state === PUSH_STATE.pending || state === PUSH_STATE.pushing ? PUSH_POLL_MS : false;
+    },
+  });
 
 export function useCreateDocument() {
   const queryClient = useQueryClient();
@@ -118,4 +130,34 @@ export function useRestoreDocument() {
     },
     onError: showError,
   });
+}
+
+export function useDeleteArchived() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: docsApi.deleteArchived,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: keys.archived }),
+    onError: showError,
+  });
+}
+
+/** Settles a page edited here and at its source at once; the editor reloads with the result. */
+export function useResolveConflict() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: docsApi.resolveConflict,
+    onSuccess: (doc) => {
+      queryClient.setQueryData(keys.node(doc.id), doc);
+      patchSummary(queryClient, doc.id, { title: doc.title, editable: doc.editable });
+    },
+    onError: showError,
+  });
+}
+
+// the server caches previews for days; a page's cards needn't ask again while it's open
+const PREVIEW_STALE_MS = 60 * 60_000;
+
+/** A link's title, picture and icon, for its card; `enabled` once there's a link to read. */
+export function useLinkPreview(url: string, enabled = true) {
+  return useQuery({ queryKey: keys.linkPreview(url), queryFn: () => docsApi.getLinkPreview(url), enabled: enabled && Boolean(url), staleTime: PREVIEW_STALE_MS, retry: false });
 }

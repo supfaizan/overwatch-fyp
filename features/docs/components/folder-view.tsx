@@ -1,10 +1,11 @@
 'use client';
 
-import { FileText, Folder } from '@phosphor-icons/react/ssr';
+import { ArrowSquareOut, FileText, Folder } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import Skeleton from '@/shared/components/skeleton';
 import { useChildren } from '../hooks';
-import { DOCUMENT_KIND, type Document } from '../types';
+import { sourceName } from '../lib';
+import { DOCUMENT_KIND, type Document, NATIVE_SOURCE } from '../types';
 import { NewMenu } from './doc-tree';
 import TitleInput from './title-input';
 
@@ -19,8 +20,13 @@ export default function FolderView({ doc }: { doc: Document }) {
       <div className="flex items-center gap-3">
         <Folder weight="fill" aria-hidden className="size-7 shrink-0 text-accent-amber" />
         <TitleInput doc={doc} />
-        {doc.editable && <NewMenu parentId={doc.id} />}
+        {doc.can_add_pages && <NewMenu parentId={doc.id} pagesOnly={doc.source !== NATIVE_SOURCE} />}
       </div>
+      {doc.external_url && (
+        <a href={doc.external_url} target="_blank" rel="noopener noreferrer" className="-mt-3 inline-flex items-center gap-1 self-start text-xs text-muted hover:text-foreground">
+          Open in {sourceName(doc.source)} <ArrowSquareOut aria-hidden className="size-3.5" />
+        </a>
+      )}
       {isPending ? (
         <Skeleton className="h-24 w-full" />
       ) : nodes.length ? (

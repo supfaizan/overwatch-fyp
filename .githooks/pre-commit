@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+BIN=node_modules/.bin
+if [ ! -x "$BIN/dprint" ] || [ ! -x "$BIN/oxlint" ]; then
+  echo "pre-commit: dprint or oxlint is missing; run pnpm install" >&2
+  exit 1
+fi
+
+echo "pre-commit: checking formatting of staged files (fix with: pnpm fmt)"
+"$BIN/dprint" check --staged --allow-no-files
+
+echo "pre-commit: linting staged files"
+git diff --cached --name-only --diff-filter=ACMR -z -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts' \
+  | xargs -0 -r "$BIN/oxlint" --deny-warnings
+
+echo "pre-commit: checks passed"

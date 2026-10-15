@@ -1,4 +1,5 @@
 allowBuilds:
+  dprint: false
   sharp: true
   unrs-resolver: true
 ignoredBuiltDependencies:

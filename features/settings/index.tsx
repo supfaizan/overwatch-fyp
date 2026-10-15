@@ -6,3 +6,4 @@ export { default as ProfileSection } from './components/profile-section';
 export { default as RepositoriesSection } from './components/repositories-section';
 export { default as SettingsLayout } from './components/settings-layout';
 export { default as WorkspaceSection } from './components/workspace-section';
+export { default as WorkItemTypesSection } from './components/work-item-types-section';

@@ -100,7 +100,7 @@ exit "$status"
 - Match validation to risk. For low-risk documentation-only changes, skip executable validation and say so; review the text for accuracy.
 - Use the cheapest useful check first: a focused test, lint on changed files, or type checking when types are affected. Do not run full suites, full lint, or builds unless risk justifies them or the user asks.
 - Use pnpm and the existing tooling: `pnpm dev`, `pnpm lint` (Oxlint), `pnpm test` (Vitest), and `pnpm build` (Next.js).
-- Format with `pnpm fmt` (dprint: 2-space indent, 100-column lines, braces on every `if`/`for`/`while`, which Oxlint's `curly` rule also enforces). The tracked pre-commit hook in `.githooks/` checks staged files with `dprint check` and `oxlint`; `pnpm install` enables it.
+- Format with `pnpm fmt` (dprint: 2-space indent, 100-column lines, braces on every `if`/`for`/`while`, enforced with Oxlint's `curly` rule; arrow functions always use a braced body with `return`, Oxlint's `arrow-body-style`). The tracked pre-commit hook in `.githooks/` checks staged files with `dprint check` and `oxlint`; `pnpm install` enables it.
 - Scoped examples: `pnpm exec oxlint <changed-files>` and `pnpm exec vitest run <test-file>`. For project-wide type checking when justified, use `pnpm exec tsc --noEmit --incremental false`. Cap potentially large output without masking failures.
 - When existing tests cover changed behavior, update or add focused cases using that test setup. If no tests cover the area and tests were not requested, do not introduce them without approval.
 - Never claim a check passed unless it ran successfully. Distinguish failures caused by the change from pre-existing issues and report unverified behavior.

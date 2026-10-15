@@ -1,6 +1,6 @@
 // mirrors the backend schemas (app/onboarding, app/connectors, app/workspaces)
 
-import type { ConnectionStatus as TrackerStatus } from '@/shared/connections/constants';
+import type { ConnectorCategory, ConnectionStatus as TrackerStatus } from '@/shared/connections/constants';
 import type { JobStatus } from '@/shared/lib/job-status';
 import type { ROLE, Role } from '@/shared/workspaces/types';
 
@@ -17,15 +17,16 @@ export type SyncTarget = {
   last_synced_at: string | null;
 };
 
-/** A project (list, board) a tracker account can sync. */
+/** A project (list, board) or docs space an account can sync; `id` is the key people know it by. */
 export type Target = { key: string; name: string | null; id: string | null };
 
-/** A tracker connector (Jira, ...) and this workspace's state for it. */
+/** A connector (Jira, Confluence, ...) and this workspace's state for it. */
 export type Connection = {
   provider: string;
   name: string;
+  category: ConnectorCategory;
   status: TrackerStatus;
-  /** False for grants made before board edits were written back: reconnect to edit. */
+  /** False when the grant can't write back (made before edits were): reconnect to edit. */
   can_write: boolean;
   external_account: { id: string; name: string | null; url: string | null } | null;
   connected_at: string | null;

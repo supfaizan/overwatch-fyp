@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowSquareOut, Kanban } from '@phosphor-icons/react/ssr';
+import { ArrowSquareOut, BookOpen, Kanban } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -17,10 +17,10 @@ import Tag from '@/shared/components/tag';
 import { useInstallations } from '@/shared/repos/hooks';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
-import { CONNECTION_STATUS } from '@/shared/connections/constants';
+import { CONNECTION_STATUS, CONNECTOR_CATEGORY, type ConnectorCategory } from '@/shared/connections/constants';
 import { ROLE } from '@/shared/workspaces/types';
 import { useAddTarget, useAvailableTargets, useConnections, useConnectionStatus, useDisconnect, useStartAuthorization, useSyncNow } from '../hooks';
-import type { Connection } from '../types';
+import type { Connection, Target } from '../types';
 import { SettingsSection } from './settings-layout';
 
 // what a tracker's OAuth callback reports, e.g. ?jira=connected
@@ -51,7 +51,7 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
       {status.isSuccess && (
         <>
           <SourceControl needsReauth={!status.data.github.authorized || status.data.github.needs_reauth} />
-          <IssueTrackers />
+          <Connectors />
         </>
       )}
     </SettingsSection>
@@ -111,7 +111,30 @@ function SourceControl({ needsReauth }: { needsReauth: boolean }) {
   );
 }
 
-function IssueTrackers() {
+// how each kind of connector is described
+const CATEGORY_COPY: Record<
+  ConnectorCategory,
+  { icon: ReactNode; label: string; target: string; reconnect: string; disconnect: string; targetLabel: (target: Target) => string }
+> = {
+  [CONNECTOR_CATEGORY.workItems]: {
+    icon: <Kanban />,
+    label: 'Issue tracker',
+    target: 'project',
+    reconnect: 'to edit, move and create its tickets from the board',
+    disconnect: 'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
+    targetLabel: (target) => (target.name ? `${target.key} · ${target.name}` : target.key),
+  },
+  [CONNECTOR_CATEGORY.documents]: {
+    icon: <BookOpen />,
+    label: 'Docs',
+    target: 'space',
+    reconnect: 'to edit its pages in Docs',
+    disconnect: 'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
+    targetLabel: (target) => [target.name ?? target.key, target.id].filter(Boolean).join(' · '),
+  },
+};
+
+function Connectors() {
   const connections = useConnections();
 
   if (connections.isPending) return <Skeleton className="h-32 w-full" />;
@@ -122,11 +145,12 @@ function IssueTrackers() {
       </Banner>
     );
   }
-  return connections.data.map((connection) => <IssueTracker key={connection.provider} connection={connection} />);
+  return connections.data.map((connection) => <ConnectorCard key={connection.provider} connection={connection} />);
 }
 
-function IssueTracker({ connection }: { connection: Connection }) {
-  const { provider, name, status, can_write, external_account, targets } = connection;
+function ConnectorCard({ connection }: { connection: Connection }) {
+  const { provider, name, category, status, can_write, external_account, targets } = connection;
+  const copy = CATEGORY_COPY[category];
   const connect = useStartAuthorization();
   const disconnect = useDisconnect(name);
   const sync = useSyncNow(name);
@@ -136,8 +160,8 @@ function IssueTracker({ connection }: { connection: Connection }) {
 
   return (
     <IntegrationCard
-      icon={<Kanban />}
-      category="Issue tracker"
+      icon={copy.icon}
+      category={copy.label}
       name={name}
       state={
         status === CONNECTION_STATUS.needsReauth ? <Tag variant="warning">Needs reconnect</Tag> : connected ? <Tag variant="success">Connected</Tag> : <Tag>Not connected</Tag>
@@ -145,7 +169,7 @@ function IssueTracker({ connection }: { connection: Connection }) {
     >
       {isAdmin && connected && !can_write && (
         <Banner type="warning" action={<Button size="sm" loading={connect.isPending} onClick={() => connect.mutate(provider)}>Reconnect</Button>}>
-          Reconnect {name} to edit, move and create its tickets from the board.
+          Reconnect {name} {copy.reconnect}.
         </Banner>
       )}
       {external_account?.name && (
@@ -158,8 +182,14 @@ function IssueTracker({ connection }: { connection: Connection }) {
           {targets.map((target) => (
             <li key={target.key} className="flex items-center justify-between gap-2">
               <span className="min-w-0 truncate">
-                <span className="font-medium">{target.key}</span>
-                {target.name && <span className="text-muted"> · {target.name}</span>}
+                {category === CONNECTOR_CATEGORY.documents ? (
+                  <span className="font-medium">{target.name ?? target.key}</span>
+                ) : (
+                  <>
+                    <span className="font-medium">{target.key}</span>
+                    {target.name && <span className="text-muted"> · {target.name}</span>}
+                  </>
+                )}
                 {target.sync_error && <span className="text-danger"> · {target.sync_error}</span>}
               </span>
               <StatusTag status={target.sync_status} done="Synced" />
@@ -167,7 +197,7 @@ function IssueTracker({ connection }: { connection: Connection }) {
           ))}
         </ul>
       )}
-      {isAdmin && connected && <AddTarget provider={provider} synced={targets.map((t) => t.key)} />}
+      {isAdmin && connected && <AddTarget provider={provider} noun={copy.target} label={copy.targetLabel} synced={targets.map((t) => t.key)} />}
       {isAdmin && (
         <div className="flex gap-2">
           {connected ? (
@@ -180,7 +210,7 @@ function IssueTracker({ connection }: { connection: Connection }) {
               <ConfirmDialog
                 trigger={<Button size="sm">Disconnect</Button>}
                 title={`Disconnect ${name}?`}
-                description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
+                description={copy.disconnect}
                 confirmLabel={`Disconnect ${name}`}
                 pending={disconnect.isPending}
                 onConfirm={(close) => disconnect.mutate(provider, { onSuccess: close })}
@@ -197,7 +227,7 @@ function IssueTracker({ connection }: { connection: Connection }) {
   );
 }
 
-function AddTarget({ provider, synced }: { provider: string; synced: string[] }) {
+function AddTarget({ provider, noun, label, synced }: { provider: string; noun: string; label: (target: Target) => string; synced: string[] }) {
   const available = useAvailableTargets(provider);
   const add = useAddTarget();
   const [selected, setSelected] = useState('');
@@ -209,11 +239,11 @@ function AddTarget({ provider, synced }: { provider: string; synced: string[] })
   return (
     <div className="flex gap-2">
       <Select value={selected} onValueChange={setSelected}>
-        <SelectTrigger className="flex-1" size="sm" aria-label="Project to sync" placeholder="Add a project to sync" />
+        <SelectTrigger className="flex-1" size="sm" aria-label={`${noun} to sync`} placeholder={`Add a ${noun} to sync`} />
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.key} value={option.key}>
-              {option.name ? `${option.key} · ${option.name}` : option.key}
+              {label(option)}
             </SelectItem>
           ))}
         </SelectContent>

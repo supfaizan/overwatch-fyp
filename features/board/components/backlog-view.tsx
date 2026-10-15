@@ -15,13 +15,15 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus } from '@phosphor-icons/react/ssr';
+import { CaretRight, Plus } from '@phosphor-icons/react/ssr';
 import { memo, useState, type ReactNode } from 'react';
 import Avatar from '@/shared/components/avatar';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
+import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
+import TypeIcon, { typeOf } from '@/shared/work-item-types/type-icon';
 import { cn } from '@/shared/lib/cn';
 import { usePlanned, useSetItemSprint, useStartSprint } from '../hooks';
 import { BACKLOG_SECTION, placement, sectionDrop, sortByRank } from '../lib';
@@ -165,12 +167,29 @@ type SectionProps = {
   onOpen: (item: WorkItem) => void;
 };
 
+/**
+ * A sprint or the backlog: collapsible, with its done items folded away at the bottom (Jira keeps them
+ * in the active sprint until it's completed, so they're there, just out of the way).
+ */
 function Section({ id, title, detail, badge, items, total, editable, action, onOpen }: SectionProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const [open, setOpen] = useState(true);
+  const [showDone, setShowDone] = useState(false);
+  const doneItems = items.filter((item) => item.status_category === STATUS_CATEGORY.done);
+  const shown = showDone ? items : items.filter((item) => item.status_category !== STATUS_CATEGORY.done);
 
   return (
     <section aria-label={title} className="flex flex-col gap-2">
       <header className="flex flex-wrap items-center gap-2 px-1">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+          onClick={() => setOpen((value) => !value)}
+          className="flex size-5 cursor-pointer items-center justify-center rounded text-muted hover:text-foreground"
+        >
+          <CaretRight aria-hidden className={cn('size-3 transition-transform', open && 'rotate-90')} />
+        </button>
         <h2 className="text-sm font-semibold">{title}</h2>
         {badge && <Tag>{badge}</Tag>}
         <span className="text-xs text-muted">{total} {total === 1 ? 'item' : 'items'}</span>
@@ -178,15 +197,24 @@ function Section({ id, title, detail, badge, items, total, editable, action, onO
         <span className="flex-1" />
         {action}
       </header>
-      <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className={cn('flex min-h-12 flex-col gap-1 rounded-lg bg-fill-hover p-1.5 transition-colors', isOver && 'bg-fill-active')}>
-          {items.length === 0 && <li className="list-none px-2 py-2 text-xs text-muted">Drag items here to plan them.</li>}
-          {items.map((item) => (
-            <Row key={item.id} item={item} editable={editable} onOpen={onOpen} />
-          ))}
-        </ul>
-      </SortableContext>
-      {total > items.length && <p className="px-1 text-xs text-muted">Showing the first {items.length} of {total}.</p>}
+      {open && (
+        <SortableContext id={id} items={shown.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+          <ul ref={setNodeRef} className={cn('flex min-h-12 flex-col gap-1 rounded-lg bg-fill-hover p-1.5 transition-colors', isOver && 'bg-fill-active')}>
+            {shown.length === 0 && <li className="list-none px-2 py-2 text-xs text-muted">Drag items here to plan them.</li>}
+            {shown.map((item) => (
+              <Row key={item.id} item={item} editable={editable} onOpen={onOpen} />
+            ))}
+            {doneItems.length > 0 && (
+              <li className="list-none">
+                <button type="button" onClick={() => setShowDone((value) => !value)} className="cursor-pointer px-2 py-1 text-xs text-muted hover:text-foreground">
+                  {showDone ? 'Hide done items' : `${doneItems.length} done ${doneItems.length === 1 ? 'item' : 'items'}`}
+                </button>
+              </li>
+            )}
+          </ul>
+        </SortableContext>
+      )}
+      {open && total > items.length && <p className="px-1 text-xs text-muted">Showing the first {items.length} of {total}.</p>}
     </section>
   );
 }
@@ -204,8 +232,10 @@ function Row({ item, editable, onOpen }: { item: WorkItem; editable: boolean; on
 type RowBodyProps = { item: WorkItem; onOpen: (item: WorkItem) => void; attributes?: DraggableAttributes; listeners?: DraggableSyntheticListeners };
 
 const RowBody = memo(function RowBody({ item, onOpen, attributes, listeners }: RowBodyProps) {
+  const type = typeOf(useWorkItemTypes().data, item.type_id);
   return (
     <div {...attributes} {...listeners} className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm">
+      {type ? <TypeIcon type={type} /> : <span aria-hidden className="size-4 shrink-0" />}
       <span className="w-20 shrink-0 text-xs font-medium text-muted">{item.key}</span>
       <button type="button" className={cn('min-w-0 flex-1 truncate text-left hover:underline', item.status_category === STATUS_CATEGORY.done && 'text-muted line-through')} onClick={() => onOpen(item)}>
         {item.title}

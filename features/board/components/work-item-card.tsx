@@ -4,15 +4,18 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ArrowSquareOut, DotsThree, Lock } from '@phosphor-icons/react/ssr';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
 import Tag from '@/shared/components/tag';
+import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
+import TypeIcon, { typeOf } from '@/shared/work-item-types/type-icon';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
 import { COLOR_CLASSES } from '../lib';
 import { COLUMN_COLOR, NATIVE_SOURCE, type Column, type ColumnColor, type WorkItem } from '../types';
+import { useItemMoves, usePrefetchMoves } from '../hooks';
 import PriorityIcon from './priority-icon';
 
 type WorkItemCardProps = {
@@ -27,10 +30,14 @@ type WorkItemCardProps = {
 
 export default function WorkItemCard({ item, columns, color, onOpen, onMoveTo }: WorkItemCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: !item.editable });
+  const prefetchMoves = usePrefetchMoves();
 
   return (
     <li
       ref={setNodeRef}
+      // where it can move, read before a drag starts so the hints are ready
+      onPointerEnter={() => prefetchMoves(item)}
+      onFocus={() => prefetchMoves(item)}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('list-none', isDragging && 'opacity-40')}
     >
@@ -47,6 +54,9 @@ type CardBodyProps = WorkItemCardProps & { attributes?: DraggableAttributes; lis
  */
 export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_COLOR.gray, onOpen, onMoveTo, attributes, listeners }: CardBodyProps) {
   const tracker = item.source !== NATIVE_SOURCE;
+  const type = typeOf(useWorkItemTypes().data, item.type_id);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const moves = useItemMoves(item, menuOpen);
 
   return (
     // the whole card opens it; a drag only starts after a few pixels of travel, so a click stays a click
@@ -78,7 +88,7 @@ export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_C
           </a>
         )}
         {item.editable && (
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="tertiary" size="sm" iconOnly aria-label={`Actions for ${item.key}`} className="size-6" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
                 <DotsThree />
@@ -87,11 +97,15 @@ export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_C
             {/* React events bubble through portals: a pick here mustn't also open the card */}
             <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
               <DropdownMenuLabel>Move to</DropdownMenuLabel>
-              {columns.filter((column) => column.id !== item.column_id).map((column) => (
-                <DropdownMenuItem key={column.id} onSelect={() => onMoveTo(item, column.id)}>
-                  {column.name}
-                </DropdownMenuItem>
-              ))}
+              {columns.filter((column) => column.id !== item.column_id).map((column) => {
+                // until the moves are read, every column is offered; the server checks the move either way
+                const blocked = moves.data && moves.data.basis !== 'open' && !moves.data.targets.some((target) => target.column_id === column.id);
+                return (
+                  <DropdownMenuItem key={column.id} disabled={Boolean(blocked)} onSelect={() => onMoveTo(item, column.id)}>
+                    {column.name}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -100,15 +114,20 @@ export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_C
       <button type="button" className="text-left font-medium hover:underline focus-visible:underline">
         {item.title}
       </button>
-      {(item.status || item.priority || item.assignee?.name) && (
+      {(type || item.status || item.priority || item.assignee?.name) && (
         <div className="flex items-center gap-2">
+          {type && (
+            <Tooltip content={type.name}>
+              <span className="inline-flex"><TypeIcon type={type} /></span>
+            </Tooltip>
+          )}
+          {item.status && <Tag>{item.status}</Tag>}
+          <span className="flex-1" />
           {item.priority && (
             <Tooltip content={`${item.priority} priority`}>
               <span className="inline-flex"><PriorityIcon priority={item.priority} /></span>
             </Tooltip>
           )}
-          {item.status && <Tag>{item.status}</Tag>}
-          <span className="flex-1" />
           {item.assignee?.name && (
             <Tooltip content={item.assignee.name}>
               <Avatar name={item.assignee.name} size="sm" />

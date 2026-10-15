@@ -5,6 +5,9 @@ import Button from '@/shared/components/button';
 import { Dialog, DialogClose, DialogContent } from '@/shared/components/dialog';
 import { Input, TextArea } from '@/shared/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
+import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
+import { typeOf } from '@/shared/work-item-types/type-icon';
+import TypeSelect from '@/shared/work-item-types/type-select';
 import { useCreateWorkItem, usePeople } from '../hooks';
 import { NATIVE_SOURCE, type Board } from '../types';
 
@@ -27,6 +30,9 @@ export default function WorkItemDialog({ open, onOpenChange, board, trackerName,
   const [description, setDescription] = useState('');
   const [assignee, setAssignee] = useState(UNASSIGNED);
   const [columnId, setColumnId] = useState(board.columns[0]?.id ?? '');
+  const types = useWorkItemTypes();
+  const [typeId, setTypeId] = useState<string | undefined>(undefined);
+  const chosenType = typeId ?? typeOf(types.data, null)?.id;
   const people = usePeople(board.source === NATIVE_SOURCE ? null : board.source, board.target_key);
   const create = useCreateWorkItem();
 
@@ -40,6 +46,7 @@ export default function WorkItemDialog({ open, onOpenChange, board, trackerName,
         board_id: board.id,
         column_id: columnId,
         sprint_id: sprintId,
+        type_id: chosenType ?? null,
       },
       { onSuccess: () => onOpenChange(false) },
     );
@@ -65,6 +72,7 @@ export default function WorkItemDialog({ open, onOpenChange, board, trackerName,
           <Input aria-label="Title" placeholder="What needs doing?" maxLength={255} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
           <TextArea aria-label="Description" placeholder="Details (optional, Markdown works)" rows={5} maxLength={20_000} value={description} onChange={(e) => setDescription(e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
+            <TypeSelect value={chosenType} onChange={setTypeId} />
             <Select value={columnId} onValueChange={setColumnId}>
               <SelectTrigger aria-label="Column" />
               <SelectContent>

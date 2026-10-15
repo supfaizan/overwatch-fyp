@@ -1,5 +1,5 @@
 import { api } from '@/shared/api/client';
-import { BOARD_KIND, type Board, type Column, type ColumnColor, type CreateWorkItem, type MoveWorkItem, type Person, type Sprint, type SprintFields, type Tracker, type WorkItem, type WorkItemChanges, type Comment } from './types';
+import { type AllowedMoves, BOARD_KIND, type Board, type Column, type ColumnColor, type CreateWorkItem, type MoveWorkItem, type Person, type Sprint, type SprintFields, type SyncTarget, type Tracker, type WorkItem, type WorkItemChanges, type Comment } from './types';
 
 /** Cards a column shows first, then how many more load each time it's scrolled to the bottom. */
 const FIRST_BATCH = 7;
@@ -78,6 +78,9 @@ export const moveWorkItem = ({ id, ...body }: MoveWorkItem & { id: string }) => 
 export const deleteWorkItem = (id: string) => api.delete<null>(`/work-items/${id}`);
 
 export const getTrackers = () => api.get<Tracker[]>('/connections');
+/** Brings a tracker board up to date; `force` skips the "synced moments ago" check (the refresh button). */
+export const syncBoard = ({ boardId, force }: { boardId: string; force: boolean }) =>
+  api.post<SyncTarget>(`/boards/${boardId}/sync`, undefined, { params: { force } });
 
 export const getTrackerAssignees = (provider: string, targetKey: string) =>
   api.get<Person[]>(`/connections/${provider}/targets/${targetKey}/assignees`);
@@ -88,3 +91,14 @@ export const getMembers = async (workspaceId: string): Promise<Person[]> => {
   );
   return members.map((m) => ({ id: m.user_id, name: m.name ?? m.github_login, avatar_url: m.avatar_url }));
 };
+
+/** The types an item can be changed to; null when any (a tracker item only to those its tracker allows in place). */
+export const getAllowedTypes = (itemId: string) => api.get<{ type_ids: string[] | null }>(`/work-items/${itemId}/types`);
+/** Where an item can move from where it is; on a tracker board, Jira's answer for it now. */
+export const getMoves = (itemId: string) => api.get<AllowedMoves>(`/work-items/${itemId}/moves`);
+/** A native board's columns and workflow, all at once; `reassign` says where removed columns' items go. */
+export const setNativeColumns = ({ boardId, ...body }: {
+  boardId: string;
+  columns: { id: string; name: string; status_category: string; color: string | null; next: string[] | null }[];
+  reassign: Record<string, string>;
+}) => api.request<Board>({ method: 'PUT', url: `/boards/${boardId}/columns`, data: body });

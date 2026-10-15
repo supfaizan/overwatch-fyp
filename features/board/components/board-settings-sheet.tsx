@@ -5,6 +5,7 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react/ssr';
 import { Dialog as DialogPrimitive } from 'radix-ui';
+import { useState } from 'react';
 import Button from '@/shared/components/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
 import SegmentedButton from '@/shared/components/segmented-button';
@@ -14,6 +15,7 @@ import { useColumnSettings } from '../hooks';
 import { COLOR_CLASSES, columnColor, hiddenByDefault } from '../lib';
 import { GROUP_BY_OPTIONS, type BoardView, type GroupBy } from '../store';
 import { COLUMN_COLOR, type Board, type Column, type ColumnColor } from '../types';
+import ColumnsWorkflowDialog from './columns-workflow-dialog';
 
 type BoardSettingsSheetProps = {
   open: boolean;
@@ -22,14 +24,17 @@ type BoardSettingsSheetProps = {
   view: BoardView;
   onHiddenChange: (columnId: string, hidden: boolean) => void;
   onGroupByChange: (groupBy: GroupBy) => void;
+  /** Admins of a native board edit its columns and workflow; a tracker's board follows the tracker. */
+  canEditColumns: boolean;
 };
 
 /**
  * The board's view settings, in a panel from the right: grouping and hidden columns are this person's;
  * column order and colors are the board's, for everyone.
  */
-export default function BoardSettingsSheet({ open, onOpenChange, board, view, onHiddenChange, onGroupByChange }: BoardSettingsSheetProps) {
+export default function BoardSettingsSheet({ open, onOpenChange, board, view, onHiddenChange, onGroupByChange, canEditColumns }: BoardSettingsSheetProps) {
   const settings = useColumnSettings();
+  const [editing, setEditing] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -73,7 +78,14 @@ export default function BoardSettingsSheet({ open, onOpenChange, board, view, on
           </section>
 
           <section className="flex flex-col gap-2">
-            <h3 className="text-sm font-medium">Columns</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="flex-1 text-sm font-medium">Columns</h3>
+              {canEditColumns && (
+                <Button size="sm" onClick={() => setEditing(true)}>
+                  Columns &amp; workflow
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-muted">Drag to reorder. Hidden columns aren’t loaded.</p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -93,6 +105,7 @@ export default function BoardSettingsSheet({ open, onOpenChange, board, view, on
           </section>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
+      {editing && <ColumnsWorkflowDialog board={board} onClose={() => setEditing(false)} />}
     </DialogPrimitive.Root>
   );
 }

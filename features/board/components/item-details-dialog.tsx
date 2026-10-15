@@ -17,9 +17,12 @@ import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
 import { cn } from '@/shared/lib/cn';
-import { useAddComment, useComments, useDeleteComment, useDeleteWorkItem, usePeople, usePriorities, useSetItemSprint, useUpdateComment, useUpdateWorkItem } from '../hooks';
+import { useAllowedTypes, useAddComment, useComments, useDeleteComment, useDeleteWorkItem, usePeople, usePriorities, useSetItemSprint, useUpdateComment, useUpdateWorkItem } from '../hooks';
 import { COLOR_CLASSES, columnColor } from '../lib';
 import { BOARD_KIND, NATIVE_SOURCE, STATUS_CATEGORY, type Board, type Comment, type LinkedItem, type Sprint, type WorkItem, type WorkItemChanges } from '../types';
+import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
+import { typeOf } from '@/shared/work-item-types/type-icon';
+import TypeSelect from '@/shared/work-item-types/type-select';
 import PriorityIcon from './priority-icon';
 
 // heavy, and only needed once someone edits
@@ -102,6 +105,9 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
 
             <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">Details</h3>
+              <Detail label="Type">
+                <TypeField item={item} disabled={readOnly} onSave={(type_id) => save({ type_id })} />
+              </Detail>
               <Detail label="Assignee">
                 <AssigneeField item={item} board={board} disabled={readOnly} onSave={(assignee_id) => save({ assignee_id })} />
               </Detail>
@@ -343,6 +349,14 @@ function AssigneeField({ item, board, disabled, onSave }: { item: WorkItem; boar
       </SelectContent>
     </Select>
   );
+}
+
+/** The item's type; a tracker item only to the types its tracker can change it to in place. */
+function TypeField({ item, disabled, onSave }: { item: WorkItem; disabled: boolean; onSave: (typeId: string) => void }) {
+  const types = useWorkItemTypes();
+  const allowed = useAllowedTypes(item, !disabled);
+  const current = typeOf(types.data, item.type_id)?.id;
+  return <TypeSelect size="sm" value={current} allowed={allowed.data?.type_ids ?? null} disabled={disabled} onChange={(typeId) => typeId !== current && onSave(typeId)} />;
 }
 
 function PriorityField({ boardId, value, disabled, onSave }: { boardId: string; value: string | null; disabled: boolean; onSave: (priority: string | null) => void }) {

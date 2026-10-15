@@ -1,4 +1,4 @@
-import { COLUMN_COLOR, PRIORITY_LEVEL, STATUS_CATEGORY, type Board, type Column, type ColumnColor, type MoveWorkItem, type PriorityLevel, type WorkItem } from './types';
+import { COLUMN_COLOR, COLUMN_MODE, NATIVE_SOURCE, PRIORITY_LEVEL, STATUS_CATEGORY, type AllowedMoves, type Board, type Column, type ColumnColor, type MoveTarget, type MoveWorkItem, type PriorityLevel, type WorkItem } from './types';
 
 const byRank = (a: WorkItem, b: WorkItem) => a.rank - b.rank || a.id.localeCompare(b.id);
 
@@ -194,3 +194,99 @@ export function laneDropTarget(
   const movingDown = laneOf(active, by) === lane && active.column_id === over.column_id && full.indexOf(active) < full.indexOf(over);
   return { lane, columnId: over.column_id, index: full.filter((item) => item.id !== activeId).indexOf(over) + (movingDown ? 1 : 0) };
 }
+
+/**
+ * Where a card may move, by column, mirroring the backend (app/boards/workflow.py): `live` is the
+ * tracker's answer for the card now; without it, the board's rules or its tracker's stored workflow.
+ * Null when nothing says (every column; the server checks the move).
+ */
+export function movesFrom(board: Board, item: WorkItem, live?: AllowedMoves): Map<string, MoveTarget[]> | null {
+  const byColumn = (targets: MoveTarget[]) => {
+    const map = new Map<string, MoveTarget[]>();
+    for (const target of targets) map.set(target.column_id, [...(map.get(target.column_id) ?? []), target]);
+    return map;
+  };
+  if (live) return live.basis === 'open' ? null : byColumn(live.targets);
+  if (board.source === NATIVE_SOURCE) {
+    const current = board.columns.find((column) => column.id === item.column_id);
+    if (!board.columns.some((column) => column.next != null) || !current) return null;
+    const allowed = current.next;
+    return byColumn(
+      board.columns
+        .filter((column) => column.id !== current.id && (allowed == null || allowed.includes(column.id)))
+        .map((column) => ({ column_id: column.id, status_id: null, status: null, transition_name: null })),
+    );
+  }
+  const workflow = board.workflow;
+  const workflowId = workflow && item.issue_type_id ? workflow.by_issue_type[item.issue_type_id] : undefined;
+  if (!workflow || !workflowId || !workflow.workflows[workflowId] || !item.status_id) return null;
+  const targets: MoveTarget[] = [];
+  for (const transition of workflow.workflows[workflowId].transitions) {
+    if (transition.to === item.status_id || (transition.from && !transition.from.includes(item.status_id))) continue;
+    const status = workflow.statuses[transition.to];
+    const column = board.column_mode === COLUMN_MODE.tracker
+      ? board.columns.find((candidate) => candidate.status_ids?.includes(transition.to))
+      : board.columns.find((candidate) => candidate.status_category === status?.category);
+    if (column && !targets.some((target) => target.column_id === column.id && target.status_id === transition.to)) {
+      targets.push({ column_id: column.id, status_id: transition.to, status: status?.name ?? null, transition_name: transition.name });
+    }
+  }
+  return byColumn(targets);
+}
+
+/** What a column offers a card being dragged over it: nothing to say (its own column, or any move goes), its landing spots, or no way in. */
+export type DropHint = { allowed: false } | { allowed: true; zones: { statusId: string | null; label: string; detail: string | null }[] };
+
+export function dropHint(moves: Map<string, MoveTarget[]> | null, item: WorkItem, column: Column, columns: Column[]): DropHint | undefined {
+  if (!moves || column.id === item.column_id) return undefined;
+  const targets = moves.get(column.id);
+  if (!targets?.length) return { allowed: false };
+  const from = item.status ?? columns.find((candidate) => candidate.id === item.column_id)?.name ?? '';
+  return {
+    allowed: true,
+    zones: targets.map((target) => {
+      const to = target.status ?? column.name;
+      // a move named other than where it goes says so underneath, as Jira does
+      return { statusId: target.status_id, label: `${from} → ${to}`, detail: target.transition_name && target.transition_name !== to ? target.transition_name : null };
+    }),
+  };
+}
+
+/** A drop zone's droppable id: one per status in a column that can take a card into several. */
+export const zoneId = (columnId: string, statusId: string | null) => `zone|${columnId}|${statusId ?? ''}`;
+
+export function parseZoneId(id: string): { columnId: string; statusId: string | null } | null {
+  const [kind, columnId, statusId] = id.split('|');
+  return kind === 'zone' && columnId ? { columnId, statusId: statusId || null } : null;
+}
+
+export const BLOCKED_MESSAGE = "This work item can't be moved to this column due to workflow configurations or permissions.";
+
+/** A native board's column while it's being edited: `next` null means it can move anywhere. */
+export type DraftColumn = { id: string; name: string; status_category: Column['status_category']; color: ColumnColor | null; next: string[] | null };
+
+export const WORKFLOW_PRESET = { open: 'open', step: 'step', custom: 'custom' } as const;
+export type WorkflowPreset = (typeof WORKFLOW_PRESET)[keyof typeof WORKFLOW_PRESET];
+
+/** Each column's moves under a preset: anywhere, or only to the column before and after it. */
+export function presetNext(columns: DraftColumn[], preset: Exclude<WorkflowPreset, 'custom'>): DraftColumn[] {
+  if (preset === WORKFLOW_PRESET.open) return columns.map((column) => ({ ...column, next: null }));
+  return columns.map((column, index) => ({ ...column, next: [columns[index - 1]?.id, columns[index + 1]?.id].filter((id): id is string => Boolean(id)) }));
+}
+
+/** Which preset the columns' moves match, or custom. */
+export function presetOf(columns: DraftColumn[]): WorkflowPreset {
+  if (columns.every((column) => column.next === null)) return WORKFLOW_PRESET.open;
+  const step = presetNext(columns, WORKFLOW_PRESET.step);
+  const same = (a: string[] | null, b: string[] | null) => a !== null && b !== null && a.length === b.length && a.every((id) => b.includes(id));
+  return columns.every((column, index) => same(column.next, step[index].next)) ? WORKFLOW_PRESET.step : WORKFLOW_PRESET.custom;
+}
+
+/** Columns no other column can move to, so cards never get there (except by being created there). */
+export function unreachableColumns(columns: DraftColumn[]): DraftColumn[] {
+  return columns.filter((column) => !columns.some((other) => other.id !== column.id && (other.next === null || other.next.includes(column.id))));
+}
+
+/** Columns a card can't leave; fine for a Done column, worth a second look elsewhere. */
+export const deadEndColumns = (columns: DraftColumn[]) =>
+  columns.filter((column) => column.next !== null && column.next.length === 0 && column.status_category !== STATUS_CATEGORY.done);

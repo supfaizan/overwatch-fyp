@@ -12,12 +12,14 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CaretDown, CaretRight } from '@phosphor-icons/react/ssr';
+import { CaretDown, CaretRight, Lock } from '@phosphor-icons/react/ssr';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import Spinner from '@/shared/components/spinner';
 import { cn } from '@/shared/lib/cn';
-import { COLOR_CLASSES, cellId, columnColor, groupByColumn, laneDropTarget, laneOf, type Lane } from '../lib';
-import type { Column, ColumnColor, WorkItem } from '../types';
+import { useCardOver, useDropHints } from '../hooks';
+import { BLOCKED_MESSAGE, COLOR_CLASSES, type DropHint, cellId, columnColor, groupByColumn, laneDropTarget, laneOf, type Lane } from '../lib';
+import type { Board, Column, ColumnColor, WorkItem } from '../types';
 import WorkItemCard, { CardBody } from './work-item-card';
 
 type CellState = { hasMore: boolean; loadingMore: boolean };
@@ -36,12 +38,15 @@ type SwimlaneBoardProps = {
   onMoveTo: (item: WorkItem, columnId: string) => void;
   /** a card dropped at `index` of a lane's column; a different lane means a different assignee (or priority) */
   onDrop: (item: WorkItem, lane: string, columnId: string, index: number) => void;
+  /** the board, for where a dragged card may go */
+  board: Board;
 };
 
 /** The board in rows, Jira-style: one lane per assignee or priority, the columns across. */
-export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, onDrop }: SwimlaneBoardProps) {
+export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, onDrop, board }: SwimlaneBoardProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [dragging, setDragging] = useState<WorkItem | null>(null);
+  const hintFor = useDropHints(board, dragging, columns);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -54,7 +59,13 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
     setDragging(null);
     const item = items.find((candidate) => candidate.id === active.id);
     const target = over && item && laneDropTarget(items, columns, by, item.id, String(over.id));
-    if (item && target) onDrop(item, target.lane, target.columnId, target.index);
+    if (!item || !target) return;
+    const column = columns.find((candidate) => candidate.id === target.columnId);
+    if (column && hintFor(column)?.allowed === false) {
+      toast.error(BLOCKED_MESSAGE);
+      return;
+    }
+    onDrop(item, target.lane, target.columnId, target.index);
   };
 
   return (
@@ -68,9 +79,12 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="sticky top-0 z-10 grid gap-4 bg-background pb-2" style={grid}>
           {columns.map((column) => (
-            <h2 key={column.id} className="flex items-center gap-2 px-1 text-sm font-medium">
-              <span aria-hidden className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)} />
-              {column.name}
+            <h2 key={column.id} className="flex flex-col gap-1 px-1 text-sm font-medium">
+              <span className="flex items-center gap-2">
+                <span aria-hidden className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)} />
+                {column.name}
+              </span>
+              <HintLabel hint={hintFor(column)} />
             </h2>
           ))}
         </div>
@@ -107,6 +121,7 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
                           color={colors[column.id]}
                           onOpen={onOpen}
                           onMoveTo={onMoveTo}
+                          blocked={hintFor(column)?.allowed === false}
                         />
                       );
                     })}
@@ -136,11 +151,21 @@ type CellProps = {
   color: ColumnColor;
   onOpen: (item: WorkItem) => void;
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** a card being dragged can't go to this column */
+  blocked: boolean;
 };
 
+/** A column's hint while a card is dragged: where it lands ("In Review → In Progress"), or that it can't. */
+function HintLabel({ hint }: { hint: DropHint | undefined }) {
+  if (!hint) return null;
+  if (!hint.allowed) return <span className="flex items-center gap-1 text-xs font-normal text-muted"><Lock aria-hidden className="size-3" />Can&apos;t move here</span>;
+  return <span className="text-xs font-normal text-primary">{hint.zones.map((zone) => zone.label).join(' · ')}</span>;
+}
+
 /** One lane's cards in one column: its own first batch, about four cards tall, loading more as it's scrolled. */
-function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onOpen, onMoveTo }: CellProps) {
-  const { setNodeRef, isOver } = useDroppable({ id });
+function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onOpen, onMoveTo, blocked }: CellProps) {
+  const { setNodeRef } = useDroppable({ id });
+  const isOver = useCardOver(id) && !blocked;
   const list = useRef<HTMLUListElement | null>(null);
   const sentinel = useRef<HTMLLIElement>(null);
 
@@ -158,7 +183,7 @@ function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onO
           setNodeRef(node);
           list.current = node;
         }}
-        className={cn('flex max-h-176 min-h-16 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active')}
+        className={cn('flex max-h-176 min-h-16 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active ring-2 ring-primary', blocked && 'opacity-40')}
       >
         {items.map((item) => (
           <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} />

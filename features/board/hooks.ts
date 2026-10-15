@@ -1,15 +1,18 @@
 'use client';
 
+import { useDndContext } from '@dnd-kit/core';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
 import { queryKeys } from '@/shared/api/query-keys';
+import { JOB_POLL_MS, isRunning } from '@/shared/lib/job-status';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import * as boardApi from './api';
-import { arrange, cellId, mergePages } from './lib';
+import { type DropHint, arrange, cellId, dropHint, mergePages, movesFrom } from './lib';
 import type { ItemPage } from './api';
-import type { Board, Column, ColumnColor, Comment, MoveWorkItem, Sprint, SprintFields, WorkItem, WorkItemChanges } from './types';
+import { NATIVE_SOURCE } from './types';
+import type { Board, Column, ColumnColor, Comment, MoveWorkItem, Sprint, SprintFields, SyncTarget, Tracker, WorkItem, WorkItemChanges } from './types';
 
 const root = ['board'] as const;
 const keys = {
@@ -26,7 +29,10 @@ const keys = {
 
 const showError = (error: ApiError) => toast.error(error.message);
 
-export const useBoards = () => useQuery({ queryKey: keys.boards, queryFn: boardApi.getBoards });
+// a board opened again within this long shows at once from the cache, and is refreshed behind it
+const BOARD_CACHE_MS = 30 * 60_000;
+
+export const useBoards = () => useQuery({ queryKey: keys.boards, queryFn: boardApi.getBoards, gcTime: BOARD_CACHE_MS });
 
 /** One column's (or swimlane cell's) loaded cards: how many there are in all, and whether more are coming. */
 type PagedState = { total: number; hasMore: boolean; loadingMore: boolean };
@@ -59,6 +65,7 @@ export function useBoardItems(board: Board | undefined, columns: Column[], sprin
     queries: requests.map(({ column, page }) => ({
       queryKey: [...keys.items(board?.id ?? ''), board?.kind, sprint, column.id, page],
       queryFn: () => boardApi.getColumnPage(board as Board, column, sprint, page),
+      gcTime: BOARD_CACHE_MS,
     })),
   });
 
@@ -84,12 +91,16 @@ export function useBoardItems(board: Board | undefined, columns: Column[], sprin
 }
 
 export const useSprints = (boardId: string | undefined) =>
-  useQuery({ queryKey: keys.sprints(boardId ?? ''), queryFn: () => boardApi.getSprints(boardId ?? ''), enabled: Boolean(boardId) });
+  useQuery({ queryKey: keys.sprints(boardId ?? ''), queryFn: () => boardApi.getSprints(boardId ?? ''), enabled: Boolean(boardId), gcTime: BOARD_CACHE_MS });
 
 /** The backlog view's sections: each open sprint's items, then the backlog's (null). */
 export const usePlanned = (boardId: string, sprintIds: (string | null)[]) =>
   useQueries({
-    queries: sprintIds.map((sprintId) => ({ queryKey: keys.planned(boardId, sprintId), queryFn: () => boardApi.getPlanned(boardId, sprintId) })),
+    queries: sprintIds.map((sprintId) => ({
+      queryKey: keys.planned(boardId, sprintId),
+      queryFn: () => boardApi.getPlanned(boardId, sprintId),
+      gcTime: BOARD_CACHE_MS,
+    })),
   });
 
 /** Creating, starting and completing sprints change the board's kind, its sprints and what each view shows. */
@@ -151,6 +162,7 @@ export function useSwimlaneItems(board: Board | undefined, columns: Column[], by
     queryKey: [...keys.items(board?.id ?? ''), board?.kind, sprint, 'lanes', by],
     queryFn: () => boardApi.getLanes(board as Board, by ?? 'assignee', sprint),
     enabled,
+    gcTime: BOARD_CACHE_MS,
   });
   const { counts, more } = usePageCounts(`${board?.id}|${board?.kind}|${sprint}|${by}`);
   const requests = enabled
@@ -165,6 +177,7 @@ export function useSwimlaneItems(board: Board | undefined, columns: Column[], by
     queries: requests.map(({ lane, column, page }) => ({
       queryKey: [...keys.items(board?.id ?? ''), board?.kind, sprint, 'lane', by, lane, column.id, page],
       queryFn: () => boardApi.getColumnPage(board as Board, column, sprint, page, { by: by ?? 'assignee', key: lane }),
+      gcTime: BOARD_CACHE_MS,
     })),
   });
 
@@ -229,7 +242,68 @@ export function useColumnChoice() {
   });
 }
 
-export const useTrackers = () => useQuery({ queryKey: queryKeys.connections, queryFn: boardApi.getTrackers });
+// while a tracker project syncs in the background, check on it until it's done
+export const useTrackers = () =>
+  useQuery({
+    queryKey: queryKeys.connections,
+    queryFn: boardApi.getTrackers,
+    gcTime: BOARD_CACHE_MS,
+    refetchInterval: (query) => (query.state.data?.some((tracker) => tracker.targets.some((target) => isRunning(target.sync_status))) ? JOB_POLL_MS : false),
+  });
+
+/** The sync state of a tracker board's project; undefined for boards made here. */
+export const syncTargetOf = (trackers: Tracker[] | undefined, board: Board | undefined) =>
+  board?.target_key ? trackers?.find((tracker) => tracker.provider === board.source)?.targets.find((target) => target.key === board.target_key) : undefined;
+
+/**
+ * Keeps a tracker board up to date with its tracker: it syncs when the board is opened, and on
+ * `sync()` (the refresh button). Whatever is cached stays on screen meanwhile; once a sync has
+ * brought something new, the board refetches in place.
+ */
+export function useBoardSync(board: Board | undefined, target: SyncTarget | undefined) {
+  const queryClient = useQueryClient();
+  const sync = useMutation({
+    mutationFn: boardApi.syncBoard,
+    onSuccess: (synced) => {
+      if (!board) return;
+      queryClient.setQueryData<Tracker[]>(queryKeys.connections, (trackers) =>
+        trackers?.map((tracker) =>
+          tracker.provider === board.source ? { ...tracker, targets: tracker.targets.map((each) => (each.key === synced.key ? { ...each, ...synced } : each)) } : tracker,
+        ),
+      );
+    },
+    onError: showError,
+  });
+  const { mutate } = sync;
+
+  // once per board opened (StrictMode runs effects twice)
+  const opened = useRef<string | null>(null);
+  const boardId = board?.target_key ? board.id : null;
+  useEffect(() => {
+    if (!boardId || opened.current === boardId) return;
+    opened.current = boardId;
+    mutate({ boardId, force: false });
+  }, [boardId, mutate]);
+
+  // a finished sync, whether it came back with the request or was polled for, refreshes what the board shows
+  const syncedAt = target?.last_synced_at ?? null;
+  const seen = useRef({ boardId, syncedAt });
+  useEffect(() => {
+    const previous = seen.current;
+    seen.current = { boardId, syncedAt };
+    if (!boardId || previous.boardId !== boardId || previous.syncedAt === syncedAt) return;
+    void queryClient.invalidateQueries({ queryKey: keys.items(boardId) });
+    void queryClient.invalidateQueries({ queryKey: keys.sprints(boardId) });
+    void queryClient.invalidateQueries({ queryKey: keys.boards });
+  }, [boardId, syncedAt, queryClient]);
+
+  return {
+    sync: () => {
+      if (boardId) mutate({ boardId, force: true });
+    },
+    syncing: sync.isPending || isRunning(target?.sync_status),
+  };
+}
 
 /** Who an item can be assigned to: workspace members, or the tracker project's assignable users. */
 export function usePeople(provider: string | null, targetKey: string | null) {
@@ -270,7 +344,10 @@ type Move = {
 /** Everything cached under a board's items (column pages and backlog sections) is an `ItemPage`. */
 type CachedItems = ItemPage | undefined;
 
-const mapCached = (data: CachedItems, change: (item: WorkItem) => WorkItem): CachedItems => data && { ...data, items: data.items.map(change) };
+// the board's cache also holds the swimlanes list under the same key, which has no cards to change
+const isItemPage = (data: unknown): data is ItemPage => typeof data === 'object' && data !== null && Array.isArray((data as ItemPage).items);
+const mapCached = (data: CachedItems, change: (item: WorkItem) => WorkItem): CachedItems =>
+  isItemPage(data) ? { ...data, items: data.items.map(change) } : data;
 
 /** Moves a card right away (see `moveItem`) and puts it back if the server, or the tracker, refuses. */
 export function useMoveWorkItem() {
@@ -314,3 +391,69 @@ function useCommentMutation<TArg extends { itemId: string }, TResult>(mutationFn
 export const useAddComment = () => useCommentMutation<{ itemId: string; body: string }, Comment>(boardApi.addComment);
 export const useUpdateComment = () => useCommentMutation<{ itemId: string; id: string; body: string }, Comment>(boardApi.updateComment);
 export const useDeleteComment = () => useCommentMutation<{ itemId: string; id: string }, null>(boardApi.deleteComment);
+
+/**
+ * Whether a card being dragged is over this column (or swimlane cell): over its empty space or over
+ * one of its cards, which are drop targets of their own. Dragging a column header doesn't count.
+ */
+export function useCardOver(containerId: string) {
+  const { active, over } = useDndContext();
+  if (!active || !over || active.data.current?.type === 'column') return false;
+  return over.id === containerId || over.data.current?.sortable?.containerId === containerId;
+}
+
+/** The types a tracker item can change to, read when its details open; native items can take any. */
+export const useAllowedTypes = (item: WorkItem, enabled: boolean) =>
+  useQuery({
+    queryKey: [...queryKeys.workItems, item.id, 'types'],
+    queryFn: () => boardApi.getAllowedTypes(item.id),
+    enabled: enabled && item.source !== NATIVE_SOURCE,
+    staleTime: 60_000,
+  });
+
+// an item's moves change with its status, so they're kept briefly
+const MOVES_STALE_MS = 30_000;
+const movesKey = (item: WorkItem) => [...queryKeys.workItems, item.id, 'moves', item.status_id ?? item.column_id] as const;
+
+/** Reads an item's moves ahead of a drag (on hover), so the hints are ready when it starts. */
+export function usePrefetchMoves() {
+  const queryClient = useQueryClient();
+  return (item: WorkItem) => {
+    if (!item.editable) return;
+    void queryClient.prefetchQuery({ queryKey: movesKey(item), queryFn: () => boardApi.getMoves(item.id), staleTime: MOVES_STALE_MS });
+  };
+}
+
+/**
+ * How each column receives the card being dragged: where it may land (named like Jira's "In Review →
+ * In Progress") or that it can't. Hints show at once from the board's rules or stored workflow, and
+ * follow the tracker's live answer as soon as it's read.
+ */
+export function useDropHints(board: Board | undefined, card: WorkItem | null | undefined, columns: Column[]) {
+  const live = useQuery({
+    queryKey: card ? movesKey(card) : ['none'],
+    queryFn: () => boardApi.getMoves(card?.id ?? ''),
+    enabled: Boolean(board && card?.editable),
+    staleTime: MOVES_STALE_MS,
+  });
+  const moves = board && card ? movesFrom(board, card, live.data) : null;
+  return (column: Column): DropHint | undefined => (card ? dropHint(moves, card, column, columns) : undefined);
+}
+
+/** An item's moves, read when asked (its "Move to" menu opening). */
+export const useItemMoves = (item: WorkItem, enabled: boolean) =>
+  useQuery({ queryKey: movesKey(item), queryFn: () => boardApi.getMoves(item.id), enabled: enabled && item.editable, staleTime: MOVES_STALE_MS });
+
+/** Saving a native board's columns and workflow: the board and its cards refetch (cards may have moved column). */
+export function useSetNativeColumns() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: boardApi.setNativeColumns,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: keys.boards });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workItems });
+      toast.success('Columns and workflow saved.');
+    },
+    onError: showError,
+  });
+}

@@ -9,8 +9,17 @@ export type Challenge = { id: string; email: string; purpose: ChallengePurpose; 
 
 const CHALLENGE_KEY = 'ow_auth_challenge';
 
-export function saveChallenge({ challenge_id, email, resend_available_in }: ChallengeIssued, purpose: ChallengePurpose, now = Date.now()): Challenge {
-  const challenge = { id: challenge_id, email, purpose, resendAt: now + resend_available_in * 1000 };
+export function saveChallenge(
+  { challenge_id, email, resend_available_in }: ChallengeIssued,
+  purpose: ChallengePurpose,
+  now = Date.now(),
+): Challenge {
+  const challenge = {
+    id: challenge_id,
+    email,
+    purpose,
+    resendAt: now + resend_available_in * 1000,
+  };
   try {
     sessionStorage.setItem(CHALLENGE_KEY, JSON.stringify(challenge));
   } catch {
@@ -22,9 +31,12 @@ export function saveChallenge({ challenge_id, email, resend_available_in }: Chal
 export function readChallenge(purpose: ChallengePurpose): Challenge | null {
   try {
     const value: unknown = JSON.parse(sessionStorage.getItem(CHALLENGE_KEY) ?? 'null');
-    if (!value || typeof value !== 'object') return null;
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
     const challenge = value as Partial<Challenge>;
-    const valid = typeof challenge.id === 'string' && typeof challenge.email === 'string' && typeof challenge.resendAt === 'number';
+    const valid = typeof challenge.id === 'string' && typeof challenge.email === 'string'
+      && typeof challenge.resendAt === 'number';
     return valid && challenge.purpose === purpose ? (challenge as Challenge) : null;
   } catch {
     return null;
@@ -34,7 +46,12 @@ export function readChallenge(purpose: ChallengePurpose): Challenge | null {
 export function setResendAt(seconds: number, now = Date.now()): void {
   try {
     const value = sessionStorage.getItem(CHALLENGE_KEY);
-    if (value) sessionStorage.setItem(CHALLENGE_KEY, JSON.stringify({ ...JSON.parse(value), resendAt: now + seconds * 1000 }));
+    if (value) {
+      sessionStorage.setItem(
+        CHALLENGE_KEY,
+        JSON.stringify({ ...JSON.parse(value), resendAt: now + seconds * 1000 }),
+      );
+    }
   } catch {
     // storage blocked: the countdown just restarts from the server's answer
   }

@@ -1,8 +1,5 @@
 'use client';
 
-import { ArrowSquareOut, PencilSimple, Trash } from '@phosphor-icons/react/ssr';
-import dynamic from 'next/dynamic';
-import { useState, type ReactNode } from 'react';
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
@@ -13,16 +10,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/compo
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
-import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
-import { hasRole } from '@/shared/workspaces/lib';
-import { ROLE } from '@/shared/workspaces/types';
 import { cn } from '@/shared/lib/cn';
-import { useAllowedTypes, useAddComment, useComments, useDeleteComment, useDeleteWorkItem, usePeople, usePriorities, useSetItemSprint, useUpdateComment, useUpdateWorkItem } from '../hooks';
-import { COLOR_CLASSES, columnColor } from '../lib';
-import { BOARD_KIND, NATIVE_SOURCE, STATUS_CATEGORY, type Board, type Comment, type LinkedItem, type Sprint, type WorkItem, type WorkItemChanges } from '../types';
 import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
 import { typeOf } from '@/shared/work-item-types/type-icon';
 import TypeSelect from '@/shared/work-item-types/type-select';
+import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { hasRole } from '@/shared/workspaces/lib';
+import { ROLE } from '@/shared/workspaces/types';
+import { ArrowSquareOut, PencilSimple, Trash } from '@phosphor-icons/react/ssr';
+import dynamic from 'next/dynamic';
+import { type ReactNode, useState } from 'react';
+import {
+  useAddComment,
+  useAllowedTypes,
+  useComments,
+  useDeleteComment,
+  useDeleteWorkItem,
+  usePeople,
+  usePriorities,
+  useSetItemSprint,
+  useUpdateComment,
+  useUpdateWorkItem,
+} from '../hooks';
+import { COLOR_CLASSES, columnColor } from '../lib';
+import {
+  type Board,
+  BOARD_KIND,
+  type Comment,
+  type LinkedItem,
+  NATIVE_SOURCE,
+  type Sprint,
+  STATUS_CATEGORY,
+  type WorkItem,
+  type WorkItemChanges,
+} from '../types';
 import PriorityIcon from './priority-icon';
 
 // heavy, and only needed once someone edits
@@ -49,7 +70,10 @@ type ItemDetailsDialogProps = {
 };
 
 /** A ticket, Jira-style: what it is on the left, its details on the right; each field saves on its own. */
-export default function ItemDetailsDialog({ open, onOpenChange, item: initial, board, sprints, trackerName, onMove }: ItemDetailsDialogProps) {
+export default function ItemDetailsDialog(
+  { open, onOpenChange, item: initial, board, sprints, trackerName, onMove }:
+    ItemDetailsDialogProps,
+) {
   // what the server last said; each change answers with the item as it now is
   const [item, setItem] = useState(initial);
   const update = useUpdateWorkItem();
@@ -59,7 +83,8 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
   const readOnly = !item.editable;
   const tracker = item.source !== NATIVE_SOURCE;
 
-  const save = (changes: WorkItemChanges) => update.mutate({ id: item.id, ...changes }, { onSuccess: setItem });
+  const save = (changes: WorkItemChanges) =>
+    update.mutate({ id: item.id, ...changes }, { onSuccess: setItem });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -73,29 +98,55 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
             {item.issue_type && <Tag>{item.issue_type}</Tag>}
           </span>
         }
-        description={readOnly ? `Read-only: reconnect ${trackerName} in Settings → Integrations to edit it here.` : undefined}
+        description={readOnly
+          ? `Read-only: reconnect ${trackerName} in Settings → Integrations to edit it here.`
+          : undefined}
         // Esc inside the description editor cancels the edit rather than closing the ticket
         onEscapeKeyDown={(event) => {
-          if (event.target instanceof Element && event.target.closest('[contenteditable="true"]')) event.preventDefault();
+          if (event.target instanceof Element && event.target.closest('[contenteditable="true"]')) {
+            event.preventDefault();
+          }
         }}
       >
         <div className="grid h-full gap-6 overflow-y-auto md:grid-cols-3 md:grid-rows-1 md:overflow-hidden">
           <div className="flex min-h-0 min-w-0 flex-col gap-6 md:col-span-2 md:overflow-y-auto md:pr-2">
-            <TitleField value={item.title} disabled={readOnly} onSave={(title) => save({ title })} />
-            <DescriptionField item={item} disabled={readOnly} saving={update.isPending} onSave={(description) => save({ description })} />
+            <TitleField
+              value={item.title}
+              disabled={readOnly}
+              onSave={(title) => save({ title })}
+            />
+            <DescriptionField
+              item={item}
+              disabled={readOnly}
+              saving={update.isPending}
+              onSave={(description) => save({ description })}
+            />
             {item.subtasks.length > 0 && <Linked title="Subtasks" items={item.subtasks} />}
             {item.links.length > 0 && <Linked title="Linked work items" items={item.links} />}
             <Comments itemId={item.id} disabled={readOnly} />
           </div>
 
           <aside className="flex min-h-0 flex-col gap-4 md:overflow-y-auto">
-            <Select value={item.column_id ?? undefined} onValueChange={(columnId) => { onMove(item, columnId); setItem({ ...item, column_id: columnId }); }} disabled={readOnly}>
+            <Select
+              value={item.column_id ?? undefined}
+              onValueChange={(columnId) => {
+                onMove(item, columnId);
+                setItem({ ...item, column_id: columnId });
+              }}
+              disabled={readOnly}
+            >
               <SelectTrigger aria-label="Status" placeholder="Status" className="font-medium" />
               <SelectContent>
                 {board.columns.map((column) => (
                   <SelectItem key={column.id} value={column.id}>
                     <span className="flex items-center gap-2">
-                      <span aria-hidden className={cn('size-2 rounded-full', COLOR_CLASSES[columnColor(column)].dot)} />
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'size-2 rounded-full',
+                          COLOR_CLASSES[columnColor(column)].dot,
+                        )}
+                      />
                       {column.name}
                     </span>
                   </SelectItem>
@@ -106,10 +157,19 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
             <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">Details</h3>
               <Detail label="Type">
-                <TypeField item={item} disabled={readOnly} onSave={(type_id) => save({ type_id })} />
+                <TypeField
+                  item={item}
+                  disabled={readOnly}
+                  onSave={(type_id) => save({ type_id })}
+                />
               </Detail>
               <Detail label="Assignee">
-                <AssigneeField item={item} board={board} disabled={readOnly} onSave={(assignee_id) => save({ assignee_id })} />
+                <AssigneeField
+                  item={item}
+                  board={board}
+                  disabled={readOnly}
+                  onSave={(assignee_id) => save({ assignee_id })}
+                />
               </Detail>
               {board.kind === BOARD_KIND.scrum && (
                 <Detail label="Sprint">
@@ -118,10 +178,16 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
                     disabled={readOnly}
                     onValueChange={(value) =>
                       setSprint.mutate(
-                        { boardId: board.id, item, to: value === BACKLOG ? null : value, before_id: null, after_id: null, rank: Date.now() / 1000 },
+                        {
+                          boardId: board.id,
+                          item,
+                          to: value === BACKLOG ? null : value,
+                          before_id: null,
+                          after_id: null,
+                          rank: Date.now() / 1000,
+                        },
                         { onSuccess: setItem },
-                      )
-                    }
+                      )}
                   >
                     <SelectTrigger aria-label="Sprint" size="sm" />
                     <SelectContent>
@@ -134,10 +200,19 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
                 </Detail>
               )}
               <Detail label="Priority">
-                <PriorityField boardId={board.id} value={item.priority} disabled={readOnly} onSave={(priority) => save({ priority })} />
+                <PriorityField
+                  boardId={board.id}
+                  value={item.priority}
+                  disabled={readOnly}
+                  onSave={(priority) => save({ priority })}
+                />
               </Detail>
               <Detail label="Labels">
-                <LabelsField value={item.labels} disabled={readOnly} onSave={(labels) => save({ labels })} />
+                <LabelsField
+                  value={item.labels}
+                  disabled={readOnly}
+                  onSave={(labels) => save({ labels })}
+                />
               </Detail>
               <Detail label="Story points">
                 <Input
@@ -151,7 +226,9 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
                   disabled={readOnly}
                   onBlur={(e) => {
                     const value = e.target.value === '' ? null : Number(e.target.value);
-                    if (value !== item.story_points) save({ story_points: value });
+                    if (value !== item.story_points) {
+                      save({ story_points: value });
+                    }
                   }}
                 />
               </Detail>
@@ -165,7 +242,9 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
                   disabled={readOnly}
                   onBlur={(e) => {
                     const value = e.target.value || null;
-                    if (value !== item.due_date) save({ due_date: value });
+                    if (value !== item.due_date) {
+                      save({ due_date: value });
+                    }
                   }}
                 />
               </Detail>
@@ -174,14 +253,18 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
                   <Tooltip content={`${item.parent.key} ${item.parent.title ?? ''}`.trim()}>
                     <Tag className="max-w-full">
                       <span className="shrink-0">{item.parent.key}</span>
-                      {item.parent.title && <span className="min-w-0 truncate font-normal">{item.parent.title}</span>}
+                      {item.parent.title && (
+                        <span className="min-w-0 truncate font-normal">{item.parent.title}</span>
+                      )}
                     </Tag>
                   </Tooltip>
                 </Detail>
               )}
               {item.reporter?.name && (
                 <Detail label="Reporter">
-                  <span className="flex items-center gap-2 text-sm"><Avatar name={item.reporter.name} size="sm" /> {item.reporter.name}</span>
+                  <span className="flex items-center gap-2 text-sm">
+                    <Avatar name={item.reporter.name} size="sm" /> {item.reporter.name}
+                  </span>
                 </Detail>
               )}
             </section>
@@ -196,17 +279,31 @@ export default function ItemDetailsDialog({ open, onOpenChange, item: initial, b
             <div className="flex flex-wrap gap-2">
               {tracker && item.external_url && (
                 <Button size="sm" asChild>
-                  <a href={item.external_url} target="_blank" rel="noopener noreferrer"><ArrowSquareOut /> Open in {trackerName}</a>
+                  <a href={item.external_url} target="_blank" rel="noopener noreferrer">
+                    <ArrowSquareOut /> Open in {trackerName}
+                  </a>
                 </Button>
               )}
               {!readOnly && (!tracker || isAdmin) && (
                 <ConfirmDialog
-                  trigger={<Button size="sm" variant="tertiary" className="text-danger"><Trash /> Delete</Button>}
+                  trigger={
+                    <Button size="sm" variant="tertiary" className="text-danger">
+                      <Trash /> Delete
+                    </Button>
+                  }
                   title={`Delete ${item.key}?`}
-                  description={tracker ? `This also deletes ${item.key} in ${trackerName}. It can't be undone.` : "This can't be undone."}
+                  description={tracker
+                    ? `This also deletes ${item.key} in ${trackerName}. It can't be undone.`
+                    : "This can't be undone."}
                   confirmLabel="Delete"
                   pending={remove.isPending}
-                  onConfirm={(done) => remove.mutate(item.id, { onSuccess: () => { done(); onOpenChange(false); } })}
+                  onConfirm={(done) =>
+                    remove.mutate(item.id, {
+                      onSuccess: () => {
+                        done();
+                        onOpenChange(false);
+                      },
+                    })}
                 />
               )}
             </div>
@@ -226,12 +323,21 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function TitleField({ value, disabled, onSave }: { value: string; disabled: boolean; onSave: (title: string) => void }) {
+function TitleField(
+  { value, disabled, onSave }: {
+    value: string;
+    disabled: boolean;
+    onSave: (title: string) => void;
+  },
+) {
   const [draft, setDraft] = useState(value);
   const commit = () => {
     const title = draft.trim();
-    if (title && title !== value) onSave(title);
-    else setDraft(value);
+    if (title && title !== value) {
+      onSave(title);
+    } else {
+      setDraft(value);
+    }
   };
   return (
     <input
@@ -247,7 +353,14 @@ function TitleField({ value, disabled, onSave }: { value: string; disabled: bool
   );
 }
 
-function DescriptionField({ item, disabled, saving, onSave }: { item: WorkItem; disabled: boolean; saving: boolean; onSave: (description: string | null) => void }) {
+function DescriptionField(
+  { item, disabled, saving, onSave }: {
+    item: WorkItem;
+    disabled: boolean;
+    saving: boolean;
+    onSave: (description: string | null) => void;
+  },
+) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.description ?? '');
   const shown = item.description_md ?? item.description;
@@ -271,45 +384,61 @@ function DescriptionField({ item, disabled, saving, onSave }: { item: WorkItem; 
           </Button>
         )}
       </header>
-      {editing ? (
-        <>
-          <RichTextEditor
-            aria-label="Description"
-            className="max-h-[45dvh] shrink-0"
-            value={draft}
-            onChange={setDraft}
-            onSubmit={saveDraft}
-            onCancel={() => setEditing(false)}
-            placeholder="Describe the work… Markdown shortcuts work."
-            autoFocus
-          />
-          {draft.includes(JIRA_ATTACHMENT) && (
-            <p className="text-xs text-warning-strong">Saving removes the attachments embedded in this description; they stay attached to the ticket in Jira.</p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
-            <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>
+      {editing
+        ? (
+          <>
+            <RichTextEditor
+              aria-label="Description"
+              className="max-h-[45dvh] shrink-0"
+              value={draft}
+              onChange={setDraft}
+              onSubmit={saveDraft}
+              onCancel={() => setEditing(false)}
+              placeholder="Describe the work… Markdown shortcuts work."
+              autoFocus
+            />
+            {draft.includes(JIRA_ATTACHMENT) && (
+              <p className="text-xs text-warning-strong">
+                Saving removes the attachments embedded in this description; they stay attached to
+                the ticket in Jira.
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>
+            </div>
+          </>
+        )
+        : shown
+        ? (
+          // long descriptions scroll here, leaving room for the comments; a click on the text edits it
+          <div
+            className={cn(
+              'max-h-[45dvh] shrink-0 overflow-y-auto rounded-md',
+              !disabled && 'cursor-text hover:bg-fill-hover',
+            )}
+            onClick={(event) => {
+              const selecting = Boolean(window.getSelection()?.toString());
+              const onLink = event.target instanceof Element && event.target.closest('a');
+              if (!disabled && !selecting && !onLink) {
+                startEdit();
+              }
+            }}
+          >
+            <Markdown>{shown}</Markdown>
           </div>
-        </>
-      ) : shown ? (
-        // long descriptions scroll here, leaving room for the comments; a click on the text edits it
-        <div
-          className={cn('max-h-[45dvh] shrink-0 overflow-y-auto rounded-md', !disabled && 'cursor-text hover:bg-fill-hover')}
-          onClick={(event) => {
-            const selecting = Boolean(window.getSelection()?.toString());
-            const onLink = event.target instanceof Element && event.target.closest('a');
-            if (!disabled && !selecting && !onLink) startEdit();
-          }}
-        >
-          <Markdown>{shown}</Markdown>
-        </div>
-      ) : disabled ? (
-        <p className="text-sm text-muted">No description.</p>
-      ) : (
-        <button type="button" className="rounded-md px-2 py-3 text-left text-sm text-muted hover:bg-fill-hover hover:text-foreground" onClick={startEdit}>
-          Add a description…
-        </button>
-      )}
+        )
+        : disabled
+        ? <p className="text-sm text-muted">No description.</p>
+        : (
+          <button
+            type="button"
+            className="rounded-md px-2 py-3 text-left text-sm text-muted hover:bg-fill-hover hover:text-foreground"
+            onClick={startEdit}
+          >
+            Add a description…
+          </button>
+        )}
     </section>
   );
 }
@@ -320,9 +449,19 @@ function Linked({ title, items }: { title: string; items: LinkedItem[] }) {
       <h3 className="text-sm font-semibold">{title}</h3>
       <ul className="flex flex-col gap-1">
         {items.map((linked) => (
-          <li key={`${linked.type}-${linked.key}`} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+          <li
+            key={`${linked.type}-${linked.key}`}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+          >
             {linked.type && <span className="w-28 shrink-0 text-xs text-muted">{linked.type}</span>}
-            <span className={cn('w-20 shrink-0 font-medium', linked.status_category === STATUS_CATEGORY.done && 'line-through')}>{linked.key}</span>
+            <span
+              className={cn(
+                'w-20 shrink-0 font-medium',
+                linked.status_category === STATUS_CATEGORY.done && 'line-through',
+              )}
+            >
+              {linked.key}
+            </span>
             <span className="min-w-0 flex-1 truncate">{linked.title}</span>
             {linked.status && <Tag>{linked.status}</Tag>}
           </li>
@@ -332,11 +471,26 @@ function Linked({ title, items }: { title: string; items: LinkedItem[] }) {
   );
 }
 
-function AssigneeField({ item, board, disabled, onSave }: { item: WorkItem; board: Board; disabled: boolean; onSave: (id: string | null) => void }) {
+function AssigneeField(
+  { item, board, disabled, onSave }: {
+    item: WorkItem;
+    board: Board;
+    disabled: boolean;
+    onSave: (id: string | null) => void;
+  },
+) {
   const people = usePeople(board.source === NATIVE_SOURCE ? null : board.source, board.target_key);
   return (
-    <Select value={item.assignee?.id ?? NONE} disabled={disabled} onValueChange={(value) => onSave(value === NONE ? null : value)}>
-      <SelectTrigger aria-label="Assignee" size="sm" placeholder={people.isPending ? 'Loading people…' : 'Unassigned'} />
+    <Select
+      value={item.assignee?.id ?? NONE}
+      disabled={disabled}
+      onValueChange={(value) => onSave(value === NONE ? null : value)}
+    >
+      <SelectTrigger
+        aria-label="Assignee"
+        size="sm"
+        placeholder={people.isPending ? 'Loading people…' : 'Unassigned'}
+      />
       <SelectContent>
         <SelectItem value={NONE}>Unassigned</SelectItem>
         {people.data?.map((person) => (
@@ -352,24 +506,54 @@ function AssigneeField({ item, board, disabled, onSave }: { item: WorkItem; boar
 }
 
 /** The item's type; a tracker item only to the types its tracker can change it to in place. */
-function TypeField({ item, disabled, onSave }: { item: WorkItem; disabled: boolean; onSave: (typeId: string) => void }) {
+function TypeField(
+  { item, disabled, onSave }: {
+    item: WorkItem;
+    disabled: boolean;
+    onSave: (typeId: string) => void;
+  },
+) {
   const types = useWorkItemTypes();
   const allowed = useAllowedTypes(item, !disabled);
   const current = typeOf(types.data, item.type_id)?.id;
-  return <TypeSelect size="sm" value={current} allowed={allowed.data?.type_ids ?? null} disabled={disabled} onChange={(typeId) => typeId !== current && onSave(typeId)} />;
+  return (
+    <TypeSelect
+      size="sm"
+      value={current}
+      allowed={allowed.data?.type_ids ?? null}
+      disabled={disabled}
+      onChange={(typeId) => typeId !== current && onSave(typeId)}
+    />
+  );
 }
 
-function PriorityField({ boardId, value, disabled, onSave }: { boardId: string; value: string | null; disabled: boolean; onSave: (priority: string | null) => void }) {
+function PriorityField(
+  { boardId, value, disabled, onSave }: {
+    boardId: string;
+    value: string | null;
+    disabled: boolean;
+    onSave: (priority: string | null) => void;
+  },
+) {
   const priorities = usePriorities(boardId);
   return (
-    <Select value={value ?? NONE} disabled={disabled} onValueChange={(next) => onSave(next === NONE ? null : next)}>
+    <Select
+      value={value ?? NONE}
+      disabled={disabled}
+      onValueChange={(next) => onSave(next === NONE ? null : next)}
+    >
       <SelectTrigger aria-label="Priority" size="sm" />
       <SelectContent>
         <SelectItem value={NONE}>None</SelectItem>
-        {[...(priorities.data ?? []), ...(value && !priorities.data?.includes(value) ? [value] : [])].map((priority) => (
+        {[
+          ...(priorities.data ?? []),
+          ...(value && !priorities.data?.includes(value) ? [value] : []),
+        ].map((priority) => (
           <SelectItem key={priority} value={priority}>
             {/* the trigger repeats an item's content, so the selected priority shows its arrow too */}
-            <span className="flex items-center gap-2"><PriorityIcon priority={priority} /> {priority}</span>
+            <span className="flex items-center gap-2">
+              <PriorityIcon priority={priority} /> {priority}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
@@ -378,7 +562,13 @@ function PriorityField({ boardId, value, disabled, onSave }: { boardId: string; 
 }
 
 /** Labels as words separated by commas or spaces, as Jira takes them (no spaces inside one). */
-function LabelsField({ value, disabled, onSave }: { value: string[]; disabled: boolean; onSave: (labels: string[]) => void }) {
+function LabelsField(
+  { value, disabled, onSave }: {
+    value: string[];
+    disabled: boolean;
+    onSave: (labels: string[]) => void;
+  },
+) {
   return (
     <Input
       key={value.join(',')}
@@ -389,7 +579,9 @@ function LabelsField({ value, disabled, onSave }: { value: string[]; disabled: b
       disabled={disabled}
       onBlur={(e) => {
         const labels = [...new Set(e.target.value.split(/[\s,]+/).filter(Boolean))];
-        if (labels.join(',') !== value.join(',')) onSave(labels);
+        if (labels.join(',') !== value.join(',')) {
+          onSave(labels);
+        }
       }}
     />
   );
@@ -411,25 +603,40 @@ function Comments({ itemId, disabled }: { itemId: string; disabled: boolean }) {
             add.mutate({ itemId, body: draft.trim() }, { onSuccess: () => setDraft('') });
           }}
         >
-          <TextArea aria-label="Add a comment" placeholder="Add a comment… Markdown works." rows={3} maxLength={20_000} value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <TextArea
+            aria-label="Add a comment"
+            placeholder="Add a comment… Markdown works."
+            rows={3}
+            maxLength={20_000}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
           <div className="flex justify-end">
-            <Button size="sm" variant="primary" type="submit" loading={add.isPending} disabled={!draft.trim()}>Comment</Button>
+            <Button
+              size="sm"
+              variant="primary"
+              type="submit"
+              loading={add.isPending}
+              disabled={!draft.trim()}
+            >
+              Comment
+            </Button>
           </div>
         </form>
       )}
-      {comments.isPending ? (
-        <Skeleton className="h-16 w-full" />
-      ) : comments.isError ? (
-        <p className="text-sm text-danger">{comments.error.message}</p>
-      ) : comments.data.length === 0 ? (
-        <p className="text-sm text-muted">No comments yet.</p>
-      ) : (
-        <ol className="flex flex-col gap-4">
-          {[...comments.data].reverse().map((comment) => (
-            <CommentRow key={comment.id} itemId={itemId} comment={comment} />
-          ))}
-        </ol>
-      )}
+      {comments.isPending
+        ? <Skeleton className="h-16 w-full" />
+        : comments.isError
+        ? <p className="text-sm text-danger">{comments.error.message}</p>
+        : comments.data.length === 0
+        ? <p className="text-sm text-muted">No comments yet.</p>
+        : (
+          <ol className="flex flex-col gap-4">
+            {[...comments.data].reverse().map((comment) => (
+              <CommentRow key={comment.id} itemId={itemId} comment={comment} />
+            ))}
+          </ol>
+        )}
     </section>
   );
 }
@@ -450,7 +657,16 @@ function CommentRow({ itemId, comment }: { itemId: string; comment: Comment }) {
           {comment.created_at && <span>{dateTime.format(new Date(comment.created_at))}</span>}
           <span className="flex-1" />
           {comment.editable && !editing && (
-            <Button size="sm" variant="tertiary" onClick={() => { setDraft(comment.body); setEditing(true); }}>Edit</Button>
+            <Button
+              size="sm"
+              variant="tertiary"
+              onClick={() => {
+                setDraft(comment.body);
+                setEditing(true);
+              }}
+            >
+              Edit
+            </Button>
           )}
           {comment.deletable && (
             <ConfirmDialog
@@ -463,25 +679,35 @@ function CommentRow({ itemId, comment }: { itemId: string; comment: Comment }) {
             />
           )}
         </div>
-        {editing ? (
-          <div className="flex flex-col gap-2">
-            <TextArea aria-label="Edit comment" rows={3} maxLength={20_000} value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus />
-            <div className="flex justify-end gap-2">
-              <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
-              <Button
-                size="sm"
-                variant="primary"
-                loading={update.isPending}
-                disabled={!draft.trim()}
-                onClick={() => update.mutate({ itemId, id: comment.id, body: draft.trim() }, { onSuccess: () => setEditing(false) })}
-              >
-                Save
-              </Button>
+        {editing
+          ? (
+            <div className="flex flex-col gap-2">
+              <TextArea
+                aria-label="Edit comment"
+                rows={3}
+                maxLength={20_000}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  loading={update.isPending}
+                  disabled={!draft.trim()}
+                  onClick={() =>
+                    update.mutate({ itemId, id: comment.id, body: draft.trim() }, {
+                      onSuccess: () => setEditing(false),
+                    })}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <Markdown>{comment.body}</Markdown>
-        )}
+          )
+          : <Markdown>{comment.body}</Markdown>}
       </div>
     </li>
   );

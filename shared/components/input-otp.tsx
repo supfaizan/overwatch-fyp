@@ -1,8 +1,8 @@
 'use client';
 
-import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from 'input-otp';
-import { useContext, type ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
+import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from 'input-otp';
+import { type ComponentProps, useContext } from 'react';
 
 /**
  * Every `input-otp` prop: `maxLength` (the code's length), `value`/`onChange`, `onComplete`, `disabled`, and
@@ -18,13 +18,18 @@ type InputOTPProps = ComponentProps<typeof OTPInput>;
  * - Label it with `aria-label` (or a `<label htmlFor>` pointing at its `id`), and set `aria-invalid` when the code was wrong.
  * - Use `onComplete` to submit as soon as the last character is entered.
  */
-export function InputOTP({ className, containerClassName, pattern = REGEXP_ONLY_DIGITS, ...props }: InputOTPProps) {
+export function InputOTP(
+  { className, containerClassName, pattern = REGEXP_ONLY_DIGITS, ...props }: InputOTPProps,
+) {
   return (
     <OTPInput
       inputMode="numeric"
       autoComplete="one-time-code"
       pattern={pattern}
-      containerClassName={cn('group flex items-center gap-2 has-disabled:opacity-60', containerClassName)}
+      containerClassName={cn(
+        'group flex items-center gap-2 has-disabled:opacity-60',
+        containerClassName,
+      )}
       className={cn('disabled:cursor-not-allowed', className)}
       {...props}
     />

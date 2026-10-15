@@ -3,12 +3,18 @@ import type { Role, Workspace } from './types';
 const RANK: Record<Role, number> = { member: 0, admin: 1, owner: 2 };
 
 /** At least `min`: the backend enforces this too, so it only decides what the UI offers. */
-export const hasRole = (role: Role | undefined, min: Role) => role !== undefined && RANK[role] >= RANK[min];
+export const hasRole = (role: Role | undefined, min: Role) =>
+  role !== undefined && RANK[role] >= RANK[min];
 
 /** The workspace asked for (?w=), else the last one used, else the personal one. Null when there are none. */
-export function pickWorkspace(workspaces: Workspace[], requested: string | null, lastUsed: string | null): Workspace | null {
+export function pickWorkspace(
+  workspaces: Workspace[],
+  requested: string | null,
+  lastUsed: string | null,
+): Workspace | null {
   const find = (id: string | null) => workspaces.find((workspace) => workspace.id === id);
-  return find(requested) ?? find(lastUsed) ?? workspaces.find((workspace) => workspace.personal) ?? workspaces[0] ?? null;
+  return find(requested) ?? find(lastUsed) ?? workspaces.find((workspace) => workspace.personal)
+    ?? workspaces[0] ?? null;
 }
 
 // keyed by user: browsers get shared and accounts switched

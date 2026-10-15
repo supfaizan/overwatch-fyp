@@ -1,28 +1,46 @@
 'use client';
 
-import type { Editor } from '@tiptap/react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { toApiError } from '@/shared/api/envelope';
-import { ArrowSquareOut, ArrowsClockwise, BookOpenText } from '@phosphor-icons/react/ssr';
 import Avatar from '@/shared/components/avatar';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Skeleton from '@/shared/components/skeleton';
 import { cn } from '@/shared/lib/cn';
+import { timeAgo } from '@/shared/lib/time';
+import { ArrowsClockwise, ArrowSquareOut, BookOpenText } from '@phosphor-icons/react/ssr';
+import type { Editor } from '@tiptap/react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import * as docsApi from '../api';
 import { useCreateDocument, useResolveConflict, useStoreSaved } from '../hooks';
 import { insertImages } from '../insert-images';
-import { timeAgo } from '@/shared/lib/time';
-import { SAVE_STATUS, type SaveStatus, createAutosave, readingMinutes, sourceName, syncLabel, withImageLinks } from '../lib';
-import { CONFLICT_ACTION, type ConflictAction, DOCUMENT_KIND, type Document, NATIVE_SOURCE, PUSH_STATE } from '../types';
+import {
+  createAutosave,
+  readingMinutes,
+  SAVE_STATUS,
+  type SaveStatus,
+  sourceName,
+  syncLabel,
+  withImageLinks,
+} from '../lib';
+import {
+  CONFLICT_ACTION,
+  type ConflictAction,
+  type Document,
+  DOCUMENT_KIND,
+  NATIVE_SOURCE,
+  PUSH_STATE,
+} from '../types';
 import EditorToolbar from './editor-toolbar';
 import TitleInput from './title-input';
 
-const DocEditor = dynamic(() => import('./doc-editor'), { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> });
+const DocEditor = dynamic(() => import('./doc-editor'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-64 w-full" />,
+});
 
 const SAVE_DELAY = 1500;
 const RETRY_DELAY = 5000;
@@ -36,7 +54,8 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
   [SAVE_STATUS.error]: "Couldn't save, retrying…",
 };
 
-const seedOf = (doc: Document) => withImageLinks(doc.content ?? { type: 'doc', content: [] }, doc.attachment_urls);
+const seedOf = (doc: Document) =>
+  withImageLinks(doc.content ?? { type: 'doc', content: [] }, doc.attachment_urls);
 
 /**
  * A page: its title, and a body saved as it's written; a save never overwrites someone else's.
@@ -61,8 +80,15 @@ export default function DocPage({ doc }: { doc: Document }) {
         retryDelay: RETRY_DELAY,
         save: async () => {
           const current = editor.current;
-          if (!current) return;
-          const saved = await docsApi.saveContent({ id: doc.id, content: current.getJSON(), content_md: current.getMarkdown(), base_version: baseVersion.current });
+          if (!current) {
+            return;
+          }
+          const saved = await docsApi.saveContent({
+            id: doc.id,
+            content: current.getJSON(),
+            content_md: current.getMarkdown(),
+            base_version: baseVersion.current,
+          });
           baseVersion.current = saved.version;
           storeSaved(saved);
         },
@@ -103,7 +129,9 @@ export default function DocPage({ doc }: { doc: Document }) {
 
   // the source changed while our edits were on their way: its version is now the page's, so show it
   useEffect(() => {
-    if (doc.push_state !== PUSH_STATE.conflict || doc.version === baseVersion.current) return;
+    if (doc.push_state !== PUSH_STATE.conflict || doc.version === baseVersion.current) {
+      return;
+    }
     baseVersion.current = doc.version;
     setSeed((previous) => ({ content: seedOf(doc), key: previous.key + 1 }));
   }, [doc]);
@@ -116,14 +144,22 @@ export default function DocPage({ doc }: { doc: Document }) {
           <span className="flex shrink-0 items-center gap-3">
             {doc.editable && <span aria-live="polite">{STATUS_LABEL[status]}</span>}
             {doc.external_url && (
-              <a href={doc.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
+              <a
+                href={doc.external_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:text-foreground"
+              >
                 Open in {sourceName(doc.source)} <ArrowSquareOut aria-hidden className="size-3.5" />
               </a>
             )}
           </span>
         </div>
         {doc.editable && toolbarEditor && (
-          <EditorToolbar editor={toolbarEditor} onImages={mirrored ? undefined : (files) => insertImages(toolbarEditor, doc.id, files)} />
+          <EditorToolbar
+            editor={toolbarEditor}
+            onImages={mirrored ? undefined : (files) => insertImages(toolbarEditor, doc.id, files)}
+          />
         )}
       </div>
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-8">
@@ -134,15 +170,22 @@ export default function DocPage({ doc }: { doc: Document }) {
             action={
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => void loadTheirs()}>Use theirs</Button>
-                <Button size="sm" variant="primary" onClick={() => void keepMine()}>Keep mine</Button>
+                <Button size="sm" variant="primary" onClick={() => void keepMine()}>
+                  Keep mine
+                </Button>
               </div>
             }
           >
-            Someone else saved this page while you were editing. Keep your version, or load theirs (your edits are dropped).
+            Someone else saved this page while you were editing. Keep your version, or load theirs
+            (your edits are dropped).
           </Banner>
         )}
         <div className="flex flex-col gap-3">
-          <TitleInput key={seed.key} doc={doc} onEnter={() => editor.current?.commands.focus('start')} />
+          <TitleInput
+            key={seed.key}
+            doc={doc}
+            onEnter={() => editor.current?.commands.focus('start')}
+          />
           <PageDetails doc={doc} />
         </div>
         <DocEditor
@@ -155,8 +198,13 @@ export default function DocPage({ doc }: { doc: Document }) {
           }}
           onChange={autosave.change}
           onImages={(files, at) => {
-            if (mirrored) toast.error(`Images can't be added to ${sourceName(doc.source)} pages from here yet.`);
-            else if (editor.current) insertImages(editor.current, doc.id, files, at);
+            if (mirrored) {
+              toast.error(
+                `Images can't be added to ${sourceName(doc.source)} pages from here yet.`,
+              );
+            } else if (editor.current) {
+              insertImages(editor.current, doc.id, files, at);
+            }
           }}
           sourceName={sourceName(doc.source)}
         />
@@ -166,23 +214,34 @@ export default function DocPage({ doc }: { doc: Document }) {
 }
 
 /** The page changed at its source while edits made here were on their way: the source's version is shown. */
-function SourceConflict({ doc, onResolved }: { doc: Document; onResolved: (doc: Document) => void }) {
+function SourceConflict(
+  { doc, onResolved }: { doc: Document; onResolved: (doc: Document) => void },
+) {
   const router = useRouter();
   const resolve = useResolveConflict();
   const create = useCreateDocument();
   const name = sourceName(doc.source);
   const conflict = doc.conflict;
-  if (!conflict) return null;
+  if (!conflict) {
+    return null;
+  }
 
   const settle = (action: ConflictAction) =>
     resolve.mutate({ id: doc.id, action, base_version: doc.version }, { onSuccess: onResolved });
   // a copy of ours as a page of its own here, then theirs stays
   const copyMine = () =>
     create.mutate(
-      { kind: DOCUMENT_KIND.page, title: `${conflict.title} (my version)`, content: conflict.content, content_md: conflict.content_md ?? '' },
+      {
+        kind: DOCUMENT_KIND.page,
+        title: `${conflict.title} (my version)`,
+        content: conflict.content,
+        content_md: conflict.content_md ?? '',
+      },
       {
         onSuccess: (copy) => {
-          toast.success('Your version was saved as a new page.', { action: { label: 'Open', onClick: () => router.push(`/documents/${copy.id}`) } });
+          toast.success('Your version was saved as a new page.', {
+            action: { label: 'Open', onClick: () => router.push(`/documents/${copy.id}`) },
+          });
           settle(CONFLICT_ACTION.keepSource);
         },
       },
@@ -193,13 +252,29 @@ function SourceConflict({ doc, onResolved }: { doc: Document; onResolved: (doc: 
       type="warning"
       action={
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" loading={resolve.isPending} onClick={() => settle(CONFLICT_ACTION.keepSource)}>Keep {name}&apos;s</Button>
-          <Button size="sm" loading={create.isPending} onClick={copyMine}>Copy mine to a new page</Button>
-          <Button size="sm" variant="primary" loading={resolve.isPending} onClick={() => settle(CONFLICT_ACTION.overwrite)}>Overwrite with mine</Button>
+          <Button
+            size="sm"
+            loading={resolve.isPending}
+            onClick={() => settle(CONFLICT_ACTION.keepSource)}
+          >
+            Keep {name}&apos;s
+          </Button>
+          <Button size="sm" loading={create.isPending} onClick={copyMine}>
+            Copy mine to a new page
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            loading={resolve.isPending}
+            onClick={() => settle(CONFLICT_ACTION.overwrite)}
+          >
+            Overwrite with mine
+          </Button>
         </div>
       }
     >
-      This page changed in {name} while your edits were on their way, so {name}&apos;s version is shown. Your version is kept until you choose.
+      This page changed in {name} while your edits were on their way, so{' '}
+      {name}&apos;s version is shown. Your version is kept until you choose.
     </Banner>
   );
 }
@@ -213,13 +288,25 @@ function PageDetails({ doc }: { doc: Document }) {
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
       {doc.author && (
         <span className="flex items-center gap-1.5">
-          <Avatar src={doc.author.avatar_url} name={doc.author.name ?? ''} size="sm" className="size-5 text-[9px]" />
+          <Avatar
+            src={doc.author.avatar_url}
+            name={doc.author.name ?? ''}
+            size="sm"
+            className="size-5 text-[9px]"
+          />
           By {doc.author.name ?? 'someone'}
         </span>
       )}
-      <span className="flex items-center gap-1.5"><BookOpenText aria-hidden className="size-3.5" />{readingMinutes(doc.content_md)} min read</span>
-      <time dateTime={doc.created_at} title={fullDate.format(new Date(doc.created_at))}>Created {timeAgo(doc.created_at)}</time>
-      <time dateTime={doc.updated_at} title={fullDate.format(new Date(doc.updated_at))}>Updated {timeAgo(doc.updated_at)}</time>
+      <span className="flex items-center gap-1.5">
+        <BookOpenText aria-hidden className="size-3.5" />
+        {readingMinutes(doc.content_md)} min read
+      </span>
+      <time dateTime={doc.created_at} title={fullDate.format(new Date(doc.created_at))}>
+        Created {timeAgo(doc.created_at)}
+      </time>
+      <time dateTime={doc.updated_at} title={fullDate.format(new Date(doc.updated_at))}>
+        Updated {timeAgo(doc.updated_at)}
+      </time>
       {sync && (
         <span className={cn('flex items-center gap-1.5', doc.push_error && 'text-warning-strong')}>
           <ArrowsClockwise aria-hidden className="size-3.5" />
@@ -231,13 +318,17 @@ function PageDetails({ doc }: { doc: Document }) {
 }
 
 function Breadcrumbs({ doc }: { doc: Document }) {
-  if (!doc.breadcrumbs.length) return <span />;
+  if (!doc.breadcrumbs.length) {
+    return <span />;
+  }
   return (
     <nav aria-label="Breadcrumb" className="min-w-0 truncate">
       {doc.breadcrumbs.map((crumb, index) => (
         <span key={crumb.id}>
           {index > 0 && <span className="px-1.5">/</span>}
-          <Link href={`/documents/${crumb.id}`} className="hover:text-foreground">{crumb.title || 'Untitled'}</Link>
+          <Link href={`/documents/${crumb.id}`} className="hover:text-foreground">
+            {crumb.title || 'Untitled'}
+          </Link>
         </span>
       ))}
     </nav>

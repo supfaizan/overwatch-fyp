@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
-import { EMBED_ORIGINS } from "./features/docs/embeds";
+import type { NextConfig } from 'next';
+import { EMBED_ORIGINS } from './features/docs/embeds';
 
 const nextConfig: NextConfig = {
   // Pin the workspace root — a stray lockfile in the home dir otherwise makes
@@ -10,20 +10,22 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: '/:path*',
         headers: [
           // pages may only frame the players of sites docs can embed, and nobody may frame us (clickjacking)
           {
-            key: "Content-Security-Policy",
-            value: `frame-src 'self' ${EMBED_ORIGINS.join(" ")}; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'`,
+            key: 'Content-Security-Policy',
+            value: `frame-src 'self' ${
+              EMBED_ORIGINS.join(' ')
+            }; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'`,
           },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
       },
       // an invite page's address may still carry its token: never send it on as a referrer
-      { source: "/invite/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
-      { source: "/invite", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: '/invite/:path*', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }] },
+      { source: '/invite', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }] },
     ];
   },
 };

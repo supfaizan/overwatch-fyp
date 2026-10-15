@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react';
 import Card from '@/shared/components/card';
+import type { ReactNode } from 'react';
 
 /** Centered card the sign-in screens share. */
-export default function AuthCard({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
+export default function AuthCard(
+  { title, description, children }: { title: string; description: ReactNode; children: ReactNode },
+) {
   return (
     <main className="flex min-h-[85vh] items-center justify-center">
       <Card className="flex w-full max-w-sm flex-col gap-6 p-8">

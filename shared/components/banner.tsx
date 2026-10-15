@@ -1,8 +1,8 @@
 'use client';
 
-import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react/ssr';
-import { useState, type ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
+import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react/ssr';
+import { type ReactNode, useState } from 'react';
 import Button from './button';
 
 const types = {
@@ -35,9 +35,13 @@ type BannerProps = {
  * - One banner per concern, at the top of the area it's about.
  * - Keep `error` for things the user must act on, and say what to do in the message.
  */
-export default function Banner({ type = 'info', children, action, dismissible, onDismiss, className }: BannerProps) {
+export default function Banner(
+  { type = 'info', children, action, dismissible, onDismiss, className }: BannerProps,
+) {
   const [dismissed, setDismissed] = useState(false);
-  if (dismissed) return null;
+  if (dismissed) {
+    return null;
+  }
 
   const { icon: Icon, box, tone } = types[type];
   return (

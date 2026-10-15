@@ -1,12 +1,12 @@
 'use client';
 
+import type { ApiError } from '@/shared/api/envelope';
+import Button from '@/shared/components/button';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { ApiError } from '@/shared/api/envelope';
-import Button from '@/shared/components/button';
 import { resendCode } from '../api';
-import { setResendAt, type Challenge } from '../challenge';
+import { type Challenge, setResendAt } from '../challenge';
 import { AUTH_ERROR } from '../constants';
 
 function secondsUntil(at: number): number {
@@ -14,7 +14,13 @@ function secondsUntil(at: number): number {
 }
 
 /** "Resend code", counting down until the server allows another. */
-export default function ResendCode({ challenge, onResent, onExpired }: { challenge: Challenge; onResent?: () => void; onExpired: () => void }) {
+export default function ResendCode(
+  { challenge, onResent, onExpired }: {
+    challenge: Challenge;
+    onResent?: () => void;
+    onExpired: () => void;
+  },
+) {
   const [resendAt, setAt] = useState(challenge.resendAt);
   const [left, setLeft] = useState(() => secondsUntil(challenge.resendAt));
 
@@ -38,22 +44,30 @@ export default function ResendCode({ challenge, onResent, onExpired }: { challen
     },
     onError: (error) => {
       const retryAfter = error.meta.retry_after_seconds;
-      if (error.errorCode === AUTH_ERROR.otpResendCooldown && typeof retryAfter === 'number') restart(retryAfter);
-      else if (error.errorCode === AUTH_ERROR.invalidCode) onExpired();
+      if (error.errorCode === AUTH_ERROR.otpResendCooldown && typeof retryAfter === 'number') {
+        restart(retryAfter);
+      } else if (error.errorCode === AUTH_ERROR.invalidCode) {
+        onExpired();
+      }
       toast.error(error.message);
     },
   });
 
   return (
     <p className="text-center text-sm text-muted">
-      Didn&apos;t get it? Check your spam folder, or{' '}
-      {left > 0 ? (
-        <span aria-live="polite">resend in {left}s</span>
-      ) : (
-        <Button variant="tertiary" size="sm" className="h-auto px-1 text-primary" loading={resend.isPending} onClick={() => resend.mutate()}>
-          resend the code
-        </Button>
-      )}
+      Didn&apos;t get it? Check your spam folder, or {left > 0
+        ? <span aria-live="polite">resend in {left}s</span>
+        : (
+          <Button
+            variant="tertiary"
+            size="sm"
+            className="h-auto px-1 text-primary"
+            loading={resend.isPending}
+            onClick={() => resend.mutate()}
+          >
+            resend the code
+          </Button>
+        )}
     </p>
   );
 }

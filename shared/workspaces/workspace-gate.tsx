@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
 import { useSession } from '@/shared/session/store';
+import { type ReactNode, useEffect } from 'react';
 import { useWorkspaces } from './hooks';
 import { pickWorkspace, readLastWorkspace, saveLastWorkspace } from './lib';
 import { useWorkspace } from './store';
@@ -18,17 +18,31 @@ export default function WorkspaceGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // picked once, or again when the current one is gone (left, or deleted by someone else)
-    if (!workspaces.data || current) return;
+    if (!workspaces.data || current) {
+      return;
+    }
     const requested = new URLSearchParams(window.location.search).get('w');
     const picked = pickWorkspace(workspaces.data, requested, readLastWorkspace(userId));
     useWorkspace.getState().setId(picked?.id ?? null);
-    if (picked) saveLastWorkspace(userId, picked.id);
+    if (picked) {
+      saveLastWorkspace(userId, picked.id);
+    }
   }, [workspaces.data, current, userId]);
 
   if (workspaces.isError) {
     return (
       <div className="mx-auto max-w-md pt-16">
-        <Banner type="error" action={<Button size="sm" onClick={() => workspaces.refetch()}>Retry</Button>}>
+        <Banner
+          type="error"
+          action={
+            <Button
+              size="sm"
+              onClick={() => workspaces.refetch()}
+            >
+              Retry
+            </Button>
+          }
+        >
           {workspaces.error.message}
         </Banner>
       </div>

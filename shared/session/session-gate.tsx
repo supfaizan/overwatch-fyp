@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
 import Spinner from '@/shared/components/spinner';
+import { usePathname, useRouter } from 'next/navigation';
+import { type ReactNode, useEffect } from 'react';
 import { useSession } from './store';
 
 export const CHOOSE_USERNAME_PATH = '/choose-username';
@@ -20,8 +20,11 @@ export default function SessionGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const here = encodeURIComponent(pathname + window.location.search);
-    if (status === 'guest') router.replace(`/sign-in?from=${here}`);
-    else if (status === 'authenticated' && needsUsername && !choosing) router.replace(`${CHOOSE_USERNAME_PATH}?from=${here}`);
+    if (status === 'guest') {
+      router.replace(`/sign-in?from=${here}`);
+    } else if (status === 'authenticated' && needsUsername && !choosing) {
+      router.replace(`${CHOOSE_USERNAME_PATH}?from=${here}`);
+    }
   }, [status, needsUsername, choosing, pathname, router]);
 
   if (status !== 'authenticated' || (needsUsername && !choosing)) {

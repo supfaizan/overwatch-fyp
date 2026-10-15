@@ -9,7 +9,8 @@ export const NAME_MAX_LENGTH = 80;
 export const EMAIL_MAX_LENGTH = 254;
 export const OTP_LENGTH = 6;
 export const OTP_TTL_MINUTES = 10;
-export const PASSWORD_HINT = `At least ${PASSWORD_MIN_LENGTH} characters. A few unrelated words make a strong one.`;
+export const PASSWORD_HINT =
+  `At least ${PASSWORD_MIN_LENGTH} characters. A few unrelated words make a strong one.`;
 
 export const AUTH_ERROR = {
   emailNotVerified: 'email_not_verified',
@@ -19,10 +20,17 @@ export const AUTH_ERROR = {
   usernameAlreadySet: 'username_already_set',
 } as const;
 
-export const CHALLENGE_PURPOSE = { verifyEmail: 'verify_email', resetPassword: 'reset_password' } as const;
+export const CHALLENGE_PURPOSE = {
+  verifyEmail: 'verify_email',
+  resetPassword: 'reset_password',
+} as const;
 export type ChallengePurpose = (typeof CHALLENGE_PURPOSE)[keyof typeof CHALLENGE_PURPOSE];
 
-export const USERNAME_PROBLEM = { invalid: 'invalid', reserved: 'reserved', taken: 'taken' } as const;
+export const USERNAME_PROBLEM = {
+  invalid: 'invalid',
+  reserved: 'reserved',
+  taken: 'taken',
+} as const;
 export type UsernameProblem = (typeof USERNAME_PROBLEM)[keyof typeof USERNAME_PROBLEM];
 
 export const USERNAME_MESSAGES: Record<UsernameProblem, string> = {

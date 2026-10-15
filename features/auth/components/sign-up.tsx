@@ -1,14 +1,14 @@
 'use client';
 
+import Banner from '@/shared/components/banner';
+import Button from '@/shared/components/button';
+import { Input } from '@/shared/components/input';
+import { useSession } from '@/shared/session/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import Banner from '@/shared/components/banner';
-import Button from '@/shared/components/button';
-import { Input } from '@/shared/components/input';
-import { useSession } from '@/shared/session/store';
 import { signUp } from '../api';
 import { saveChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE } from '../constants';
@@ -24,17 +24,24 @@ import UsernameField, { useUsernameAvailability } from './username-input';
 export default function SignUp({ from }: { from?: string }) {
   const status = useSession((state) => state.status);
   const router = useRouter();
-  const form = useForm<SignUpValues>({ resolver: zodResolver(signUpSchema), defaultValues: { name: '', username: '', email: '', password: '' } });
+  const form = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { name: '', username: '', email: '', password: '' },
+  });
   const { errors, isSubmitting } = form.formState;
   const username = useWatch({ control: form.control, name: 'username' });
   const availability = useUsernameAvailability(username);
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace(safeDestination(from));
+    if (status === 'authenticated') {
+      router.replace(safeDestination(from));
+    }
   }, [status, from, router]);
 
   const submit = form.handleSubmit(async (values) => {
-    if (availability.problem) return form.setError('username', { message: availability.problem }, { shouldFocus: true });
+    if (availability.problem) {
+      return form.setError('username', { message: availability.problem }, { shouldFocus: true });
+    }
     try {
       saveChallenge(await signUp(values), CHALLENGE_PURPOSE.verifyEmail);
       rememberDestination(from);
@@ -45,17 +52,39 @@ export default function SignUp({ from }: { from?: string }) {
   });
 
   return (
-    <AuthCard title="Create your account" description="Map your codebase and your team's work in one place.">
+    <AuthCard
+      title="Create your account"
+      description="Map your codebase and your team's work in one place."
+    >
       {errors.root?.message && <Banner type="error">{errors.root.message}</Banner>}
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
         <FormField id="name" label="Name" error={errors.name?.message}>
-          <Input size="lg" autoComplete="name" {...describedBy('name', errors.name?.message)} {...form.register('name')} />
+          <Input
+            size="lg"
+            autoComplete="name"
+            {...describedBy('name', errors.name?.message)}
+            {...form.register('name')}
+          />
         </FormField>
-        <UsernameField value={username} availability={availability} error={errors.username?.message} registration={form.register('username')} />
+        <UsernameField
+          value={username}
+          availability={availability}
+          error={errors.username?.message}
+          registration={form.register('username')}
+        />
         <FormField id="email" label="Email" error={errors.email?.message}>
-          <Input size="lg" type="email" autoComplete="email" {...describedBy('email', errors.email?.message)} {...form.register('email')} />
+          <Input
+            size="lg"
+            type="email"
+            autoComplete="email"
+            {...describedBy('email', errors.email?.message)}
+            {...form.register('email')}
+          />
         </FormField>
-        <NewPasswordField error={errors.password?.message} registration={form.register('password')} />
+        <NewPasswordField
+          error={errors.password?.message}
+          registration={form.register('password')}
+        />
         <Button type="submit" variant="primary" size="lg" loading={isSubmitting}>
           Create account
         </Button>

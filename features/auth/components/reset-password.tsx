@@ -1,14 +1,14 @@
 'use client';
 
+import Banner from '@/shared/components/banner';
+import Button from '@/shared/components/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import Banner from '@/shared/components/banner';
-import Button from '@/shared/components/button';
 import { resetPassword } from '../api';
-import { clearChallenge, readChallenge, type Challenge } from '../challenge';
+import { type Challenge, clearChallenge, readChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE, OTP_LENGTH } from '../constants';
 import { applyServerErrors } from '../form-errors';
 import { codeSchema, resetPasswordSchema, type ResetPasswordValues } from '../schemas';
@@ -23,15 +23,23 @@ export default function ResetPassword() {
   const [challenge, setChallenge] = useState<Challenge | null | undefined>(undefined);
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState<string | undefined>();
-  const form = useForm<ResetPasswordValues>({ resolver: zodResolver(resetPasswordSchema), defaultValues: { password: '', confirm: '' } });
+  const form = useForm<ResetPasswordValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', confirm: '' },
+  });
   const { errors, isSubmitting } = form.formState;
 
   useEffect(() => setChallenge(readChallenge(CHALLENGE_PURPOSE.resetPassword)), []);
 
-  if (challenge === undefined) return null;
+  if (challenge === undefined) {
+    return null;
+  }
   if (challenge === null) {
     return (
-      <AuthCard title="That reset request expired" description="Ask for a new code to reset your password.">
+      <AuthCard
+        title="That reset request expired"
+        description="Ask for a new code to reset your password."
+      >
         <Button asChild variant="primary" size="lg">
           <Link href="/forgot-password">Send a new code</Link>
         </Button>
@@ -41,7 +49,9 @@ export default function ResetPassword() {
 
   const submit = form.handleSubmit(async ({ password }) => {
     const parsed = codeSchema.safeParse(code);
-    if (!parsed.success) return setCodeError(parsed.error.issues[0]?.message);
+    if (!parsed.success) {
+      return setCodeError(parsed.error.issues[0]?.message);
+    }
     setCodeError(undefined);
     try {
       await resetPassword(challenge.id, code, password);
@@ -62,7 +72,8 @@ export default function ResetPassword() {
       title="Choose a new password"
       description={
         <>
-          If <span className="font-medium text-foreground">{challenge.email}</span> has an account, we sent it a {OTP_LENGTH}-digit code.
+          If <span className="font-medium text-foreground">{challenge.email}</span>{' '}
+          has an account, we sent it a {OTP_LENGTH}-digit code.
         </>
       }
     >
@@ -76,15 +87,28 @@ export default function ResetPassword() {
               setCode(value);
               setCodeError(undefined);
             }}
-            onComplete={() => form.setFocus('password')} invalid={Boolean(codeError)} disabled={isSubmitting} />
+            onComplete={() => form.setFocus('password')}
+            invalid={Boolean(codeError)}
+            disabled={isSubmitting}
+          />
           {codeError && (
             <p id="code-error" role="alert" className="text-xs text-danger">
               {codeError}
             </p>
           )}
         </div>
-        <NewPasswordField label="New password" error={errors.password?.message} registration={form.register('password')} />
-        <NewPasswordField id="confirm" label="Confirm new password" hint={null} error={errors.confirm?.message} registration={form.register('confirm')} />
+        <NewPasswordField
+          label="New password"
+          error={errors.password?.message}
+          registration={form.register('password')}
+        />
+        <NewPasswordField
+          id="confirm"
+          label="Confirm new password"
+          hint={null}
+          error={errors.confirm?.message}
+          registration={form.register('confirm')}
+        />
         <Button type="submit" variant="primary" size="lg" loading={isSubmitting}>
           Reset password
         </Button>

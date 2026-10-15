@@ -1,14 +1,20 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
-import { useConnectJiraProject, useDisconnectJira, useJiraProjects, useOnboardingStatus, useStartJiraAuthorization } from '../hooks';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  useConnectJiraProject,
+  useDisconnectJira,
+  useJiraProjects,
+  useOnboardingStatus,
+  useStartJiraAuthorization,
+} from '../hooks';
 import { skipJira } from '../jira-skip';
 import StepCard from './step-card';
 
@@ -31,7 +37,9 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
   const selectedProject = projects.data?.find((project) => project.key === selected);
 
   useEffect(() => {
-    if (!outcome) return;
+    if (!outcome) {
+      return;
+    }
     OUTCOMES[outcome]?.();
     router.replace('/onboarding/jira'); // drop ?jira= so a refresh doesn't toast again
   }, [outcome, router]);
@@ -81,7 +89,11 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
             <Button variant="tertiary" onClick={skip}>
               Skip for now
             </Button>
-            <Button variant="primary" loading={authorize.isPending} onClick={() => authorize.mutate()}>
+            <Button
+              variant="primary"
+              loading={authorize.isPending}
+              onClick={() => authorize.mutate()}
+            >
               {jira.needs_reauth ? 'Reconnect Jira' : 'Connect Jira'}
             </Button>
           </>
@@ -99,7 +111,12 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
           <Button variant="tertiary" onClick={skip}>
             Skip for now
           </Button>
-          <Button variant="primary" disabled={!selectedProject} loading={connect.isPending} onClick={() => selectedProject && connect.mutate(selectedProject)}>
+          <Button
+            variant="primary"
+            disabled={!selectedProject}
+            loading={connect.isPending}
+            onClick={() => selectedProject && connect.mutate(selectedProject)}
+          >
             Connect project
           </Button>
         </>
@@ -110,7 +127,10 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
           Project
         </label>
         <Select value={selected} onValueChange={setSelected} disabled={projects.isPending}>
-          <SelectTrigger id="jira-project" placeholder={projects.isPending ? 'Loading projects…' : 'Select a project'} />
+          <SelectTrigger
+            id="jira-project"
+            placeholder={projects.isPending ? 'Loading projects…' : 'Select a project'}
+          />
           <SelectContent>
             {projects.data?.map((project) => (
               <SelectItem key={project.key} value={project.key}>

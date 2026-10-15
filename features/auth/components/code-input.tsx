@@ -1,6 +1,11 @@
 'use client';
 
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/shared/components/input-otp';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from '@/shared/components/input-otp';
 import { OTP_LENGTH } from '../constants';
 
 const HALF = OTP_LENGTH / 2;
@@ -35,15 +40,11 @@ export default function CodeInput({
       containerClassName="justify-center"
     >
       <InputOTPGroup>
-        {SLOTS.slice(0, HALF).map((index) => (
-          <InputOTPSlot key={index} index={index} />
-        ))}
+        {SLOTS.slice(0, HALF).map((index) => <InputOTPSlot key={index} index={index} />)}
       </InputOTPGroup>
       <InputOTPSeparator />
       <InputOTPGroup>
-        {SLOTS.slice(HALF).map((index) => (
-          <InputOTPSlot key={index} index={index} />
-        ))}
+        {SLOTS.slice(HALF).map((index) => <InputOTPSlot key={index} index={index} />)}
       </InputOTPGroup>
     </InputOTP>
   );

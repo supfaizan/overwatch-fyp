@@ -14,6 +14,12 @@ describe('emojiGlyph', () => {
 
   it('keeps a custom emoji as its short name', () => {
     expect(emojiGlyph({ id: 'atlassian-blue_star', shortName: ':blue_star:' })).toBe(':blue_star:');
-    expect(emojiGlyph({ id: 'a3f9e2c1-0d4b-4c1e-9f7a-1b2c3d4e5f60', text: ':party:', shortName: ':party:' })).toBe(':party:');
+    expect(
+      emojiGlyph({
+        id: 'a3f9e2c1-0d4b-4c1e-9f7a-1b2c3d4e5f60',
+        text: ':party:',
+        shortName: ':party:',
+      }),
+    ).toBe(':party:');
   });
 });

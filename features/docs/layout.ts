@@ -16,7 +16,11 @@ export const LayoutColumn = Node.create({
       width: {
         default: null,
         parseHTML: (element) => Number(element.getAttribute('data-width')) || null,
-        renderHTML: (attrs) => (attrs.width ? { 'data-width': attrs.width, style: `flex: ${attrs.width} 1 0%` } : { style: 'flex: 1 1 0%' }),
+        renderHTML: (
+          attrs,
+        ) => (attrs.width
+          ? { 'data-width': attrs.width, style: `flex: ${attrs.width} 1 0%` }
+          : { style: 'flex: 1 1 0%' }),
       },
     };
   },
@@ -56,10 +60,15 @@ export const LayoutSection = Node.create({
 
 /** Puts `count` empty columns of even width where the selection is; not inside other columns. */
 export function insertColumns(editor: Editor, count: number) {
-  if (editor.isActive(LayoutSection.name)) return false;
+  if (editor.isActive(LayoutSection.name)) {
+    return false;
+  }
   const width = Math.round((100 / count) * 100) / 100;
   const column = { type: LayoutColumn.name, attrs: { width }, content: [{ type: 'paragraph' }] };
-  return editor.chain().focus().insertContent({ type: LayoutSection.name, content: Array.from({ length: count }, () => column) }).run();
+  return editor.chain().focus().insertContent({
+    type: LayoutSection.name,
+    content: Array.from({ length: count }, () => column),
+  }).run();
 }
 
 /** Lays the columns around the selection back out, one after another. */
@@ -68,7 +77,9 @@ export function removeColumns(editor: Editor) {
   const { $from } = state.selection;
   for (let depth = $from.depth; depth > 0; depth--) {
     const node = $from.node(depth);
-    if (node.type.name !== LayoutSection.name) continue;
+    if (node.type.name !== LayoutSection.name) {
+      continue;
+    }
     const blocks: (typeof node)[] = [];
     node.forEach((column) => column.forEach((block) => void blocks.push(block)));
     editor.view.dispatch(state.tr.replaceWith($from.before(depth), $from.after(depth), blocks));

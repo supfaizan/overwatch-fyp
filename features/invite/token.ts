@@ -4,8 +4,12 @@ const INVITE_PATH = '/invite';
 /** `#token` from a new link, or the last path segment of a link sent before tokens moved into the fragment. */
 export function tokenFromUrl(hash: string, pathname: string): string | null {
   const fromHash = hash.replace(/^#/, '');
-  if (fromHash) return fromHash;
-  const segment = pathname.startsWith(`${INVITE_PATH}/`) ? pathname.slice(INVITE_PATH.length + 1) : '';
+  if (fromHash) {
+    return fromHash;
+  }
+  const segment = pathname.startsWith(`${INVITE_PATH}/`)
+    ? pathname.slice(INVITE_PATH.length + 1)
+    : '';
   return segment ? decodeURIComponent(segment) : null;
 }
 
@@ -16,7 +20,9 @@ export function tokenFromUrl(hash: string, pathname: string): string | null {
 export function takeInviteToken(): string | null {
   const fromUrl = tokenFromUrl(window.location.hash, window.location.pathname);
   try {
-    if (fromUrl) sessionStorage.setItem(TOKEN_KEY, fromUrl);
+    if (fromUrl) {
+      sessionStorage.setItem(TOKEN_KEY, fromUrl);
+    }
     window.history.replaceState(null, '', INVITE_PATH);
     return fromUrl ?? sessionStorage.getItem(TOKEN_KEY);
   } catch {

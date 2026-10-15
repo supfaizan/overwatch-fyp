@@ -4,8 +4,11 @@ export function isActive(pathname: string, href: string): boolean {
 }
 
 /** ⌘K on a Mac, Ctrl+K elsewhere; never while an input method is composing text. */
-export function isCommandShortcut(event: Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'isComposing'>): boolean {
-  return event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.isComposing;
+export function isCommandShortcut(
+  event: Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'isComposing'>,
+): boolean {
+  return event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey
+    && !event.isComposing;
 }
 
 export function shortcutLabel(isMac: boolean): string {

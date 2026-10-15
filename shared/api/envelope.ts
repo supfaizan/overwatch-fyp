@@ -23,8 +23,14 @@ export class ApiError extends Error {
 }
 
 function toFields(value: unknown): Record<string, string> {
-  if (!value || typeof value !== 'object') return {};
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string] =>
+      typeof entry[1] === 'string'
+    ),
+  );
 }
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -32,13 +38,18 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000
 export const GITHUB_SIGN_IN_URL = `${API_URL}/auth/github/login`;
 
 export function toApiError(error: unknown): ApiError {
-  if (error instanceof ApiError) return error;
+  if (error instanceof ApiError) {
+    return error;
+  }
   if (axios.isAxiosError<ApiEnvelope<null>>(error) && error.response) {
     const { meta } = error.response.data ?? {};
     const message = typeof meta?.message === 'string' ? meta.message : 'Something went wrong';
     const code = typeof meta?.error_code === 'string' ? meta.error_code : 'unknown';
     return new ApiError(message, error.response.status, code, toFields(meta?.fields), meta ?? {});
   }
-  return new ApiError("Can't reach the server. Check your connection and try again.", 0, ERROR_CODE.networkError);
+  return new ApiError(
+    "Can't reach the server. Check your connection and try again.",
+    0,
+    ERROR_CODE.networkError,
+  );
 }
-

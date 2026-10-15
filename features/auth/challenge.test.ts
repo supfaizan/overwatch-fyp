@@ -16,7 +16,12 @@ describe('the challenge a tab waits on', () => {
 
   it('is kept per purpose with its resend time', () => {
     saveChallenge(ISSUED, CHALLENGE_PURPOSE.verifyEmail, 1_000);
-    expect(readChallenge(CHALLENGE_PURPOSE.verifyEmail)).toEqual({ id: 'c1', email: 'ada@example.com', purpose: 'verify_email', resendAt: 61_000 });
+    expect(readChallenge(CHALLENGE_PURPOSE.verifyEmail)).toEqual({
+      id: 'c1',
+      email: 'ada@example.com',
+      purpose: 'verify_email',
+      resendAt: 61_000,
+    });
     expect(readChallenge(CHALLENGE_PURPOSE.resetPassword)).toBeNull();
   });
 

@@ -51,12 +51,30 @@ export type WorkItem = {
   updated_at: string;
 };
 
-export type LinkedItem = { key: string | null; title: string | null; status: string | null; status_category: StatusCategory | null; type?: string | null };
+export type LinkedItem = {
+  key: string | null;
+  title: string | null;
+  status: string | null;
+  status_category: StatusCategory | null;
+  type?: string | null;
+};
 
-export type WorkItemFields = { title: string; description: string | null; assignee_id: string | null };
+export type WorkItemFields = {
+  title: string;
+  description: string | null;
+  assignee_id: string | null;
+};
 
 /** Fields the ticket view edits one at a time. */
-export type WorkItemChanges = Partial<WorkItemFields & { priority: string | null; labels: string[]; due_date: string | null; story_points: number | null; type_id: string }>;
+export type WorkItemChanges = Partial<
+  WorkItemFields & {
+    priority: string | null;
+    labels: string[];
+    due_date: string | null;
+    story_points: number | null;
+    type_id: string;
+  }
+>;
 
 export type Comment = {
   id: string;
@@ -69,9 +87,19 @@ export type Comment = {
   deletable: boolean;
 };
 
-export type CreateWorkItem = WorkItemFields & { board_id: string; column_id: string; sprint_id: string | null; type_id: string | null };
+export type CreateWorkItem = WorkItemFields & {
+  board_id: string;
+  column_id: string;
+  sprint_id: string | null;
+  type_id: string | null;
+};
 
-export type MoveWorkItem = { column_id: string; before_id: string | null; after_id: string | null; status_id?: string | null };
+export type MoveWorkItem = {
+  column_id: string;
+  before_id: string | null;
+  after_id: string | null;
+  status_id?: string | null;
+};
 
 export const COLUMN_MODE = { default: 'default', tracker: 'tracker' } as const;
 export const COLUMN_PROMPT = { none: 'none', pending: 'pending', dismissed: 'dismissed' } as const;
@@ -104,17 +132,34 @@ export type Column = {
 export type TrackerWorkflow = {
   statuses: Record<string, { name: string; category: StatusCategory }>;
   /** `from` null: from any status (a global transition). */
-  workflows: Record<string, { name: string | null; transitions: { id: string; name: string; from: string[] | null; to: string }[] }>;
+  workflows: Record<
+    string,
+    {
+      name: string | null;
+      transitions: { id: string; name: string; from: string[] | null; to: string }[];
+    }
+  >;
   by_issue_type: Record<string, string>;
 };
 
 /** One place a card can land: a column, and on a tracker board the status (and named move) that takes it there. */
-export type MoveTarget = { column_id: string; status_id: string | null; status: string | null; transition_name: string | null };
+export type MoveTarget = {
+  column_id: string;
+  status_id: string | null;
+  status: string | null;
+  transition_name: string | null;
+};
 
 /** Where an item can move: `open` boards allow any column; `live` is the tracker's answer for the item now. */
 export type AllowedMoves = { basis: 'open' | 'board' | 'live'; targets: MoveTarget[] };
 
-export const PRIORITY_LEVEL = { highest: 'highest', high: 'high', medium: 'medium', low: 'low', lowest: 'lowest' } as const;
+export const PRIORITY_LEVEL = {
+  highest: 'highest',
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+  lowest: 'lowest',
+} as const;
 export type PriorityLevel = (typeof PRIORITY_LEVEL)[keyof typeof PRIORITY_LEVEL];
 
 export type Board = {
@@ -143,7 +188,13 @@ export type Tracker = {
 };
 
 /** A tracker project's sync with its tracker; null `last_synced_at` until its first sync. */
-export type SyncTarget = { key: string; name: string | null; sync_status: JobStatus; sync_error: string | null; last_synced_at: string | null };
+export type SyncTarget = {
+  key: string;
+  name: string | null;
+  sync_status: JobStatus;
+  sync_error: string | null;
+  last_synced_at: string | null;
+};
 
 export type Person = { id: string; name: string; avatar_url: string | null };
 
@@ -161,7 +212,12 @@ export type Sprint = {
   completed_at: string | null;
 };
 
-export type SprintFields = { name?: string; goal?: string | null; start_at?: string | null; end_at?: string | null };
+export type SprintFields = {
+  name?: string;
+  goal?: string | null;
+  start_at?: string | null;
+  end_at?: string | null;
+};
 
 /** What the board shows: the active sprint, a chosen one, or (kanban boards) everything current. */
 export const CURRENT_SPRINT = 'current';

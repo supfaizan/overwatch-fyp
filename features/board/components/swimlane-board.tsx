@@ -1,24 +1,38 @@
 'use client';
 
+import Spinner from '@/shared/components/spinner';
+import { cn } from '@/shared/lib/cn';
 import {
+  closestCorners,
   DndContext,
+  type DragEndEvent,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  closestCorners,
   useDroppable,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CaretDown, CaretRight, Lock } from '@phosphor-icons/react/ssr';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import Spinner from '@/shared/components/spinner';
-import { cn } from '@/shared/lib/cn';
 import { useCardOver, useDropHints } from '../hooks';
-import { BLOCKED_MESSAGE, COLOR_CLASSES, type DropHint, cellId, columnColor, groupByColumn, laneDropTarget, laneOf, type Lane } from '../lib';
+import {
+  BLOCKED_MESSAGE,
+  cellId,
+  COLOR_CLASSES,
+  columnColor,
+  type DropHint,
+  groupByColumn,
+  type Lane,
+  laneDropTarget,
+  laneOf,
+} from '../lib';
 import type { Board, Column, ColumnColor, WorkItem } from '../types';
 import WorkItemCard, { CardBody } from './work-item-card';
 
@@ -45,7 +59,10 @@ type SwimlaneBoardProps = {
 };
 
 /** The board in rows, Jira-style: one lane per assignee or priority, the columns across. */
-export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, linkOf, onDrop, board }: SwimlaneBoardProps) {
+export default function SwimlaneBoard(
+  { columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, linkOf, onDrop, board }:
+    SwimlaneBoardProps,
+) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [dragging, setDragging] = useState<WorkItem | null>(null);
   const hintFor = useDropHints(board, dragging, columns);
@@ -61,7 +78,9 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
     setDragging(null);
     const item = items.find((candidate) => candidate.id === active.id);
     const target = over && item && laneDropTarget(items, columns, by, item.id, String(over.id));
-    if (!item || !target) return;
+    if (!item || !target) {
+      return;
+    }
     const column = columns.find((candidate) => candidate.id === target.columnId);
     if (column && hintFor(column)?.allowed === false) {
       toast.error(BLOCKED_MESSAGE);
@@ -83,7 +102,10 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
           {columns.map((column) => (
             <h2 key={column.id} className="flex flex-col gap-1 px-1 text-sm font-medium">
               <span className="flex items-center gap-2">
-                <span aria-hidden className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)} />
+                <span
+                  aria-hidden
+                  className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)}
+                />
                 {column.name}
               </span>
               <HintLabel hint={hintFor(column)} />
@@ -93,7 +115,10 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
         <div className="flex flex-col gap-4">
           {lanes.map((lane) => {
             // cards are placed by what they say now, so a reassigned card shows in its new lane at once
-            const cellsOfLane = groupByColumn(items.filter((item) => laneOf(item, by) === lane.key), columns);
+            const cellsOfLane = groupByColumn(
+              items.filter((item) => laneOf(item, by) === lane.key),
+              columns,
+            );
             const open = !collapsed[lane.key];
             return (
               <section key={lane.key} aria-label={lane.label} className="flex flex-col gap-2">
@@ -137,7 +162,14 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
       </div>
       <DragOverlay className="cursor-grabbing">
         {dragging && dragging.column_id && (
-          <CardBody item={dragging} columns={columns} color={colors[dragging.column_id]} onOpen={() => {}} onMoveTo={() => {}} linkOf={() => ''} />
+          <CardBody
+            item={dragging}
+            columns={columns}
+            color={colors[dragging.column_id]}
+            onOpen={() => {}}
+            onMoveTo={() => {}}
+            linkOf={() => ''}
+          />
         )}
       </DragOverlay>
     </DndContext>
@@ -162,36 +194,83 @@ type CellProps = {
 
 /** A column's hint while a card is dragged: where it lands ("In Review → In Progress"), or that it can't. */
 function HintLabel({ hint }: { hint: DropHint | undefined }) {
-  if (!hint) return null;
-  if (!hint.allowed) return <span className="flex items-center gap-1 text-xs font-normal text-muted"><Lock aria-hidden className="size-3" />Can&apos;t move here</span>;
-  return <span className="text-xs font-normal text-primary">{hint.zones.map((zone) => zone.label).join(' · ')}</span>;
+  if (!hint) {
+    return null;
+  }
+  if (!hint.allowed) {
+    return (
+      <span className="flex items-center gap-1 text-xs font-normal text-muted">
+        <Lock aria-hidden className="size-3" />Can&apos;t move here
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs font-normal text-primary">
+      {hint.zones.map((zone) => zone.label).join(' · ')}
+    </span>
+  );
 }
 
 /** One lane's cards in one column: its own first batch, about four cards tall, loading more as it's scrolled. */
-function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onOpen, onMoveTo, linkOf, blocked }: CellProps) {
+function Cell(
+  {
+    id,
+    hasMore,
+    loadingMore,
+    onLoadMore,
+    items,
+    columns,
+    color,
+    onOpen,
+    onMoveTo,
+    linkOf,
+    blocked,
+  }: CellProps,
+) {
   const { setNodeRef } = useDroppable({ id });
   const isOver = useCardOver(id) && !blocked;
   const list = useRef<HTMLUListElement | null>(null);
   const sentinel = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
-    if (!hasMore || loadingMore || !sentinel.current) return;
-    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && onLoadMore(id), { root: list.current, rootMargin: '0px 0px 120px 0px' });
+    if (!hasMore || loadingMore || !sentinel.current) {
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && onLoadMore(id), {
+      root: list.current,
+      rootMargin: '0px 0px 120px 0px',
+    });
     observer.observe(sentinel.current);
     return () => observer.disconnect();
   }, [hasMore, loadingMore, items.length, id, onLoadMore]);
 
   return (
-    <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+    <SortableContext
+      id={id}
+      items={items.map((item) => item.id)}
+      strategy={verticalListSortingStrategy}
+    >
       <ul
         ref={(node) => {
           setNodeRef(node);
           list.current = node;
         }}
-        className={cn('flex max-h-176 min-h-16 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active ring-2 ring-primary', blocked && 'opacity-40')}
+        className={cn(
+          'flex max-h-176 min-h-16 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors',
+          isOver && 'bg-fill-active ring-2 ring-primary',
+          blocked && 'opacity-40',
+        )}
       >
         {items.map((item) => (
-          <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} linkOf={linkOf} />
+          <WorkItemCard
+            key={item.id}
+            item={item}
+            columns={columns}
+            color={color}
+            onOpen={onOpen}
+            onMoveTo={onMoveTo}
+            linkOf={linkOf}
+          />
         ))}
         {hasMore && (
           <li ref={sentinel} className="flex list-none justify-center py-2" aria-live="polite">

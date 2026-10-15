@@ -9,7 +9,14 @@ const kept = { default: null, rendered: false };
 
 export const DocTable = Table.extend({
   addAttributes() {
-    return { ...this.parent?.(), layout: kept, isNumberColumnEnabled: kept, width: kept, displayMode: kept, localId: kept };
+    return {
+      ...this.parent?.(),
+      layout: kept,
+      isNumberColumnEnabled: kept,
+      width: kept,
+      displayMode: kept,
+      localId: kept,
+    };
   },
 });
 
@@ -18,7 +25,12 @@ const background = {
   parseHTML: (element: HTMLElement) => element.getAttribute('data-background'),
   renderHTML: (attrs: Record<string, unknown>) => {
     const color = plainColor(attrs.background);
-    return color ? { 'data-background': color, style: `background-color: color-mix(in srgb, ${color} 35%, transparent)` } : {};
+    return color
+      ? {
+        'data-background': color,
+        style: `background-color: color-mix(in srgb, ${color} 35%, transparent)`,
+      }
+      : {};
   },
 };
 

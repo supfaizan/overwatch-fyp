@@ -1,4 +1,3 @@
-import { CaretDown, Copy, PushPin, ShareNetwork, Trash } from '@phosphor-icons/react/ssr';
 import Button from '@/shared/components/button';
 import {
   DropdownMenu,
@@ -8,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/dropdown-menu';
+import { CaretDown, Copy, PushPin, ShareNetwork, Trash } from '@phosphor-icons/react/ssr';
 
 export function Actions() {
   return (

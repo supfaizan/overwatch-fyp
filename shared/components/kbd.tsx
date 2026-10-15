@@ -1,5 +1,5 @@
-import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
+import type { ComponentProps } from 'react';
 
 /**
  * Keyboard shortcut hint, e.g. `<Kbd>⌘K</Kbd>`. The thicker bottom border echoes the raised buttons.

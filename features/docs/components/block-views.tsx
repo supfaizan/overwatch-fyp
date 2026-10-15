@@ -1,12 +1,20 @@
 'use client';
 
-import { CaretRight, CheckCircle, Info, Note, Warning, XCircle, type Icon } from '@phosphor-icons/react';
+import { cn } from '@/shared/lib/cn';
+import {
+  CaretRight,
+  CheckCircle,
+  type Icon,
+  Info,
+  Note,
+  Warning,
+  XCircle,
+} from '@phosphor-icons/react';
 import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import type { PanelType } from '../blocks';
 import { emojiGlyph } from '../inline-nodes';
 import { plainColor } from '../lib';
-import type { PanelType } from '../blocks';
 
 const PANELS: Record<PanelType, { icon: Icon | null; className: string }> = {
   info: { icon: Info, className: 'bg-accent-blue/10 text-accent-blue' },
@@ -21,16 +29,26 @@ const PANELS: Record<PanelType, { icon: Icon | null; className: string }> = {
 export function PanelView({ node }: NodeViewProps) {
   const type: PanelType = node.attrs.panelType in PANELS ? node.attrs.panelType : 'info';
   const { icon: Glyph, className } = PANELS[type];
-  const emoji = node.attrs.panelIconId || node.attrs.panelIconText ? emojiGlyph({ id: node.attrs.panelIconId, text: node.attrs.panelIconText, shortName: node.attrs.panelIcon }) : '';
+  const emoji = node.attrs.panelIconId || node.attrs.panelIconText
+    ? emojiGlyph({
+      id: node.attrs.panelIconId,
+      text: node.attrs.panelIconText,
+      shortName: node.attrs.panelIcon,
+    })
+    : '';
   const color = type === 'custom' ? plainColor(node.attrs.panelColor) : undefined;
   return (
     <NodeViewWrapper
       data-panel={type}
       className={cn('my-2 flex gap-3 rounded-md px-4 py-3', className)}
-      style={color ? { backgroundColor: `color-mix(in srgb, ${color} 35%, transparent)` } : undefined}
+      style={color
+        ? { backgroundColor: `color-mix(in srgb, ${color} 35%, transparent)` }
+        : undefined}
     >
       <span contentEditable={false} className="mt-0.5 shrink-0 select-none" aria-hidden>
-        {emoji ? <span className="text-base leading-none">{emoji}</span> : Glyph && <Glyph weight="fill" className="size-5" />}
+        {emoji
+          ? <span className="text-base leading-none">{emoji}</span>
+          : Glyph && <Glyph weight="fill" className="size-5" />}
       </span>
       <NodeViewContent className="min-w-0 flex-1 text-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0" />
     </NodeViewWrapper>

@@ -1,5 +1,5 @@
-import { Check } from '@phosphor-icons/react/ssr';
 import { cn } from '@/shared/lib/cn';
+import { Check } from '@phosphor-icons/react/ssr';
 
 type StepsProps = {
   /** Step names, in order. Keep them to a word or two. */
@@ -21,7 +21,11 @@ export default function Steps({ steps, current, className }: StepsProps) {
         const done = index < current;
         const active = index === current;
         return (
-          <li key={label} aria-current={active ? 'step' : undefined} className="flex items-center gap-2">
+          <li
+            key={label}
+            aria-current={active ? 'step' : undefined}
+            className="flex items-center gap-2"
+          >
             <span
               className={cn(
                 'flex size-6 items-center justify-center rounded-full border text-xs font-semibold',

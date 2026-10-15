@@ -19,7 +19,11 @@ const PROVIDERS: EmbedProvider[] = [
     name: 'Loom',
     hosts: ['loom.com'],
     frames: ['https://www.loom.com'],
-    player: (url) => (/^\/(share|embed)\//.test(url.pathname) ? `https://www.loom.com/embed/${lastSegment(url)}` : null),
+    player: (
+      url,
+    ) => (/^\/(share|embed)\//.test(url.pathname)
+      ? `https://www.loom.com/embed/${lastSegment(url)}`
+      : null),
   },
   {
     name: 'YouTube',
@@ -28,7 +32,8 @@ const PROVIDERS: EmbedProvider[] = [
     player: (url) => {
       const id = url.hostname.endsWith('youtu.be')
         ? lastSegment(url)
-        : (url.searchParams.get('v') ?? (/^\/(embed|shorts|live)\//.test(url.pathname) ? lastSegment(url) : null));
+        : (url.searchParams.get('v')
+          ?? (/^\/(embed|shorts|live)\//.test(url.pathname) ? lastSegment(url) : null));
       return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : null;
     },
   },
@@ -36,7 +41,11 @@ const PROVIDERS: EmbedProvider[] = [
     name: 'Vimeo',
     hosts: ['vimeo.com'],
     frames: ['https://player.vimeo.com'],
-    player: (url) => (/^\d+$/.test(lastSegment(url)) ? `https://player.vimeo.com/video/${lastSegment(url)}` : null),
+    player: (
+      url,
+    ) => (/^\d+$/.test(lastSegment(url))
+      ? `https://player.vimeo.com/video/${lastSegment(url)}`
+      : null),
   },
   {
     name: 'Figma',
@@ -44,7 +53,10 @@ const PROVIDERS: EmbedProvider[] = [
     frames: ['https://embed.figma.com'],
     player: (url) =>
       /^\/(file|design|proto|board|slides)\//.test(url.pathname)
-        ? `https://embed.figma.com${url.pathname}?${new URLSearchParams({ ...Object.fromEntries(url.searchParams), 'embed-host': 'overwatch' })}`
+        ? `https://embed.figma.com${url.pathname}?${new URLSearchParams({
+          ...Object.fromEntries(url.searchParams),
+          'embed-host': 'overwatch',
+        })}`
         : null,
   },
   {
@@ -73,12 +85,14 @@ const parse = (link: string) => {
   }
 };
 
-const matches = (hostname: string, host: string) => hostname === host || hostname.endsWith(`.${host}`);
+const matches = (hostname: string, host: string) =>
+  hostname === host || hostname.endsWith(`.${host}`);
 
 /** The player for a link and whose it is, or null when it isn't one of the embeddable sites. */
 export function embedFor(link: string): { src: string; provider: string } | null {
   const url = parse(link);
-  const provider = url && PROVIDERS.find((candidate) => candidate.hosts.some((host) => matches(url.hostname, host)));
+  const provider = url
+    && PROVIDERS.find((candidate) => candidate.hosts.some((host) => matches(url.hostname, host)));
   const src = url && provider?.player(url);
   return src && provider ? { src, provider: provider.name } : null;
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
 import { useSession } from '@/shared/session/store';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { takeDestination } from '../redirect';
 import AuthCard from './auth-card';
 
@@ -15,12 +15,17 @@ export default function AuthComplete() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace(takeDestination());
+    if (status === 'authenticated') {
+      router.replace(takeDestination());
+    }
   }, [status, router]);
 
   if (status === 'guest') {
     return (
-      <AuthCard title="Sign-in didn't finish" description="We couldn't start your session. Please sign in again.">
+      <AuthCard
+        title="Sign-in didn't finish"
+        description="We couldn't start your session. Please sign in again."
+      >
         <Button asChild variant="primary">
           <Link href="/sign-in">Back to sign in</Link>
         </Button>

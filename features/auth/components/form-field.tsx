@@ -26,17 +26,19 @@ export default function FormField({
         {action}
       </div>
       {children}
-      {error ? (
-        <p id={`${id}-error`} className="text-xs text-danger">
-          {error}
-        </p>
-      ) : (
-        hint && (
-          <p id={`${id}-hint`} className="text-xs text-muted">
-            {hint}
+      {error
+        ? (
+          <p id={`${id}-error`} className="text-xs text-danger">
+            {error}
           </p>
         )
-      )}
+        : (
+          hint && (
+            <p id={`${id}-hint`} className="text-xs text-muted">
+              {hint}
+            </p>
+          )
+        )}
     </div>
   );
 }

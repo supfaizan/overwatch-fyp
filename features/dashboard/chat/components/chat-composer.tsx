@@ -1,10 +1,10 @@
 'use client';
 
-import { PaperPlaneRight } from '@phosphor-icons/react/ssr';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import Button from '@/shared/components/button';
 import { TextArea } from '@/shared/components/input';
 import { cn } from '@/shared/lib/cn';
+import { PaperPlaneRight } from '@phosphor-icons/react/ssr';
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { MIN_MENTION_TERM, useMentionCandidates } from '../hooks';
 import { keptMentions, mentionQuery } from '../lib';
 import type { Mention, MentionCandidate } from '../types';
@@ -44,7 +44,9 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
   const question = text.trim();
 
   const pick = (candidate: MentionCandidate) => {
-    if (!query) return;
+    if (!query) {
+      return;
+    }
     const name = candidate.name ?? candidate.path ?? candidate.id;
     const next = `${text.slice(0, query.start)}@${name} ${text.slice(caret)}`;
     const at = query.start + name.length + 2;
@@ -56,7 +58,9 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
   };
 
   const send = () => {
-    if (!question || pending) return;
+    if (!question || pending) {
+      return;
+    }
     onSend(question, keptMentions(question, mentions).map((mention) => mention.nodeId)).then(
       () => {
         setText('');
@@ -101,14 +105,22 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
       }}
     >
       {options.length > 0 && (
-        <ul id={listId} role="listbox" aria-label="Nodes to mention" className="absolute right-0 bottom-full left-0 mb-1 max-h-56 overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-chrome">
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label="Nodes to mention"
+          className="absolute right-0 bottom-full left-0 mb-1 max-h-56 overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-chrome"
+        >
           {options.map((option, index) => (
             <li
               key={option.id}
               id={`${listId}-${index}`}
               role="option"
               aria-selected={index === active}
-              className={cn('flex cursor-pointer flex-col rounded px-2 py-1 text-sm', index === active && 'bg-fill-hover')}
+              className={cn(
+                'flex cursor-pointer flex-col rounded px-2 py-1 text-sm',
+                index === active && 'bg-fill-hover',
+              )}
               // keep focus in the box, so typing carries on after the pick
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => pick(option)}
@@ -128,7 +140,9 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
         role="combobox"
         aria-expanded={options.length > 0}
         aria-controls={listId}
-        aria-activedescendant={options.length > 0 ? `${listId}-${Math.min(active, options.length - 1)}` : undefined}
+        aria-activedescendant={options.length > 0
+          ? `${listId}-${Math.min(active, options.length - 1)}`
+          : undefined}
         placeholder="Ask about the code. Type @ to mention a file or symbol."
         rows={2}
         maxLength={MAX_QUESTION_CHARS}
@@ -143,7 +157,15 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
         onKeyDown={onKeyDown}
       />
       {/* as tall as the box, so the two line up whatever its height */}
-      <Button variant="primary" iconOnly type="submit" aria-label="Send" className="h-auto" loading={pending} disabled={!question}>
+      <Button
+        variant="primary"
+        iconOnly
+        type="submit"
+        aria-label="Send"
+        className="h-auto"
+        loading={pending}
+        disabled={!question}
+      >
         <PaperPlaneRight />
       </Button>
     </form>

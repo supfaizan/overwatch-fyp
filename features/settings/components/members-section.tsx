@@ -1,8 +1,5 @@
 'use client';
 
-import { Copy, EnvelopeSimple, LinkSimple, UserMinus, X } from '@phosphor-icons/react/ssr';
-import { useState, type FormEvent } from 'react';
-import { toast } from 'sonner';
 import Avatar from '@/shared/components/avatar';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
@@ -19,19 +16,35 @@ import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE, type Role, type Workspace } from '@/shared/workspaces/types';
-import { useCreateInvite, useInvites, useMembers, useRemoveMember, useResendInvite, useRevokeInvite, useUpdateMember } from '../hooks';
-import { INVITE_KIND, type Invite, type InviteKind, type InviteRole, type Member } from '../types';
+import { Copy, EnvelopeSimple, LinkSimple, UserMinus, X } from '@phosphor-icons/react/ssr';
+import { type FormEvent, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  useCreateInvite,
+  useInvites,
+  useMembers,
+  useRemoveMember,
+  useResendInvite,
+  useRevokeInvite,
+  useUpdateMember,
+} from '../hooks';
+import { type Invite, INVITE_KIND, type InviteKind, type InviteRole, type Member } from '../types';
 import { SettingsSection } from './settings-layout';
 
 const ROLE_LABELS: Record<Role, string> = { owner: 'Owner', admin: 'Admin', member: 'Member' };
 
 export default function MembersSection() {
   const workspace = useCurrentWorkspace();
-  if (!workspace) return null;
+  if (!workspace) {
+    return null;
+  }
   const isAdmin = hasRole(workspace.role, ROLE.admin);
 
   return (
-    <SettingsSection title="Members" description="Admins connect repositories and integrations and manage people; members can view and re-index.">
+    <SettingsSection
+      title="Members"
+      description="Admins connect repositories and integrations and manage people; members can view and re-index."
+    >
       <MemberList workspace={workspace} />
       {isAdmin && <Invites workspace={workspace} />}
     </SettingsSection>
@@ -41,10 +54,22 @@ export default function MembersSection() {
 function MemberList({ workspace }: { workspace: Workspace }) {
   const members = useMembers(workspace.id);
 
-  if (members.isPending) return <Skeleton className="h-32 w-full" />;
+  if (members.isPending) {
+    return <Skeleton className="h-32 w-full" />;
+  }
   if (members.isError) {
     return (
-      <Banner type="error" action={<Button size="sm" onClick={() => members.refetch()}>Retry</Button>}>
+      <Banner
+        type="error"
+        action={
+          <Button
+            size="sm"
+            onClick={() => members.refetch()}
+          >
+            Retry
+          </Button>
+        }
+      >
         {members.error.message}
       </Banner>
     );
@@ -67,8 +92,11 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
   const name = displayName(member);
   const isSelf = member.user_id === userId;
   // nobody changes a role above their own; the backend also keeps one owner
-  const canManage = !isSelf && hasRole(workspace.role, ROLE.admin) && hasRole(workspace.role, member.role);
-  const roles = (Object.keys(ROLE_LABELS) as Role[]).filter((role) => hasRole(workspace.role, role));
+  const canManage = !isSelf && hasRole(workspace.role, ROLE.admin)
+    && hasRole(workspace.role, member.role);
+  const roles = (Object.keys(ROLE_LABELS) as Role[]).filter((role) =>
+    hasRole(workspace.role, role)
+  );
 
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
@@ -79,28 +107,38 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
         </p>
         <p className="truncate text-xs text-muted">
           {handle(member)}
-          {member.email && member.username && <> · {member.email}</>}
+          {member.email && member.username && <>· {member.email}</>}
         </p>
       </div>
-      {canManage ? (
-        <Select value={member.role} onValueChange={(role) => update.mutate({ id: workspace.id, userId: member.user_id, role: role as Role })}>
-          <SelectTrigger size="sm" className="w-28" aria-label={`Role for ${name}`} />
-          <SelectContent>
-            {roles.map((role) => (
-              <SelectItem key={role} value={role}>
-                {ROLE_LABELS[role]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <Tag>{ROLE_LABELS[member.role]}</Tag>
-      )}
+      {canManage
+        ? (
+          <Select
+            value={member.role}
+            onValueChange={(role) =>
+              update.mutate({ id: workspace.id, userId: member.user_id, role: role as Role })}
+          >
+            <SelectTrigger size="sm" className="w-28" aria-label={`Role for ${name}`} />
+            <SelectContent>
+              {roles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {ROLE_LABELS[role]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+        : <Tag>{ROLE_LABELS[member.role]}</Tag>}
       {canManage && (
         <ConfirmDialog
           trigger={
             <Tooltip content="Remove">
-              <Button size="sm" variant="tertiary" iconOnly aria-label={`Remove ${name}`} className="hover:text-danger">
+              <Button
+                size="sm"
+                variant="tertiary"
+                iconOnly
+                aria-label={`Remove ${name}`}
+                className="hover:text-danger"
+              >
                 <UserMinus />
               </Button>
             </Tooltip>
@@ -109,7 +147,8 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
           description="They lose access to this workspace until they're invited again."
           confirmLabel="Remove member"
           pending={remove.isPending}
-          onConfirm={(close) => remove.mutate({ id: workspace.id, userId: member.user_id }, { onSuccess: close })}
+          onConfirm={(close) =>
+            remove.mutate({ id: workspace.id, userId: member.user_id }, { onSuccess: close })}
         />
       )}
     </li>
@@ -126,7 +165,9 @@ const EMAIL_MAX_LENGTH = 254;
 const GITHUB_LOGIN_MAX_LENGTH = 39;
 
 function inviteFor(invite: Invite): string {
-  if (invite.kind === INVITE_KIND.email) return ` for ${invite.email}`;
+  if (invite.kind === INVITE_KIND.email) {
+    return ` for ${invite.email}`;
+  }
   return invite.github_login ? ` for @${invite.github_login}` : ' link';
 }
 
@@ -145,12 +186,19 @@ function Invites({ workspace }: { workspace: Workspace }) {
     event.preventDefault();
     const value = target.trim();
     create.mutate(
-      { id: workspace.id, role, email: kind === INVITE_KIND.email ? value : undefined, githubLogin: kind === INVITE_KIND.github ? value : undefined },
+      {
+        id: workspace.id,
+        role,
+        email: kind === INVITE_KIND.email ? value : undefined,
+        githubLogin: kind === INVITE_KIND.github ? value : undefined,
+      },
       {
         onSuccess: (invite) => {
           setUrl(invite.url);
           setTarget('');
-          if (invite.kind === INVITE_KIND.email) toast.success(`Invite sent to ${invite.email}.`);
+          if (invite.kind === INVITE_KIND.email) {
+            toast.success(`Invite sent to ${invite.email}.`);
+          }
         },
       },
     );
@@ -167,7 +215,8 @@ function Invites({ workspace }: { workspace: Workspace }) {
       <div>
         <p className="text-sm font-medium">Invite people</p>
         <p className="text-sm text-muted">
-          Invites work once and expire in 7 days. Email invites go straight to that inbox; links can be locked to a GitHub username.
+          Invites work once and expire in 7 days. Email invites go straight to that inbox; links can
+          be locked to a GitHub username.
         </p>
       </div>
       <form onSubmit={submit} className="flex flex-wrap items-center gap-2">
@@ -207,20 +256,27 @@ function Invites({ workspace }: { workspace: Workspace }) {
           />
         )}
         <Button type="submit" variant="primary" className="ml-auto" loading={create.isPending}>
-          {kind === INVITE_KIND.email ? (
-            <>
-              <EnvelopeSimple /> Send invite
-            </>
-          ) : (
-            <>
-              <LinkSimple /> Create link
-            </>
-          )}
+          {kind === INVITE_KIND.email
+            ? (
+              <>
+                <EnvelopeSimple /> Send invite
+              </>
+            )
+            : (
+              <>
+                <LinkSimple /> Create link
+              </>
+            )}
         </Button>
       </form>
       {url && (
         <div className="flex gap-2">
-          <Input readOnly aria-label="Invite link" value={url} onFocus={(event) => event.currentTarget.select()} />
+          <Input
+            readOnly
+            aria-label="Invite link"
+            value={url}
+            onFocus={(event) => event.currentTarget.select()}
+          />
           <Button onClick={() => void copy(url)}>
             <Copy /> Copy
           </Button>
@@ -229,13 +285,16 @@ function Invites({ workspace }: { workspace: Workspace }) {
       {invites.data && invites.data.length > 0 && (
         <ul className="divide-y divide-border border-t border-border">
           {invites.data.map((invite) => {
-            const sentRecently = invite.last_sent_at !== null && Date.now() - new Date(invite.last_sent_at).getTime() < RESEND_COOLDOWN_MS;
+            const sentRecently = invite.last_sent_at !== null
+              && Date.now() - new Date(invite.last_sent_at).getTime() < RESEND_COOLDOWN_MS;
             return (
               <li key={invite.id} className="flex items-center gap-3 py-2 text-sm">
                 <span className="min-w-0 flex-1 truncate">
                   {ROLE_LABELS[invite.role]} invite{inviteFor(invite)}
                   <span className="text-muted">
-                    {invite.last_sent_at && ` · sent ${timeAgo(invite.last_sent_at)}`} · expires {new Date(invite.expires_at).toLocaleDateString()}
+                    {invite.last_sent_at && ` · sent ${timeAgo(invite.last_sent_at)}`} · expires
+                    {' '}
+                    {new Date(invite.expires_at).toLocaleDateString()}
                   </span>
                 </span>
                 {invite.kind === INVITE_KIND.email && (

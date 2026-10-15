@@ -1,7 +1,5 @@
 'use client';
 
-import { Devices, SignOut } from '@phosphor-icons/react/ssr';
-import { useRouter } from 'next/navigation';
 import Avatar from '@/shared/components/avatar';
 import {
   DropdownMenu,
@@ -14,11 +12,15 @@ import {
 import { displayName, handle } from '@/shared/session/lib';
 import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
+import { Devices, SignOut } from '@phosphor-icons/react/ssr';
+import { useRouter } from 'next/navigation';
 
 export default function UserMenu() {
   const user = useSession((state) => state.user);
   const router = useRouter();
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   const name = displayName(user);
   const leave = (everywhere: boolean) => () => {
@@ -27,7 +29,10 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" aria-label="Account menu">
+      <DropdownMenuTrigger
+        className="cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        aria-label="Account menu"
+      >
         <Avatar src={user.avatar_url} name={name} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

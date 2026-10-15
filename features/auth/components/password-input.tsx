@@ -1,15 +1,17 @@
 'use client';
 
-import { Eye, EyeSlash } from '@phosphor-icons/react/ssr';
-import { useState, type ComponentProps } from 'react';
-import type { UseFormRegisterReturn } from 'react-hook-form';
 import Button from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
+import { Eye, EyeSlash } from '@phosphor-icons/react/ssr';
+import { type ComponentProps, useState } from 'react';
+import type { UseFormRegisterReturn } from 'react-hook-form';
 import { PASSWORD_HINT } from '../constants';
 import FormField, { describedBy } from './form-field';
 
 /** A password input with a show/hide toggle; every other prop goes to the `<input>`. */
-export default function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' | 'suffix'>) {
+export default function PasswordInput(
+  props: Omit<ComponentProps<typeof Input>, 'type' | 'suffix'>,
+) {
   const [visible, setVisible] = useState(false);
   return (
     <Input
@@ -52,7 +54,11 @@ export function NewPasswordField({
 }) {
   return (
     <FormField id={id} label={label} error={error} hint={hint}>
-      <PasswordInput autoComplete="new-password" {...describedBy(id, error, Boolean(hint))} {...registration} />
+      <PasswordInput
+        autoComplete="new-password"
+        {...describedBy(id, error, Boolean(hint))}
+        {...registration}
+      />
     </FormField>
   );
 }

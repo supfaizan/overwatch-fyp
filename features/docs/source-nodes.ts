@@ -31,16 +31,26 @@ export const SourceBlock = Node.create<SourceOptions>({
   addOptions: () => ({ sourceName: 'its source' }),
 
   addAttributes() {
-    return { raw: rawAttribute('data-source-block'), label: { default: 'Content', renderHTML: () => ({}) } };
+    return {
+      raw: rawAttribute('data-source-block'),
+      label: { default: 'Content', renderHTML: () => ({}) },
+    };
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-source-block]', getAttrs: (element) => ({ label: element.getAttribute('data-label') ?? 'Content' }) }];
+    return [{
+      tag: 'div[data-source-block]',
+      getAttrs: (element) => ({ label: element.getAttribute('data-label') ?? 'Content' }),
+    }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
     const label = String(node.attrs.label);
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-label': label, contenteditable: 'false' }), hint(label, this.options.sourceName)];
+    return [
+      'div',
+      mergeAttributes(HTMLAttributes, { 'data-label': label, contenteditable: 'false' }),
+      hint(label, this.options.sourceName),
+    ];
   },
 
   renderMarkdown: (node) => `_[${node.attrs?.label ?? 'Content'}]_`,
@@ -56,15 +66,28 @@ export const SourceInline = Node.create<SourceOptions>({
   addOptions: () => ({ sourceName: 'its source' }),
 
   addAttributes() {
-    return { raw: rawAttribute('data-source-inline'), label: { default: '', renderHTML: () => ({}) } };
+    return {
+      raw: rawAttribute('data-source-inline'),
+      label: { default: '', renderHTML: () => ({}) },
+    };
   },
 
   parseHTML() {
-    return [{ tag: 'span[data-source-inline]', getAttrs: (element) => ({ label: element.textContent ?? '' }) }];
+    return [{
+      tag: 'span[data-source-inline]',
+      getAttrs: (element) => ({ label: element.textContent ?? '' }),
+    }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes, { title: `Edit it in ${this.options.sourceName}`, contenteditable: 'false' }), String(node.attrs.label)];
+    return [
+      'span',
+      mergeAttributes(HTMLAttributes, {
+        title: `Edit it in ${this.options.sourceName}`,
+        contenteditable: 'false',
+      }),
+      String(node.attrs.label),
+    ];
   },
 
   renderMarkdown: (node) => String(node.attrs?.label ?? ''),
@@ -85,7 +108,9 @@ export const SourceMark = Mark.create({
             return [];
           }
         },
-        renderHTML: (attrs: Record<string, unknown>) => ({ 'data-source-mark': JSON.stringify(attrs.marks ?? []) }),
+        renderHTML: (attrs: Record<string, unknown>) => ({
+          'data-source-mark': JSON.stringify(attrs.marks ?? []),
+        }),
       },
     };
   },

@@ -24,7 +24,12 @@ export type DocumentSummary = {
 export const NATIVE_SOURCE = 'native';
 
 /** Where a mirrored page's edits are on their way back to its source. */
-export const PUSH_STATE = { none: 'none', pending: 'pending', pushing: 'pushing', conflict: 'conflict' } as const;
+export const PUSH_STATE = {
+  none: 'none',
+  pending: 'pending',
+  pushing: 'pushing',
+  conflict: 'conflict',
+} as const;
 export type PushState = (typeof PUSH_STATE)[keyof typeof PUSH_STATE];
 
 export type Document = DocumentSummary & {
@@ -49,7 +54,13 @@ export type Document = DocumentSummary & {
   conflict: { title: string; content: JSONContent; content_md: string | null } | null;
 };
 
-export type CreateDocument = { kind: DocumentKind; title?: string; parent_id?: string | null; content?: JSONContent; content_md?: string };
+export type CreateDocument = {
+  kind: DocumentKind;
+  title?: string;
+  parent_id?: string | null;
+  content?: JSONContent;
+  content_md?: string;
+};
 
 export const CONFLICT_ACTION = { keepSource: 'keep_source', overwrite: 'overwrite' } as const;
 export type ConflictAction = (typeof CONFLICT_ACTION)[keyof typeof CONFLICT_ACTION];
@@ -71,7 +82,13 @@ export type ArchivedDocument = {
 };
 
 /** How to send a file, exactly as the backend says: a signed form (`fields`), a signed PUT (`headers`), or our API. */
-export type UploadTarget = { method: string; url: string; fields: Record<string, string>; headers: Record<string, string>; via_api: boolean };
+export type UploadTarget = {
+  method: string;
+  url: string;
+  fields: Record<string, string>;
+  headers: Record<string, string>;
+  via_api: boolean;
+};
 
 /** What's known about a link; any of it may be missing, and its card falls back to the address. */
 export type LinkPreview = {

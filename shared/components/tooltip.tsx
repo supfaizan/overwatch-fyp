@@ -1,7 +1,7 @@
-import { Tooltip as TooltipPrimitive } from 'radix-ui';
-import type { ComponentProps, ReactNode } from 'react';
 import { popIn } from '@/shared/lib/animations';
 import { cn } from '@/shared/lib/cn';
+import { Tooltip as TooltipPrimitive } from 'radix-ui';
+import type { ComponentProps, ReactNode } from 'react';
 
 type TooltipProps = ComponentProps<typeof TooltipPrimitive.Trigger> & {
   /** What the tooltip says. Keep it short and plain text. */
@@ -21,7 +21,9 @@ type TooltipProps = ComponentProps<typeof TooltipPrimitive.Trigger> & {
  * - No interactive content inside; use a dropdown or dialog for that.
  * - Works as another component's `asChild` child (e.g. a `DialogTrigger`): extra props reach the trigger.
  */
-export default function Tooltip({ content, children, side = 'top', className, ...props }: TooltipProps) {
+export default function Tooltip(
+  { content, children, side = 'top', className, ...props }: TooltipProps,
+) {
   return (
     <TooltipPrimitive.Provider delayDuration={300}>
       <TooltipPrimitive.Root>
@@ -32,7 +34,11 @@ export default function Tooltip({ content, children, side = 'top', className, ..
           <TooltipPrimitive.Content
             side={side}
             sideOffset={6}
-            className={cn('z-50 max-w-xs rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background', popIn, className)}
+            className={cn(
+              'z-50 max-w-xs rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background',
+              popIn,
+              className,
+            )}
           >
             {content}
           </TooltipPrimitive.Content>

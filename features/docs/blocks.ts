@@ -5,7 +5,8 @@ import { ExpandView, PanelView } from './components/block-views';
  * Containers a mirrored page brings: a coloured panel (info, note, warning…) and a collapsible section.
  * Both are edited in place; their source attributes ride along so they go back as they came.
  */
-const kept = (names: string[]) => Object.fromEntries(names.map((name) => [name, { default: null, rendered: false }]));
+const kept = (names: string[]) =>
+  Object.fromEntries(names.map((name) => [name, { default: null, rendered: false }]));
 
 export const PANEL_TYPES = ['info', 'note', 'success', 'warning', 'error', 'custom'] as const;
 export type PanelType = (typeof PANEL_TYPES)[number];
@@ -18,7 +19,11 @@ export const Panel = Node.create({
 
   addAttributes() {
     return {
-      panelType: { default: 'info', parseHTML: (element) => element.getAttribute('data-panel'), renderHTML: (attrs) => ({ 'data-panel': attrs.panelType }) },
+      panelType: {
+        default: 'info',
+        parseHTML: (element) => element.getAttribute('data-panel'),
+        renderHTML: (attrs) => ({ 'data-panel': attrs.panelType }),
+      },
       ...kept(['panelIcon', 'panelIconId', 'panelIconText', 'panelColor', 'localId']),
     };
   },
@@ -31,7 +36,10 @@ export const Panel = Node.create({
     return ['div', mergeAttributes(HTMLAttributes), 0];
   },
 
-  renderMarkdown: (node, h) => h.renderChildren(node.content ?? [], '\n\n').split('\n').map((line) => (line ? `> ${line}` : '>')).join('\n'),
+  renderMarkdown: (node, h) =>
+    h.renderChildren(node.content ?? [], '\n\n').split('\n').map((
+      line,
+    ) => (line ? `> ${line}` : '>')).join('\n'),
 
   addNodeView() {
     return ReactNodeViewRenderer(PanelView);
@@ -46,7 +54,11 @@ export const Expand = Node.create({
 
   addAttributes() {
     return {
-      title: { default: '', parseHTML: (element) => element.getAttribute('data-title') ?? '', renderHTML: (attrs) => ({ 'data-title': attrs.title }) },
+      title: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('data-title') ?? '',
+        renderHTML: (attrs) => ({ 'data-title': attrs.title }),
+      },
       // Confluence's expand inside a table cell
       nested: { default: false, rendered: false },
       ...kept(['sourceMarks']),
@@ -61,7 +73,8 @@ export const Expand = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-expand': '' }), 0];
   },
 
-  renderMarkdown: (node, h) => `**${node.attrs?.title || 'Details'}**\n\n${h.renderChildren(node.content ?? [], '\n\n')}`,
+  renderMarkdown: (node, h) =>
+    `**${node.attrs?.title || 'Details'}**\n\n${h.renderChildren(node.content ?? [], '\n\n')}`,
 
   addNodeView() {
     return ReactNodeViewRenderer(ExpandView);

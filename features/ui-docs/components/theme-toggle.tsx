@@ -1,8 +1,8 @@
 'use client';
 
+import Button from '@/shared/components/button';
 import { Moon, Sun } from '@phosphor-icons/react/ssr';
 import { useTheme } from 'next-themes';
-import Button from '@/shared/components/button';
 
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

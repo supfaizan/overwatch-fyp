@@ -1,7 +1,5 @@
 'use client';
 
-import { PencilSimple, Plus, Trash } from '@phosphor-icons/react/ssr';
-import { useState, type FormEvent } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
@@ -11,12 +9,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/compo
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import { cn } from '@/shared/lib/cn';
+import {
+  useCreateType,
+  useDeleteType,
+  useUpdateType,
+  useWorkItemTypes,
+} from '@/shared/work-item-types/hooks';
+import TypeIcon, { ICONS, TYPE_COLOR_CLASSES } from '@/shared/work-item-types/type-icon';
+import {
+  TYPE_COLORS,
+  TYPE_ICONS,
+  type TypeColor,
+  type TypeIcon as TypeIconName,
+  type WorkItemType,
+} from '@/shared/work-item-types/types';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
-import { useCreateType, useDeleteType, useUpdateType, useWorkItemTypes } from '@/shared/work-item-types/hooks';
-import TypeIcon, { ICONS, TYPE_COLOR_CLASSES } from '@/shared/work-item-types/type-icon';
-import { TYPE_COLORS, TYPE_ICONS, type TypeColor, type TypeIcon as TypeIconName, type WorkItemType } from '@/shared/work-item-types/types';
+import { PencilSimple, Plus, Trash } from '@phosphor-icons/react/ssr';
+import { type FormEvent, useState } from 'react';
 import { SettingsSection } from './settings-layout';
 
 const NATIVE = 'native';
@@ -36,7 +47,17 @@ export default function WorkItemTypesSection() {
     >
       {types.isPending && <Skeleton className="h-40 w-full" />}
       {types.isError && (
-        <Banner type="error" action={<Button size="sm" onClick={() => types.refetch()}>Retry</Button>}>
+        <Banner
+          type="error"
+          action={
+            <Button
+              size="sm"
+              onClick={() => types.refetch()}
+            >
+              Retry
+            </Button>
+          }
+        >
           {types.error.message}
         </Banner>
       )}
@@ -51,10 +72,24 @@ export default function WorkItemTypesSection() {
                 <span className="flex-1" />
                 {isAdmin && (
                   <>
-                    <Button size="sm" variant="tertiary" iconOnly aria-label={`Edit ${type.name}`} onClick={() => setEditing(type)}>
+                    <Button
+                      size="sm"
+                      variant="tertiary"
+                      iconOnly
+                      aria-label={`Edit ${type.name}`}
+                      onClick={() => setEditing(type)}
+                    >
                       <PencilSimple />
                     </Button>
-                    <Button size="sm" variant="tertiary" iconOnly aria-label={`Remove ${type.name}`} disabled={types.data.length <= 1} onClick={() => setRemoving(type)}>
+                    <Button
+                      size="sm"
+                      variant="tertiary"
+                      iconOnly
+                      aria-label={`Remove ${type.name}`}
+                      disabled={types.data.length <= 1}
+                      onClick={() =>
+                        setRemoving(type)}
+                    >
                       <Trash />
                     </Button>
                   </>
@@ -69,8 +104,19 @@ export default function WorkItemTypesSection() {
           <Plus /> Add type
         </Button>
       )}
-      {editing && <TypeDialog type={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
-      {removing && types.data && <RemoveDialog type={removing} others={types.data.filter((t) => t.id !== removing.id)} onClose={() => setRemoving(null)} />}
+      {editing && (
+        <TypeDialog
+          type={editing === 'new' ? null : editing}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {removing && types.data && (
+        <RemoveDialog
+          type={removing}
+          others={types.data.filter((t) => t.id !== removing.id)}
+          onClose={() => setRemoving(null)}
+        />
+      )}
     </SettingsSection>
   );
 }
@@ -88,21 +134,34 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const fields = { name: name.trim(), icon, color };
-    if (type) update.mutate({ id: type.id, ...(fromTracker ? { icon, color } : fields) }, { onSuccess: onClose });
-    else create.mutate(fields, { onSuccess: onClose });
+    if (type) {
+      update.mutate({ id: type.id, ...(fromTracker ? { icon, color } : fields) }, {
+        onSuccess: onClose,
+      });
+    } else {
+      create.mutate(fields, { onSuccess: onClose });
+    }
   };
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         title={type ? `Edit ${type.name}` : 'Add a type'}
-        description={fromTracker ? `Its name comes from ${trackerName(type?.source ?? '')}; its icon and color are yours.` : undefined}
+        description={fromTracker
+          ? `Its name comes from ${trackerName(type?.source ?? '')}; its icon and color are yours.`
+          : undefined}
         footer={
           <>
             <DialogClose asChild>
               <Button>Cancel</Button>
             </DialogClose>
-            <Button variant="primary" type="submit" form="work-item-type" loading={pending} disabled={!name.trim()}>
+            <Button
+              variant="primary"
+              type="submit"
+              form="work-item-type"
+              loading={pending}
+              disabled={!name.trim()}
+            >
               {type ? 'Save' : 'Add type'}
             </Button>
           </>
@@ -111,7 +170,15 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
         <form id="work-item-type" onSubmit={submit} className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <TypeIcon type={{ icon, color, name: name || 'New type' }} className="size-6" />
-            <Input aria-label="Name" placeholder="e.g. Chore" maxLength={40} value={name} disabled={fromTracker} onChange={(e) => setName(e.target.value)} autoFocus={!fromTracker} />
+            <Input
+              aria-label="Name"
+              placeholder="e.g. Chore"
+              maxLength={40}
+              value={name}
+              disabled={fromTracker}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus={!fromTracker}
+            />
           </div>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-xs font-medium text-muted">Icon</legend>
@@ -164,7 +231,9 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
 }
 
 /** Remove a type; its items take another one first. */
-function RemoveDialog({ type, others, onClose }: { type: WorkItemType; others: WorkItemType[]; onClose: () => void }) {
+function RemoveDialog(
+  { type, others, onClose }: { type: WorkItemType; others: WorkItemType[]; onClose: () => void },
+) {
   const [reassignTo, setReassignTo] = useState(others[0]?.id ?? '');
   const remove = useDeleteType();
   return (
@@ -177,7 +246,12 @@ function RemoveDialog({ type, others, onClose }: { type: WorkItemType; others: W
             <DialogClose asChild>
               <Button>Cancel</Button>
             </DialogClose>
-            <Button variant="danger" loading={remove.isPending} disabled={!reassignTo} onClick={() => remove.mutate({ id: type.id, reassignTo }, { onSuccess: onClose })}>
+            <Button
+              variant="danger"
+              loading={remove.isPending}
+              disabled={!reassignTo}
+              onClick={() => remove.mutate({ id: type.id, reassignTo }, { onSuccess: onClose })}
+            >
               Remove {type.name}
             </Button>
           </>
@@ -188,7 +262,10 @@ function RemoveDialog({ type, others, onClose }: { type: WorkItemType; others: W
           <SelectContent>
             {others.map((other) => (
               <SelectItem key={other.id} value={other.id}>
-                <span className="flex items-center gap-2"><TypeIcon type={other} />{other.name}</span>
+                <span className="flex items-center gap-2">
+                  <TypeIcon type={other} />
+                  {other.name}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>

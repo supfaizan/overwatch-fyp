@@ -1,9 +1,5 @@
 'use client';
 
-import { ArrowSquareOut, BookOpen, Kanban } from '@phosphor-icons/react/ssr';
-import { useRouter } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
@@ -13,14 +9,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/compo
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
 import Tag from '@/shared/components/tag';
+import {
+  CONNECTION_STATUS,
+  CONNECTOR_CATEGORY,
+  type ConnectorCategory,
+} from '@/shared/connections/constants';
 import ConnectGithubButton, { useGithubLinkResult } from '@/shared/repos/connect-github-button';
 import { useInstallations } from '@/shared/repos/hooks';
 import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
-import { CONNECTION_STATUS, CONNECTOR_CATEGORY, type ConnectorCategory } from '@/shared/connections/constants';
 import { ROLE } from '@/shared/workspaces/types';
-import { useAddTarget, useAvailableTargets, useConnections, useConnectionStatus, useDisconnect, useStartAuthorization, useSyncNow } from '../hooks';
+import { ArrowSquareOut, BookOpen, Kanban } from '@phosphor-icons/react/ssr';
+import { useRouter } from 'next/navigation';
+import { type ReactNode, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  useAddTarget,
+  useAvailableTargets,
+  useConnections,
+  useConnectionStatus,
+  useDisconnect,
+  useStartAuthorization,
+  useSyncNow,
+} from '../hooks';
 import type { Connection, Target } from '../types';
 import { SettingsSection } from './settings-layout';
 
@@ -36,22 +48,40 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
   const status = useConnectionStatus();
 
   useEffect(() => {
-    if (!outcome) return;
+    if (!outcome) {
+      return;
+    }
     OUTCOMES[outcome]?.();
     router.replace('/settings/integrations'); // drop the outcome so a refresh doesn't toast again
   }, [outcome, router]);
 
   return (
-    <SettingsSection title="Integrations" description="The tools Overwatch reads from to understand your project.">
+    <SettingsSection
+      title="Integrations"
+      description="The tools Overwatch reads from to understand your project."
+    >
       {status.isPending && <Skeleton className="h-40 w-full" />}
       {status.isError && (
-        <Banner type="error" action={<Button size="sm" onClick={() => status.refetch()}>Retry</Button>}>
+        <Banner
+          type="error"
+          action={
+            <Button
+              size="sm"
+              onClick={() => status.refetch()}
+            >
+              Retry
+            </Button>
+          }
+        >
           {status.error.message}
         </Banner>
       )}
       {status.isSuccess && (
         <>
-          <SourceControl authorized={status.data.github.authorized} needsReauth={status.data.github.needs_reauth} />
+          <SourceControl
+            authorized={status.data.github.authorized}
+            needsReauth={status.data.github.needs_reauth}
+          />
           <Connectors />
         </>
       )}
@@ -59,11 +89,21 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
   );
 }
 
-function IntegrationCard({ icon, category, name, state, children }: { icon: ReactNode; category: string; name: string; state: ReactNode; children: ReactNode }) {
+function IntegrationCard(
+  { icon, category, name, state, children }: {
+    icon: ReactNode;
+    category: string;
+    name: string;
+    state: ReactNode;
+    children: ReactNode;
+  },
+) {
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-md border border-border [&_svg]:size-4">{icon}</span>
+        <span className="flex size-9 items-center justify-center rounded-md border border-border [&_svg]:size-4">
+          {icon}
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted">{category}</p>
           <p className="text-sm font-medium">{name}</p>
@@ -86,36 +126,50 @@ function SourceControl({ authorized, needsReauth }: { authorized: boolean; needs
       icon={<GithubMark />}
       category="Source control"
       name="GitHub"
-      state={
-        !authorized && !hasGithub ? <Tag>Not connected</Tag> : needsReauth || !authorized ? <Tag variant="warning">Needs reconnecting</Tag> : <Tag variant="success">Connected</Tag>
-      }
+      state={!authorized && !hasGithub
+        ? <Tag>Not connected</Tag>
+        : needsReauth || !authorized
+        ? <Tag variant="warning">Needs reconnecting</Tag>
+        : <Tag variant="success">Connected</Tag>}
     >
-      {!authorized && !hasGithub ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted">Connect your GitHub account to add repositories.</p>
-          <ConnectGithubButton returnTo="settings" />
-        </div>
-      ) : (
-        (needsReauth || !authorized) && (
-          <Banner type="warning" action={<ConnectGithubButton returnTo="settings" reconnect />}>
-            Your GitHub authorization expired or was revoked.
-          </Banner>
+      {!authorized && !hasGithub
+        ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted">Connect your GitHub account to add repositories.</p>
+            <ConnectGithubButton returnTo="settings" />
+          </div>
         )
-      )}
+        : (
+          (needsReauth || !authorized) && (
+            <Banner type="warning" action={<ConnectGithubButton returnTo="settings" reconnect />}>
+              Your GitHub authorization expired or was revoked.
+            </Banner>
+          )
+        )}
       {accounts.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm">
           {accounts.map((account) => (
             <li key={account.id} className="flex items-center justify-between gap-2">
               <span>
-                {account.account_login} <span className="text-muted">({account.account_type.toLowerCase()})</span>
+                {account.account_login}{' '}
+                <span className="text-muted">({account.account_type.toLowerCase()})</span>
               </span>
-              <span className="text-xs text-muted">{account.repository_selection === 'all' ? 'All repositories' : 'Selected repositories'}</span>
+              <span className="text-xs text-muted">
+                {account.repository_selection === 'all'
+                  ? 'All repositories'
+                  : 'Selected repositories'}
+              </span>
             </li>
           ))}
         </ul>
       )}
       {installations.data && (
-        <a href={installations.data.install_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline">
+        <a
+          href={installations.data.install_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline"
+        >
           Manage the GitHub App <ArrowSquareOut className="size-3.5" />
         </a>
       )}
@@ -126,14 +180,22 @@ function SourceControl({ authorized, needsReauth }: { authorized: boolean; needs
 // how each kind of connector is described
 const CATEGORY_COPY: Record<
   ConnectorCategory,
-  { icon: ReactNode; label: string; target: string; reconnect: string; disconnect: string; targetLabel: (target: Target) => string }
+  {
+    icon: ReactNode;
+    label: string;
+    target: string;
+    reconnect: string;
+    disconnect: string;
+    targetLabel: (target: Target) => string;
+  }
 > = {
   [CONNECTOR_CATEGORY.workItems]: {
     icon: <Kanban />,
     label: 'Issue tracker',
     target: 'project',
     reconnect: 'to edit, move and create its tickets from the board',
-    disconnect: 'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
+    disconnect:
+      'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
     targetLabel: (target) => (target.name ? `${target.key} · ${target.name}` : target.key),
   },
   [CONNECTOR_CATEGORY.documents]: {
@@ -141,7 +203,8 @@ const CATEGORY_COPY: Record<
     label: 'Docs',
     target: 'space',
     reconnect: 'to edit its pages in Docs',
-    disconnect: 'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
+    disconnect:
+      'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
     targetLabel: (target) => [target.name ?? target.key, target.id].filter(Boolean).join(' · '),
   },
 };
@@ -149,15 +212,29 @@ const CATEGORY_COPY: Record<
 function Connectors() {
   const connections = useConnections();
 
-  if (connections.isPending) return <Skeleton className="h-32 w-full" />;
+  if (connections.isPending) {
+    return <Skeleton className="h-32 w-full" />;
+  }
   if (connections.isError) {
     return (
-      <Banner type="error" action={<Button size="sm" onClick={() => connections.refetch()}>Retry</Button>}>
+      <Banner
+        type="error"
+        action={
+          <Button
+            size="sm"
+            onClick={() => connections.refetch()}
+          >
+            Retry
+          </Button>
+        }
+      >
         {connections.error.message}
       </Banner>
     );
   }
-  return connections.data.map((connection) => <ConnectorCard key={connection.provider} connection={connection} />);
+  return connections.data.map((connection) => (
+    <ConnectorCard key={connection.provider} connection={connection} />
+  ));
 }
 
 function ConnectorCard({ connection }: { connection: Connection }) {
@@ -175,12 +252,25 @@ function ConnectorCard({ connection }: { connection: Connection }) {
       icon={copy.icon}
       category={copy.label}
       name={name}
-      state={
-        status === CONNECTION_STATUS.needsReauth ? <Tag variant="warning">Needs reconnect</Tag> : connected ? <Tag variant="success">Connected</Tag> : <Tag>Not connected</Tag>
-      }
+      state={status === CONNECTION_STATUS.needsReauth
+        ? <Tag variant="warning">Needs reconnect</Tag>
+        : connected
+        ? <Tag variant="success">Connected</Tag>
+        : <Tag>Not connected</Tag>}
     >
       {isAdmin && connected && !can_write && (
-        <Banner type="warning" action={<Button size="sm" loading={connect.isPending} onClick={() => connect.mutate(provider)}>Reconnect</Button>}>
+        <Banner
+          type="warning"
+          action={
+            <Button
+              size="sm"
+              loading={connect.isPending}
+              onClick={() => connect.mutate(provider)}
+            >
+              Reconnect
+            </Button>
+          }
+        >
           Reconnect {name} {copy.reconnect}.
         </Banner>
       )}
@@ -194,64 +284,98 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           {targets.map((target) => (
             <li key={target.key} className="flex items-center justify-between gap-2">
               <span className="min-w-0 truncate">
-                {category === CONNECTOR_CATEGORY.documents ? (
-                  <span className="font-medium">{target.name ?? target.key}</span>
-                ) : (
-                  <>
-                    <span className="font-medium">{target.key}</span>
-                    {target.name && <span className="text-muted"> · {target.name}</span>}
-                  </>
-                )}
-                {target.sync_error && <span className="text-danger"> · {target.sync_error}</span>}
+                {category === CONNECTOR_CATEGORY.documents
+                  ? <span className="font-medium">{target.name ?? target.key}</span>
+                  : (
+                    <>
+                      <span className="font-medium">{target.key}</span>
+                      {target.name && <span className="text-muted">· {target.name}</span>}
+                    </>
+                  )}
+                {target.sync_error && <span className="text-danger">· {target.sync_error}</span>}
               </span>
               <StatusTag status={target.sync_status} done="Synced" />
             </li>
           ))}
         </ul>
       )}
-      {isAdmin && connected && <AddTarget provider={provider} noun={copy.target} label={copy.targetLabel} synced={targets.map((t) => t.key)} />}
+      {isAdmin && connected && (
+        <AddTarget
+          provider={provider}
+          noun={copy.target}
+          label={copy.targetLabel}
+          synced={targets.map((t) => t.key)}
+        />
+      )}
       {isAdmin && (
         <div className="flex gap-2">
-          {connected ? (
-            <>
-              {targets.length > 0 && (
-                <Button size="sm" loading={sync.isPending} onClick={() => sync.mutate(provider)}>
-                  Sync now
-                </Button>
-              )}
-              <ConfirmDialog
-                trigger={<Button size="sm">Disconnect</Button>}
-                title={`Disconnect ${name}?`}
-                description={copy.disconnect}
-                confirmLabel={`Disconnect ${name}`}
-                pending={disconnect.isPending}
-                onConfirm={(close) => disconnect.mutate(provider, { onSuccess: close })}
-              />
-            </>
-          ) : (
-            <Button size="sm" variant="primary" loading={connect.isPending} onClick={() => connect.mutate(provider)}>
-              {status === CONNECTION_STATUS.needsReauth ? `Reconnect ${name}` : `Connect ${name}`}
-            </Button>
-          )}
+          {connected
+            ? (
+              <>
+                {targets.length > 0 && (
+                  <Button
+                    size="sm"
+                    loading={sync.isPending}
+                    onClick={() => sync.mutate(provider)}
+                  >
+                    Sync now
+                  </Button>
+                )}
+                <ConfirmDialog
+                  trigger={<Button size="sm">Disconnect</Button>}
+                  title={`Disconnect ${name}?`}
+                  description={copy.disconnect}
+                  confirmLabel={`Disconnect ${name}`}
+                  pending={disconnect.isPending}
+                  onConfirm={(close) => disconnect.mutate(provider, { onSuccess: close })}
+                />
+              </>
+            )
+            : (
+              <Button
+                size="sm"
+                variant="primary"
+                loading={connect.isPending}
+                onClick={() => connect.mutate(provider)}
+              >
+                {status === CONNECTION_STATUS.needsReauth ? `Reconnect ${name}` : `Connect ${name}`}
+              </Button>
+            )}
         </div>
       )}
     </IntegrationCard>
   );
 }
 
-function AddTarget({ provider, noun, label, synced }: { provider: string; noun: string; label: (target: Target) => string; synced: string[] }) {
+function AddTarget(
+  { provider, noun, label, synced }: {
+    provider: string;
+    noun: string;
+    label: (target: Target) => string;
+    synced: string[];
+  },
+) {
   const available = useAvailableTargets(provider);
   const add = useAddTarget();
   const [selected, setSelected] = useState('');
   const options = (available.data ?? []).filter((target) => !synced.includes(target.key));
   const target = options.find((option) => option.key === selected);
 
-  if (available.isPending) return <Skeleton className="h-9 w-full" />;
-  if (options.length === 0) return null;
+  if (available.isPending) {
+    return <Skeleton className="h-9 w-full" />;
+  }
+  if (options.length === 0) {
+    return null;
+  }
   return (
     <div className="flex gap-2">
       <Select value={selected} onValueChange={setSelected}>
-        <SelectTrigger className="flex-1" size="sm" aria-label={`${noun} to sync`} placeholder={`Add a ${noun} to sync`} />
+        <SelectTrigger
+          className="flex-1"
+          size="sm"
+          aria-label={`${noun} to sync`}
+          placeholder={`Add a ${noun} to sync`}
+        />
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.key} value={option.key}>
@@ -260,7 +384,13 @@ function AddTarget({ provider, noun, label, synced }: { provider: string; noun: 
           ))}
         </SelectContent>
       </Select>
-      <Button size="sm" disabled={!target} loading={add.isPending} onClick={() => target && add.mutate({ provider, target }, { onSuccess: () => setSelected('') })}>
+      <Button
+        size="sm"
+        disabled={!target}
+        loading={add.isPending}
+        onClick={() =>
+          target && add.mutate({ provider, target }, { onSuccess: () => setSelected('') })}
+      >
         Add
       </Button>
     </div>

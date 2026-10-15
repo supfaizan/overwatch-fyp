@@ -1,10 +1,5 @@
 'use client';
 
-import { UsersThree } from '@phosphor-icons/react/ssr';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
-import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
 import { queryKeys } from '@/shared/api/query-keys';
 import Banner from '@/shared/components/banner';
@@ -17,7 +12,12 @@ import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
 import { useSwitchWorkspace } from '@/shared/workspaces/hooks';
 import { ROLE, type Workspace } from '@/shared/workspaces/types';
-import { acceptInvite, INVITE_KIND, previewInvite, publicPreview, type InvitePreview } from './api';
+import { UsersThree } from '@phosphor-icons/react/ssr';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { type ReactNode, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { acceptInvite, INVITE_KIND, type InvitePreview, previewInvite, publicPreview } from './api';
 import { forgetInviteToken, takeInviteToken } from './token';
 
 const keys = {
@@ -35,7 +35,9 @@ type InviteProps = {
 };
 
 function invitedAs(preview: InvitePreview): string {
-  return `@${preview.invited_by} invited you as ${preview.role === ROLE.admin ? 'an admin' : 'a member'}.`;
+  return `@${preview.invited_by} invited you as ${
+    preview.role === ROLE.admin ? 'an admin' : 'a member'
+  }.`;
 }
 
 /** Join a workspace from an invite link: signed in, accept it; signed out, sign in or create an account first. */
@@ -54,17 +56,19 @@ export default function Invite({ renderSignIn, renderSignUp }: InviteProps) {
   if (token === null) {
     return (
       <Shell>
-        <Banner type="error">This invite link is incomplete. Open it again from the email or message it came in.</Banner>
+        <Banner type="error">
+          This invite link is incomplete. Open it again from the email or message it came in.
+        </Banner>
       </Shell>
     );
   }
-  return status === 'authenticated' ? (
-    <Shell>
-      <AcceptInvite token={token} />
-    </Shell>
-  ) : (
-    <GuestInvite token={token} renderSignIn={renderSignIn} renderSignUp={renderSignUp} />
-  );
+  return status === 'authenticated'
+    ? (
+      <Shell>
+        <AcceptInvite token={token} />
+      </Shell>
+    )
+    : <GuestInvite token={token} renderSignIn={renderSignIn} renderSignUp={renderSignUp} />;
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -82,7 +86,8 @@ function Heading({ preview }: { preview: InvitePreview }) {
       <div className="flex flex-col gap-1">
         <h1 className="text-lg font-bold">Join {preview.workspace_name}</h1>
         <p className="text-sm text-muted">
-          {invitedAs(preview)} You&apos;ll see its repositories and integrations alongside your own workspace.
+          {invitedAs(preview)}{' '}
+          You&apos;ll see its repositories and integrations alongside your own workspace.
         </p>
       </div>
     </div>
@@ -91,7 +96,11 @@ function Heading({ preview }: { preview: InvitePreview }) {
 
 function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { token: string }) {
   // a used or expired link stays that way, so a failed preview isn't retried
-  const preview = useQuery({ queryKey: keys.publicPreview(token), queryFn: () => publicPreview(token), retry: false });
+  const preview = useQuery({
+    queryKey: keys.publicPreview(token),
+    queryFn: () => publicPreview(token),
+    retry: false,
+  });
 
   if (preview.isPending) {
     return (
@@ -115,8 +124,17 @@ function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { toke
   if (data.kind === INVITE_KIND.email && data.email) {
     const title = `Join ${data.workspace_name} on Overwatch`;
     return data.account_exists
-      ? renderSignIn({ email: data.email, title: `Sign in to join ${data.workspace_name}`, description: invitedAs(data) })
-      : renderSignUp({ token, email: data.email, title, description: `${invitedAs(data)} Create your account to join.` });
+      ? renderSignIn({
+        email: data.email,
+        title: `Sign in to join ${data.workspace_name}`,
+        description: invitedAs(data),
+      })
+      : renderSignUp({
+        token,
+        email: data.email,
+        title,
+        description: `${invitedAs(data)} Create your account to join.`,
+      });
   }
   return (
     <Shell>
@@ -137,7 +155,11 @@ function AcceptInvite({ token }: { token: string }) {
   const user = useSession((state) => state.user);
   const queryClient = useQueryClient();
   const switchTo = useSwitchWorkspace();
-  const preview = useQuery<InvitePreview, ApiError>({ queryKey: keys.preview(token), queryFn: () => previewInvite(token), retry: false });
+  const preview = useQuery<InvitePreview, ApiError>({
+    queryKey: keys.preview(token),
+    queryFn: () => previewInvite(token),
+    retry: false,
+  });
   const accept = useMutation<Workspace, ApiError>({
     mutationFn: () => acceptInvite(token),
     onSuccess: async (workspace) => {
@@ -150,14 +172,19 @@ function AcceptInvite({ token }: { token: string }) {
     onError: (error) => toast.error(error.message),
   });
 
-  if (preview.isPending) return <Skeleton className="h-24 w-full" />;
+  if (preview.isPending) {
+    return <Skeleton className="h-24 w-full" />;
+  }
   if (preview.isError) {
     const wrongAccount = preview.error.errorCode === INVITE_ERROR.wrongAccount;
-    const invited = typeof preview.error.meta.invited === 'string' ? ` (${preview.error.meta.invited})` : '';
+    const invited = typeof preview.error.meta.invited === 'string'
+      ? ` (${preview.error.meta.invited})`
+      : '';
     return (
       <>
         <Banner type="error">
-          {wrongAccount ? `This invite is for another account${invited}.` : preview.error.message}{' '}
+          {wrongAccount ? `This invite is for another account${invited}.` : preview.error.message}
+          {' '}
           {user && <>You&apos;re signed in as {handle(user)}.</>}
         </Banner>
         <div className="flex justify-end gap-2">

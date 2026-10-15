@@ -1,7 +1,7 @@
 'use client';
 
 import { DotsThree } from '@phosphor-icons/react/ssr';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, type NodeProps, Position } from '@xyflow/react';
 import { useViewStore } from '../store';
 import type { OverflowFlowNode } from '../types';
 

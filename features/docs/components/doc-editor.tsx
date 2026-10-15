@@ -1,5 +1,7 @@
 'use client';
 
+import { RICH_TEXT_CLASS } from '@/shared/components/rich-text-editor';
+import { cn } from '@/shared/lib/cn';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { TableKit } from '@tiptap/extension-table';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -8,8 +10,6 @@ import { Markdown } from '@tiptap/markdown';
 import { type Editor, EditorContent, type JSONContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useRef } from 'react';
-import { RICH_TEXT_CLASS } from '@/shared/components/rich-text-editor';
-import { cn } from '@/shared/lib/cn';
 import { Expand, Panel } from '../blocks';
 import { isWebLink } from '../embeds';
 import { DocImage } from '../image';
@@ -47,7 +47,10 @@ const extensions = (sourceName: string) => [
   SourceInline.configure({ sourceName }),
   SourceMark,
   Markdown,
-  Placeholder.configure({ placeholder: "Write, or use the toolbar above. Markdown works too: '# ' heading, '- ' list, '[] ' checklist…" }),
+  Placeholder.configure({
+    placeholder:
+      "Write, or use the toolbar above. Markdown works too: '# ' heading, '- ' list, '[] ' checklist…",
+  }),
 ];
 
 const TASK_LIST_CLASS = cn(
@@ -103,7 +106,8 @@ const IMAGE_CLASS = cn(
   '[&_img[data-uploading]]:animate-pulse [&_img[data-uploading]]:opacity-60',
 );
 
-const imageFiles = (list: FileList | undefined | null) => Array.from(list ?? []).filter((file) => file.type.startsWith('image/'));
+const imageFiles = (list: FileList | undefined | null) =>
+  Array.from(list ?? []).filter((file) => file.type.startsWith('image/'));
 
 type DocEditorProps = {
   /** Read once: the editor owns the content after that. */
@@ -120,7 +124,9 @@ type DocEditorProps = {
 };
 
 /** A page's body: full width and borderless; the toolbar above drives it. */
-export default function DocEditor({ initial, editable, onEditor, onChange, onImages, sourceName = 'its source' }: DocEditorProps) {
+export default function DocEditor(
+  { initial, editable, onEditor, onChange, onImages, sourceName = 'its source' }: DocEditorProps,
+) {
   const handlers = useRef({ onEditor, onChange, onImages });
   useEffect(() => {
     handlers.current = { onEditor, onChange, onImages };
@@ -132,7 +138,21 @@ export default function DocEditor({ initial, editable, onEditor, onChange, onIma
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     editorProps: {
-      attributes: { class: cn('min-h-[60vh] pb-24 text-[15px]', RICH_TEXT_CLASS, TASK_LIST_CLASS, TABLE_CLASS, LAYOUT_CLASS, INLINE_CLASS, IMAGE_CLASS, SOURCE_CLASS), 'aria-label': 'Page content', 'aria-multiline': 'true', role: 'textbox' },
+      attributes: {
+        class: cn(
+          'min-h-[60vh] pb-24 text-[15px]',
+          RICH_TEXT_CLASS,
+          TASK_LIST_CLASS,
+          TABLE_CLASS,
+          LAYOUT_CLASS,
+          INLINE_CLASS,
+          IMAGE_CLASS,
+          SOURCE_CLASS,
+        ),
+        'aria-label': 'Page content',
+        'aria-multiline': 'true',
+        role: 'textbox',
+      },
       // pasted or dropped image files upload; a link pasted on an empty line becomes a card (or an
       // embed, where its site allows); anything else pastes and drops as usual
       handlePaste: (view, event) => {
@@ -143,22 +163,40 @@ export default function DocEditor({ initial, editable, onEditor, onChange, onIma
         }
         const text = event.clipboardData?.getData('text/plain') ?? '';
         const { empty, $from } = view.state.selection;
-        if (!isWebLink(text) || !empty || $from.parent.type.name !== 'paragraph' || $from.parent.content.size) return false;
-        view.dispatch(view.state.tr.replaceSelectionWith(cardFor(view.state.schema, text.trim())).scrollIntoView());
+        if (
+          !isWebLink(text) || !empty || $from.parent.type.name !== 'paragraph'
+          || $from.parent.content.size
+        ) {
+          return false;
+        }
+        view.dispatch(
+          view.state.tr.replaceSelectionWith(cardFor(view.state.schema, text.trim()))
+            .scrollIntoView(),
+        );
         return true;
       },
       handleDrop: (view, event, _slice, moved) => {
         const files = moved ? [] : imageFiles(event.dataTransfer?.files);
-        if (!files.length) return false;
-        handlers.current.onImages(files, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos);
+        if (!files.length) {
+          return false;
+        }
+        handlers.current.onImages(
+          files,
+          view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos,
+        );
         return true;
       },
       handleDOMEvents: {
         // runs before the resize plugin's own mousedown: a drag on a column edge works with real widths,
         // an inner edge is dragged here (the table keeps its width), the last edge by the plugin
         mousedown: (view, event) => {
-          const table = view.dom.classList.contains('resize-cursor') && event.target instanceof Element ? event.target.closest('table') : null;
-          if (!table) return false;
+          const table =
+            view.dom.classList.contains('resize-cursor') && event.target instanceof Element
+              ? event.target.closest('table')
+              : null;
+          if (!table) {
+            return false;
+          }
           pinColumnWidths(view, table);
           return dragInnerColumnEdge(view, event);
         },

@@ -1,9 +1,9 @@
 'use client';
 
-import { CaretDown, CaretUp } from '@phosphor-icons/react/ssr';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { MouseEvent, ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
+import { CaretDown, CaretUp } from '@phosphor-icons/react/ssr';
+import { Handle, type NodeProps, Position } from '@xyflow/react';
+import type { MouseEvent, ReactNode } from 'react';
 import { useViewOptions } from '../hooks';
 import { describeContents, describeNode } from '../lib/appearance';
 import { useViewStore } from '../store';
@@ -61,23 +61,27 @@ export default function NodeCard({ id, data }: NodeProps<GraphFlowNode>) {
           data.expanded ? 'opacity-100' : 'opacity-0',
         )}
       >
-        {!isRoot &&
-          (data.expanded ? (
-            <LevelButton label="Close this folder" onClick={() => close(id)}>
-              <CaretUp aria-hidden />
-            </LevelButton>
-          ) : (
-            data.expandable && (
-              <LevelButton
-                label={paged ? `Open: ${data.child_count} inside, first ${options?.page_size} drawn` : `Open: ${data.child_count} inside`}
-                onClick={() => open(id)}
-                warn={paged}
-              >
-                <CaretDown aria-hidden />
-                {data.child_count}
+        {!isRoot
+          && (data.expanded
+            ? (
+              <LevelButton label="Close this folder" onClick={() => close(id)}>
+                <CaretUp aria-hidden />
               </LevelButton>
             )
-          ))}
+            : (
+              data.expandable && (
+                <LevelButton
+                  label={paged
+                    ? `Open: ${data.child_count} inside, first ${options?.page_size} drawn`
+                    : `Open: ${data.child_count} inside`}
+                  onClick={() => open(id)}
+                  warn={paged}
+                >
+                  <CaretDown aria-hidden />
+                  {data.child_count}
+                </LevelButton>
+              )
+            ))}
       </div>
 
       <Handle type="source" position={Position.Bottom} className={handle} />
@@ -85,7 +89,14 @@ export default function NodeCard({ id, data }: NodeProps<GraphFlowNode>) {
   );
 }
 
-function LevelButton({ label, onClick, warn, children }: { label: string; onClick: () => void; warn?: boolean; children: ReactNode }) {
+function LevelButton(
+  { label, onClick, warn, children }: {
+    label: string;
+    onClick: () => void;
+    warn?: boolean;
+    children: ReactNode;
+  },
+) {
   return (
     <button
       type="button"

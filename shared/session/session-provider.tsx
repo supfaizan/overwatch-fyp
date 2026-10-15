@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
 import { api } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/envelope';
+import { type ReactNode, useEffect } from 'react';
 import { endSession, expiresIn, onSessionBroadcast, refreshSession } from './refresh';
-import { useSession, type User } from './store';
+import { type User, useSession } from './store';
 
 // refresh this long before the access token expires
 const REFRESH_EARLY_MS = 60_000;
@@ -19,7 +19,9 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
     const timer = setTimeout(() => {
       refreshSession().catch(signOutIfRejected);
     }, Math.max(0, expiresIn(token) - REFRESH_EARLY_MS));
@@ -30,7 +32,9 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
 }
 
 async function restore(): Promise<void> {
-  if (useSession.getState().status !== 'loading') return; // already restored this page load
+  if (useSession.getState().status !== 'loading') {
+    return;
+  } // already restored this page load
   try {
     await refreshSession();
     useSession.getState().setUser(await api.get<User>('/me'));
@@ -42,5 +46,7 @@ async function restore(): Promise<void> {
 
 function signOutIfRejected(error: unknown): void {
   // a dropped connection isn't a sign-out; only the server rejecting the session is
-  if (error instanceof ApiError && error.status === 401) endSession();
+  if (error instanceof ApiError && error.status === 401) {
+    endSession();
+  }
 }

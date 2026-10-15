@@ -4,10 +4,19 @@ import type { User } from '@/shared/session/store';
 import type { Workspace } from '@/shared/workspaces/types';
 import type { UsernameProblem } from './constants';
 import { rememberDestination } from './redirect';
-import type { ForgotPasswordValues, InviteSignUpValues, SignInValues, SignUpValues } from './schemas';
+import type {
+  ForgotPasswordValues,
+  InviteSignUpValues,
+  SignInValues,
+  SignUpValues,
+} from './schemas';
 
 export type ChallengeIssued = { challenge_id: string; email: string; resend_available_in: number };
-export type UsernameAvailability = { username: string; available: boolean; reason: UsernameProblem | null };
+export type UsernameAvailability = {
+  username: string;
+  available: boolean;
+  reason: UsernameProblem | null;
+};
 type AccessToken = { access_token: string };
 
 /** Leave for GitHub; the backend redirects back to /auth/complete (or /sign-in?error=...). */
@@ -20,11 +29,15 @@ export const signUp = (values: SignUpValues) => api.post<ChallengeIssued>('/auth
 export const signUpWithInvite = (values: InviteSignUpValues & { token: string }) =>
   api.post<AccessToken & { workspace: Workspace }>('/auth/signup/invite', values);
 export const signIn = (values: SignInValues) => api.post<AccessToken>('/auth/login', values);
-export const verifyEmail = (challengeId: string, code: string) => api.post<AccessToken>('/auth/email/verify', { challenge_id: challengeId, code });
-export const resendCode = (challengeId: string) => api.post<{ resend_available_in: number }>('/auth/otp/resend', { challenge_id: challengeId });
-export const requestPasswordReset = (values: ForgotPasswordValues) => api.post<ChallengeIssued>('/auth/password/forgot', values);
+export const verifyEmail = (challengeId: string, code: string) =>
+  api.post<AccessToken>('/auth/email/verify', { challenge_id: challengeId, code });
+export const resendCode = (challengeId: string) =>
+  api.post<{ resend_available_in: number }>('/auth/otp/resend', { challenge_id: challengeId });
+export const requestPasswordReset = (values: ForgotPasswordValues) =>
+  api.post<ChallengeIssued>('/auth/password/forgot', values);
 export const resetPassword = (challengeId: string, code: string, password: string) =>
   api.post<null>('/auth/password/reset', { challenge_id: challengeId, code, password });
 export const checkUsername = (username: string, signal?: AbortSignal) =>
   api.get<UsernameAvailability>('/auth/username-availability', { params: { username }, signal });
-export const setUsername = (username: string) => api.request<User>({ method: 'PUT', url: '/me/username', data: { username } });
+export const setUsername = (username: string) =>
+  api.request<User>({ method: 'PUT', url: '/me/username', data: { username } });

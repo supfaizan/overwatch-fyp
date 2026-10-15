@@ -1,11 +1,11 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { useForm, useWatch } from 'react-hook-form';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { useSession } from '@/shared/session/store';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useForm, useWatch } from 'react-hook-form';
 import { setUsername } from '../api';
 import { AUTH_ERROR } from '../constants';
 import { applyServerErrors } from '../form-errors';
@@ -18,27 +18,43 @@ import UsernameField, { useUsernameAvailability } from './username-input';
 export default function ChooseUsername({ from }: { from?: string }) {
   const router = useRouter();
   const setUser = useSession((state) => state.setUser);
-  const form = useForm<UsernameValues>({ resolver: zodResolver(usernameSchema), defaultValues: { username: '' } });
+  const form = useForm<UsernameValues>({
+    resolver: zodResolver(usernameSchema),
+    defaultValues: { username: '' },
+  });
   const { errors, isSubmitting } = form.formState;
   const username = useWatch({ control: form.control, name: 'username' });
   const availability = useUsernameAvailability(username);
 
   const submit = form.handleSubmit(async (values) => {
-    if (availability.problem) return form.setError('username', { message: availability.problem }, { shouldFocus: true });
+    if (availability.problem) {
+      return form.setError('username', { message: availability.problem }, { shouldFocus: true });
+    }
     try {
       setUser(await setUsername(values.username));
       router.replace(safeDestination(from));
     } catch (failure) {
       const apiError = applyServerErrors(failure, form.setError, ['username']);
-      if (apiError.errorCode === AUTH_ERROR.usernameAlreadySet) router.replace(safeDestination(from));
+      if (apiError.errorCode === AUTH_ERROR.usernameAlreadySet) {
+        router.replace(safeDestination(from));
+      }
     }
   });
 
   return (
-    <AuthCard title="Choose a username" description="It's how teammates mention and find you. You can't change it later.">
+    <AuthCard
+      title="Choose a username"
+      description="It's how teammates mention and find you. You can't change it later."
+    >
       {errors.root?.message && <Banner type="error">{errors.root.message}</Banner>}
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
-        <UsernameField value={username} availability={availability} error={errors.username?.message} registration={form.register('username')} autoFocus />
+        <UsernameField
+          value={username}
+          availability={availability}
+          error={errors.username?.message}
+          registration={form.register('username')}
+          autoFocus
+        />
         <Button type="submit" variant="primary" size="lg" loading={isSubmitting}>
           Continue
         </Button>

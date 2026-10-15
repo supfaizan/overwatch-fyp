@@ -1,11 +1,11 @@
 'use client';
 
+import Steps from '@/shared/components/steps';
 import { useRouter, useSelectedLayoutSegment } from 'next/navigation';
 import { useEffect } from 'react';
-import Steps from '@/shared/components/steps';
 import { useOnboardingStatus } from '../hooks';
 import { isJiraSkipped } from '../jira-skip';
-import { STEPS, currentStep, stepIndex } from '../steps';
+import { currentStep, stepIndex, STEPS } from '../steps';
 
 /** The step indicator; also sends the user back if they open a step they haven't reached. */
 export default function OnboardingProgress() {
@@ -15,10 +15,20 @@ export default function OnboardingProgress() {
 
   useEffect(() => {
     // wait out refetches: a step just completed is only reflected once fresh status arrives
-    if (!segment || !status.data || status.isFetching) return;
+    if (!segment || !status.data || status.isFetching) {
+      return;
+    }
     const reached = currentStep(status.data, isJiraSkipped());
-    if (stepIndex(segment) > stepIndex(reached)) router.replace(`/onboarding/${reached}`);
+    if (stepIndex(segment) > stepIndex(reached)) {
+      router.replace(`/onboarding/${reached}`);
+    }
   }, [segment, status.data, status.isFetching, router]);
 
-  return <Steps steps={STEPS.map((step) => step.label)} current={stepIndex(segment ?? undefined)} className="justify-center" />;
+  return (
+    <Steps
+      steps={STEPS.map((step) => step.label)}
+      current={stepIndex(segment ?? undefined)}
+      className="justify-center"
+    />
+  );
 }

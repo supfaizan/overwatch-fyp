@@ -1,8 +1,14 @@
 'use client';
 
-import { type QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import type { ApiError } from '@/shared/api/envelope';
+import {
+  type QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { toast } from 'sonner';
 import * as docsApi from './api';
 import { type ChildPage, type Document, type DocumentSummary, PUSH_STATE } from './types';
 
@@ -20,8 +26,17 @@ const showError = (error: ApiError) => toast.error(error.message);
 
 /** Changes a node wherever the tree has it loaded, without refetching any level. */
 function patchSummary(queryClient: QueryClient, id: string, patch: Partial<DocumentSummary>) {
-  queryClient.setQueriesData<ChildPages>({ queryKey: [...root, 'children'] }, (data) =>
-    data && { ...data, pages: data.pages.map((page) => ({ ...page, nodes: page.nodes.map((node) => (node.id === id ? { ...node, ...patch } : node)) })) },
+  queryClient.setQueriesData<ChildPages>(
+    { queryKey: [...root, 'children'] },
+    (data) =>
+      data
+      && {
+        ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          nodes: page.nodes.map((node) => (node.id === id ? { ...node, ...patch } : node)),
+        })),
+      },
   );
 }
 
@@ -31,7 +46,11 @@ export function useChildren(parentId: string | null, enabled = true) {
     queryKey: keys.children(parentId),
     queryFn: ({ pageParam }) => docsApi.getChildren(parentId, pageParam),
     initialPageParam: 0,
-    getNextPageParam: (last) => (last.offset + last.nodes.length < last.total ? last.offset + last.nodes.length : undefined),
+    getNextPageParam: (
+      last,
+    ) => (last.offset + last.nodes.length < last.total
+      ? last.offset + last.nodes.length
+      : undefined),
     enabled,
   });
   return { ...query, nodes: query.data?.pages.flatMap((page) => page.nodes) ?? [] };
@@ -57,7 +76,9 @@ export function useCreateDocument() {
     mutationFn: docsApi.createDocument,
     onSuccess: (doc) => {
       queryClient.setQueryData(keys.node(doc.id), doc);
-      if (doc.parent_id) patchSummary(queryClient, doc.parent_id, { has_children: true });
+      if (doc.parent_id) {
+        patchSummary(queryClient, doc.parent_id, { has_children: true });
+      }
       void queryClient.invalidateQueries({ queryKey: keys.children(doc.parent_id) });
     },
     onError: showError,
@@ -72,7 +93,9 @@ export function useRenameDocument() {
     onMutate: ({ id, title }) => {
       const previous = queryClient.getQueryData<Document>(keys.node(id));
       patchSummary(queryClient, id, { title });
-      if (previous) queryClient.setQueryData(keys.node(id), { ...previous, title });
+      if (previous) {
+        queryClient.setQueryData(keys.node(id), { ...previous, title });
+      }
       return { previous };
     },
     onError: (error: ApiError, { id }, context) => {
@@ -103,7 +126,9 @@ export function useArchiveDocument() {
       queryClient.removeQueries({ queryKey: keys.node(id) });
       void queryClient.invalidateQueries({ queryKey: [...root, 'children'] });
       void queryClient.invalidateQueries({ queryKey: keys.archived });
-      if (choice.children === 'move') void queryClient.invalidateQueries({ queryKey: [...root, 'node'] });
+      if (choice.children === 'move') {
+        void queryClient.invalidateQueries({ queryKey: [...root, 'node'] });
+      }
     },
     onError: showError,
   });
@@ -114,7 +139,11 @@ export function useArchived() {
     queryKey: keys.archived,
     queryFn: ({ pageParam }) => docsApi.getArchived(pageParam),
     initialPageParam: 0,
-    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
+    getNextPageParam: (
+      last,
+    ) => (last.offset + last.items.length < last.total
+      ? last.offset + last.items.length
+      : undefined),
   });
   return { ...query, items: query.data?.pages.flatMap((page) => page.items) ?? [] };
 }
@@ -159,5 +188,11 @@ const PREVIEW_STALE_MS = 60 * 60_000;
 
 /** A link's title, picture and icon, for its card; `enabled` once there's a link to read. */
 export function useLinkPreview(url: string, enabled = true) {
-  return useQuery({ queryKey: keys.linkPreview(url), queryFn: () => docsApi.getLinkPreview(url), enabled: enabled && Boolean(url), staleTime: PREVIEW_STALE_MS, retry: false });
+  return useQuery({
+    queryKey: keys.linkPreview(url),
+    queryFn: () => docsApi.getLinkPreview(url),
+    enabled: enabled && Boolean(url),
+    staleTime: PREVIEW_STALE_MS,
+    retry: false,
+  });
 }

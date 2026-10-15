@@ -1,16 +1,16 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type ReactNode, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
 import { startSession } from '@/shared/session/sign-in';
 import { useSession } from '@/shared/session/store';
-import { signIn, type ChallengeIssued } from '../api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { type ReactNode, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { type ChallengeIssued, signIn } from '../api';
 import { saveChallenge } from '../challenge';
 import { AUTH_ERROR, CHALLENGE_PURPOSE } from '../constants';
 import { signInErrorMessage } from '../errors';
@@ -32,16 +32,30 @@ type SignInProps = {
   description?: ReactNode;
 };
 
-export default function SignIn({ error, from, reset, email, title = 'Sign in', description = 'Welcome back. Sign in with your email or GitHub.' }: SignInProps) {
+export default function SignIn(
+  {
+    error,
+    from,
+    reset,
+    email,
+    title = 'Sign in',
+    description = 'Welcome back. Sign in with your email or GitHub.',
+  }: SignInProps,
+) {
   const status = useSession((state) => state.status);
   const router = useRouter();
   const message = signInErrorMessage(error);
-  const form = useForm<SignInValues>({ resolver: zodResolver(signInSchema), defaultValues: { email: email ?? '', password: '' } });
+  const form = useForm<SignInValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: email ?? '', password: '' },
+  });
   const { errors, isSubmitting } = form.formState;
 
   // already signed in (e.g. a bookmarked /sign-in): skip straight ahead
   useEffect(() => {
-    if (status === 'authenticated' && !isSubmitting) router.replace(safeDestination(from));
+    if (status === 'authenticated' && !isSubmitting) {
+      router.replace(safeDestination(from));
+    }
   }, [status, from, router, isSubmitting]);
 
   const submit = form.handleSubmit(async (values) => {
@@ -62,7 +76,11 @@ export default function SignIn({ error, from, reset, email, title = 'Sign in', d
   return (
     <AuthCard title={title} description={description}>
       {message && <Banner type="error">{message}</Banner>}
-      {reset && <Banner type="success">Your password was changed. Sign in with the new one.</Banner>}
+      {reset && (
+        <Banner type="success">
+          Your password was changed. Sign in with the new one.
+        </Banner>
+      )}
       {errors.root?.message && <Banner type="error">{errors.root.message}</Banner>}
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
         <FormField id="email" label="Email" error={errors.email?.message}>
@@ -85,7 +103,11 @@ export default function SignIn({ error, from, reset, email, title = 'Sign in', d
             </Link>
           }
         >
-          <PasswordInput autoComplete="current-password" {...describedBy('password', errors.password?.message)} {...form.register('password')} />
+          <PasswordInput
+            autoComplete="current-password"
+            {...describedBy('password', errors.password?.message)}
+            {...form.register('password')}
+          />
         </FormField>
         <Button type="submit" variant="primary" size="lg" loading={isSubmitting}>
           Sign in
@@ -94,7 +116,10 @@ export default function SignIn({ error, from, reset, email, title = 'Sign in', d
       <GithubSignIn from={from} label="Continue with GitHub" />
       <p className="text-center text-sm text-muted">
         New to Overwatch?{' '}
-        <Link href={from ? `/sign-up?from=${encodeURIComponent(safeDestination(from))}` : '/sign-up'} className="font-medium text-primary hover:underline">
+        <Link
+          href={from ? `/sign-up?from=${encodeURIComponent(safeDestination(from))}` : '/sign-up'}
+          className="font-medium text-primary hover:underline"
+        >
           Create an account
         </Link>
       </p>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import RepoPicker from '@/shared/components/repo-picker';
+import { useState } from 'react';
 
 const repos = [
   { id: 1, full_name: 'acme/api', private: true, connected: true },

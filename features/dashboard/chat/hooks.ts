@@ -1,8 +1,8 @@
 'use client';
 
+import type { ApiError } from '@/shared/api/envelope';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { ApiError } from '@/shared/api/envelope';
 import * as chatApi from './api';
 import type { AskBody, AskResult, Conversation } from './types';
 
@@ -19,7 +19,11 @@ export const useConversations = (repo: string) =>
   useQuery({ queryKey: keys.conversations(repo), queryFn: () => chatApi.getConversations(repo) });
 
 export const useConversation = (id: string | null) =>
-  useQuery({ queryKey: keys.conversation(id ?? ''), queryFn: () => chatApi.getConversation(id ?? ''), enabled: Boolean(id) });
+  useQuery({
+    queryKey: keys.conversation(id ?? ''),
+    queryFn: () => chatApi.getConversation(id ?? ''),
+    enabled: Boolean(id),
+  });
 
 /** Errors stay with the caller, which keeps the draft and shows them inline. */
 export function useAsk() {
@@ -32,7 +36,9 @@ export function useAsk() {
         ...conversation,
         messages: [...(current?.messages ?? []), question, answer],
       }));
-      void queryClient.invalidateQueries({ queryKey: keys.conversations(conversation.repo_full_name) });
+      void queryClient.invalidateQueries({
+        queryKey: keys.conversations(conversation.repo_full_name),
+      });
     },
   });
 }

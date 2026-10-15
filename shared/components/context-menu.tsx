@@ -1,6 +1,6 @@
+import { cn } from '@/shared/lib/cn';
 import { ContextMenu as Menu } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { cn } from '@/shared/lib/cn';
 import { MENU_CONTENT_CLASS, MENU_LABEL_CLASS, menuItemClass } from './dropdown-menu';
 
 // unstyled Radix parts, re-exported so callers only import from here
@@ -38,6 +38,8 @@ export function ContextMenuLabel({ className, ...props }: ComponentProps<typeof 
 }
 
 /** Thin line between groups of items. */
-export function ContextMenuSeparator({ className, ...props }: ComponentProps<typeof Menu.Separator>) {
+export function ContextMenuSeparator(
+  { className, ...props }: ComponentProps<typeof Menu.Separator>,
+) {
   return <Menu.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
 }

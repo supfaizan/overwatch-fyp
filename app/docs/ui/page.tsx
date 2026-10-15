@@ -1,6 +1,6 @@
+import UiDocs from '@/features/ui-docs';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import UiDocs from '@/features/ui-docs';
 
 export const metadata: Metadata = { title: 'UI components', robots: { index: false } };
 

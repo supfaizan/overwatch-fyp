@@ -1,7 +1,5 @@
 'use client';
 
-import { GearSix, Moon, SquaresFour } from '@phosphor-icons/react/ssr';
-import { useState } from 'react';
 import Button from '@/shared/components/button';
 import {
   Command,
@@ -13,6 +11,8 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/shared/components/command';
+import { GearSix, Moon, SquaresFour } from '@phosphor-icons/react/ssr';
+import { useState } from 'react';
 
 const items = (
   <>

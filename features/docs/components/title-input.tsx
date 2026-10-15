@@ -16,7 +16,9 @@ export default function TitleInput({ doc, onEnter }: { doc: Document; onEnter?: 
   const commit = (value: string) => {
     clearTimeout(timer.current);
     const next = value.trim();
-    if (next === saved.current) return;
+    if (next === saved.current) {
+      return;
+    }
     saved.current = next;
     rename.mutate({ id: doc.id, title: next });
   };

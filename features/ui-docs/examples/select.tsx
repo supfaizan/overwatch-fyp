@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
+import { useState } from 'react';
 
 export function Basic() {
   const [repo, setRepo] = useState('');

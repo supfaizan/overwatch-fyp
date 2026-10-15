@@ -19,16 +19,26 @@ export const DocImage = Node.create({
       attachmentId: {
         default: null,
         parseHTML: (element) => element.getAttribute('data-attachment-id'),
-        renderHTML: (attrs) => (attrs.attachmentId ? { 'data-attachment-id': attrs.attachmentId } : {}),
+        renderHTML: (
+          attrs,
+        ) => (attrs.attachmentId ? { 'data-attachment-id': attrs.attachmentId } : {}),
       },
-      uploadId: { default: null, renderHTML: (attrs) => (attrs.uploadId ? { 'data-uploading': '' } : {}) },
+      uploadId: {
+        default: null,
+        renderHTML: (attrs) => (attrs.uploadId ? { 'data-uploading': '' } : {}),
+      },
       raw: { default: null, rendered: false },
     };
   },
 
   // an image pasted from a web page keeps its address; only web addresses, never scripts
   parseHTML() {
-    return [{ tag: 'img[src]', getAttrs: (element) => (/^https?:\/\//i.test(element.getAttribute('src') ?? '') ? null : false) }];
+    return [{
+      tag: 'img[src]',
+      getAttrs: (
+        element,
+      ) => (/^https?:\/\//i.test(element.getAttribute('src') ?? '') ? null : false),
+    }];
   },
 
   renderHTML({ HTMLAttributes }) {

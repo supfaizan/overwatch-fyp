@@ -40,10 +40,20 @@ export type AskBody = {
   open_folder_ids: string[];
 };
 
-export type AskResult = { conversation: ConversationSummary; question: ChatMessage; answer: ChatMessage };
+export type AskResult = {
+  conversation: ConversationSummary;
+  question: ChatMessage;
+  answer: ChatMessage;
+};
 
 /** A file or symbol from graph search, offered after `@`. */
-export type MentionCandidate = { id: string; name: string | null; kind: string | null; path: string | null; file_path: string | null };
+export type MentionCandidate = {
+  id: string;
+  name: string | null;
+  kind: string | null;
+  path: string | null;
+  file_path: string | null;
+};
 
 /** A mention picked in the composer. */
 export type Mention = { nodeId: string; name: string };

@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { UserMenu } from '@/features/auth';
 import { OnboardingProgress } from '@/features/onboarding';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 // a focused flow: no app sidebar, just the logo and the account menu
 const layout = ({ children }: { children: ReactNode }) => (

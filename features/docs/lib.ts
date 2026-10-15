@@ -1,7 +1,6 @@
 import { timeAgo } from '@/shared/lib/time';
 import { type Document, NATIVE_SOURCE, PUSH_STATE } from './types';
 
-
 export const SAVE_STATUS = {
   saved: 'saved',
   /** edited, waiting for the pause that triggers a save */
@@ -47,7 +46,9 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
   async function flush(): Promise<void> {
     clear();
     // a save in flight sends this change when it finishes
-    if (stopped || saving || !dirty) return;
+    if (stopped || saving || !dirty) {
+      return;
+    }
     saving = true;
     dirty = false;
     onStatus(SAVE_STATUS.saving);
@@ -66,12 +67,16 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
     } finally {
       saving = false;
     }
-    if (dirty && !stopped && !timer) schedule(delay);
+    if (dirty && !stopped && !timer) {
+      schedule(delay);
+    }
   }
 
   return {
     change() {
-      if (stopped) return;
+      if (stopped) {
+        return;
+      }
       dirty = true;
       onStatus(SAVE_STATUS.dirty);
       schedule(delay);
@@ -115,18 +120,31 @@ export function readingMinutes(markdown: string | null): number {
   return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
-type ContentNode = { type?: string; attrs?: Record<string, unknown>; content?: ContentNode[]; [key: string]: unknown };
+type ContentNode = {
+  type?: string;
+  attrs?: Record<string, unknown>;
+  content?: ContentNode[];
+  [key: string]: unknown;
+};
 
 /**
  * A page's content as it's opened: uploaded images get their fresh signed links, and an image whose
  * upload never finished (saved with only its local preview) is left out.
  */
 export function withImageLinks<T extends ContentNode>(node: T, urls: Record<string, string>): T {
-  if (!node.content) return node;
+  if (!node.content) {
+    return node;
+  }
   const content = node.content.flatMap((child) => {
-    if (child.type !== 'image') return [withImageLinks(child, urls)];
+    if (child.type !== 'image') {
+      return [withImageLinks(child, urls)];
+    }
     const id = child.attrs?.attachmentId;
-    if (typeof id === 'string') return urls[id] ? [{ ...child, attrs: { ...child.attrs, src: urls[id], uploadId: null } }] : [];
+    if (typeof id === 'string') {
+      return urls[id]
+        ? [{ ...child, attrs: { ...child.attrs, src: urls[id], uploadId: null } }]
+        : [];
+    }
     return String(child.attrs?.src ?? '').startsWith('blob:') ? [] : [child];
   });
   return { ...node, content };
@@ -139,15 +157,25 @@ export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 // docs sources by their names as people know them; others show their id, capitalised
 const SOURCE_NAMES: Record<string, string> = { confluence: 'Confluence' };
 
-export const sourceName = (source: string) => SOURCE_NAMES[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
+export const sourceName = (source: string) =>
+  SOURCE_NAMES[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
 
 /** How a mirrored page stands with its source, for under its title; null for pages written here. */
-export function syncLabel(doc: Pick<Document, 'source' | 'push_state' | 'push_error' | 'synced_at'>, now = Date.now()): string | null {
-  if (doc.source === NATIVE_SOURCE) return null;
+export function syncLabel(
+  doc: Pick<Document, 'source' | 'push_state' | 'push_error' | 'synced_at'>,
+  now = Date.now(),
+): string | null {
+  if (doc.source === NATIVE_SOURCE) {
+    return null;
+  }
   const name = sourceName(doc.source);
-  if (doc.push_state === PUSH_STATE.conflict) return `Changed in ${name} too`;
+  if (doc.push_state === PUSH_STATE.conflict) {
+    return `Changed in ${name} too`;
+  }
   if (doc.push_state === PUSH_STATE.pending || doc.push_state === PUSH_STATE.pushing) {
-    return doc.push_error ? `Not saved to ${name} yet: ${doc.push_error}` : `Saving to ${name} shortly`;
+    return doc.push_error
+      ? `Not saved to ${name} yet: ${doc.push_error}`
+      : `Saving to ${name} shortly`;
   }
   return doc.synced_at ? `Synced with ${name} ${timeAgo(doc.synced_at, now)}` : `From ${name}`;
 }

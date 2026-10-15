@@ -4,6 +4,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  type Edge,
   MarkerType,
   MiniMap,
   ReactFlow,
@@ -11,18 +12,17 @@ import {
   useNodesInitialized,
   useNodesState,
   useReactFlow,
-  type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import Link from 'next/link';
-import { useTheme } from 'next-themes';
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
 import { isRunning, JOB_STATUS } from '@/shared/lib/job-status';
+import { useTheme } from 'next-themes';
+import Link from 'next/link';
+import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useGraphView } from '../hooks';
-import { FOCUS_STROKE, TREE_STROKE, edgeStyle } from '../lib/appearance';
+import { edgeStyle, FOCUS_STROKE, TREE_STROKE } from '../lib/appearance';
 import { describeEdge, neighbourhood, relationTo } from '../lib/edges';
 import { isInside, useViewStore } from '../store';
 import type { CanvasNode, EdgeType, GraphView, RelationEdge } from '../types';
@@ -57,20 +57,34 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
   const dense = (data?.nodes.length ?? 0) > DENSE;
 
   useEffect(() => {
-    if (!data) return;
+    if (!data) {
+      return;
+    }
     // a closed folder holding a highlighted node stands in for it
     const lit = (id: string) => highlighted.some((nodeId) => isInside(nodeId, id));
     const opacityOf = (id: string) => {
-      if (focusId) return inFocus.has(id) ? 1 : RECEDED.node;
+      if (focusId) {
+        return inFocus.has(id) ? 1 : RECEDED.node;
+      }
       return highlighted.length === 0 || lit(id) ? 1 : RECEDED.node;
     };
     setNodes((current) => restyleNodes(current, data.nodes, opacityOf));
     const relations = styleEdges(data.edges, focusId);
     // quietest first, so lines in focus paint over the rest
-    setEdges([...treeEdges(data.view.containment), ...relations.filter((edge) => !edge.zIndex), ...relations.filter((edge) => edge.zIndex)]);
+    setEdges([
+      ...treeEdges(data.view.containment),
+      ...relations.filter((edge) => !edge.zIndex),
+      ...relations.filter((edge) => edge.zIndex),
+    ]);
   }, [data, focusId, inFocus, highlighted, setNodes, setEdges]);
 
-  if (isPending) return <Notice><Spinner className="size-5 text-muted" /> Drawing the architecture…</Notice>;
+  if (isPending) {
+    return (
+      <Notice>
+        <Spinner className="size-5 text-muted" /> Drawing the architecture…
+      </Notice>
+    );
+  }
   if (isError) {
     return (
       <Notice>
@@ -85,7 +99,14 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
     if (status === JOB_STATUS.failed) {
       return (
         <Notice>
-          <Banner type="error" action={<Button size="sm" asChild><Link href="/settings/repositories">Repositories</Link></Button>}>
+          <Banner
+            type="error"
+            action={
+              <Button size="sm" asChild>
+                <Link href="/settings/repositories">Repositories</Link>
+              </Button>
+            }
+          >
             Indexing this repository failed. Retry it from Settings.
           </Banner>
         </Notice>
@@ -95,7 +116,9 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
     return (
       <Notice>
         {indexing && <Spinner className="size-5 text-muted" />}
-        {indexing ? 'Indexing the repository. The diagram appears when the first pass finishes.' : 'Nothing to draw at this level.'}
+        {indexing
+          ? 'Indexing the repository. The diagram appears when the first pass finishes.'
+          : 'Nothing to draw at this level.'}
       </Notice>
     );
   }
@@ -109,7 +132,8 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         onNodeClick={(_, node) => node.type === 'graphNode' && select(node.id)}
-        onNodeDoubleClick={(_, node) => node.type === 'graphNode' && node.data.expandable && !node.data.expanded && open(node.id)}
+        onNodeDoubleClick={(_, node) =>
+          node.type === 'graphNode' && node.data.expandable && !node.data.expanded && open(node.id)}
         onNodeMouseEnter={(_, node) => hover(node.id)}
         onNodeMouseLeave={() => hover(null)}
         onPaneClick={() => {
@@ -127,7 +151,12 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
       >
         <FitToContent signature={signature} dense={dense} />
         <FocusOnRequest view={data.view} ready={!isPlaceholderData} signature={signature} />
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="var(--color-border-strong)" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={22}
+          size={1}
+          color="var(--color-border-strong)"
+        />
         <Controls showInteractive={false} />
         {/* only worth the space once there's more graph than fits */}
         {dense && <MiniMap pannable zoomable nodeStrokeWidth={0} />}
@@ -138,7 +167,11 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
 }
 
 function Notice({ children }: { children: ReactNode }) {
-  return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted">{children}</div>;
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted">
+      {children}
+    </div>
+  );
 }
 
 /**
@@ -151,7 +184,9 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
   const fitted = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!measured || fitted.current === signature) return;
+    if (!measured || fitted.current === signature) {
+      return;
+    }
     fitted.current = signature;
     void fitView({ ...FIT, duration: dense ? 0 : 220 });
   }, [signature, measured, dense, fitView]);
@@ -163,32 +198,49 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
  * Settles a chat reference click: once the view with its folders open has landed, selects the node,
  * or the nearest folder holding it that could be drawn (a capped folder may not show it), and pans there.
  */
-function FocusOnRequest({ view, ready, signature }: { view: GraphView; ready: boolean; signature: string }) {
+function FocusOnRequest(
+  { view, ready, signature }: { view: GraphView; ready: boolean; signature: string },
+) {
   const request = useViewStore((state) => state.focusRequest);
   const { fitView, getNode } = useReactFlow();
   const measured = useNodesInitialized();
 
   useEffect(() => {
-    if (!request || !ready || !measured) return;
+    if (!request || !ready || !measured) {
+      return;
+    }
     const drawn = new Set(view.nodes.map((node) => node.id));
-    const target = [request.nodeId, ...[...request.ancestors].reverse()].find((id) => drawn.has(id)) ?? null;
+    const target = [request.nodeId, ...[...request.ancestors].reverse()].find((id) => drawn.has(id))
+      ?? null;
     // React Flow takes the new nodes an effect later; wait for this one to be there to pan to
-    if (target && !getNode(target)) return;
+    if (target && !getNode(target)) {
+      return;
+    }
     useViewStore.getState().settleFocus(target);
-    if (target) void fitView({ nodes: [{ id: target }], padding: 0.6, maxZoom: 1.2, duration: 300 });
+    if (target) {
+      void fitView({ nodes: [{ id: target }], padding: 0.6, maxZoom: 1.2, duration: 300 });
+    }
   }, [request, ready, measured, view, signature, fitView, getNode]);
 
   return null;
 }
 
 /** Reuse every node whose look didn't change: React Flow re-measures any node handed over as a new object. */
-function restyleNodes(current: CanvasNode[], next: CanvasNode[], opacityOf: (id: string) => number): CanvasNode[] {
+function restyleNodes(
+  current: CanvasNode[],
+  next: CanvasNode[],
+  opacityOf: (id: string) => number,
+): CanvasNode[] {
   const previous = new Map(current.map((node) => [node.id, node]));
   return next.map((node) => {
     const opacity = opacityOf(node.id);
     const prior = previous.get(node.id);
-    if (!prior || prior.data !== node.data) return { ...node, style: { opacity } };
-    return prior.style?.opacity === opacity ? prior : { ...prior, style: { ...prior.style, opacity } };
+    if (!prior || prior.data !== node.data) {
+      return { ...node, style: { opacity } };
+    }
+    return prior.style?.opacity === opacity
+      ? prior
+      : { ...prior, style: { ...prior.style, opacity } };
   });
 }
 
@@ -198,7 +250,11 @@ function styleEdges(edges: RelationEdge[], focusId: string | null): Edge[] {
     const relation = relationTo(edge, focusId);
     const connected = relation === 'outgoing' || relation === 'incoming';
     const style = edgeStyle(detail.types[0]);
-    const stroke = relation === 'outgoing' ? FOCUS_STROKE.outgoing : relation === 'incoming' ? FOCUS_STROKE.incoming : style.stroke;
+    const stroke = relation === 'outgoing'
+      ? FOCUS_STROKE.outgoing
+      : relation === 'incoming'
+      ? FOCUS_STROKE.incoming
+      : style.stroke;
 
     return {
       ...edge,
@@ -236,39 +292,60 @@ function treeEdges(lines: GraphView['containment']): Edge[] {
 }
 
 /** Explains only the lines on screen; with a node in focus, the focus colours instead. */
-function EdgeLegend({ view, edges, focused }: { view: GraphView; edges: RelationEdge[]; focused: boolean }) {
-  const kinds = useMemo(() => [...new Set(edges.flatMap((edge) => edge.data?.types ?? []))].sort() as EdgeType[], [edges]);
-  if (kinds.length === 0 && !view.truncated) return null;
+function EdgeLegend(
+  { view, edges, focused }: { view: GraphView; edges: RelationEdge[]; focused: boolean },
+) {
+  const kinds = useMemo(
+    () => [...new Set(edges.flatMap((edge) => edge.data?.types ?? []))].sort() as EdgeType[],
+    [edges],
+  );
+  if (kinds.length === 0 && !view.truncated) {
+    return null;
+  }
 
   return (
     <div className="pointer-events-none absolute top-3 right-3 flex max-w-64 flex-col items-end gap-1.5 rounded-md border border-border bg-surface/90 px-3 py-2 text-xs text-muted backdrop-blur-sm">
-      {focused ? (
-        <>
-          <LegendLine stroke={FOCUS_STROKE.outgoing}>this uses →</LegendLine>
-          <LegendLine stroke={FOCUS_STROKE.incoming}>→ uses this</LegendLine>
-        </>
-      ) : (
-        <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
-          {kinds.map((kind) => {
-            const style = edgeStyle(kind);
-            return (
-              <LegendLine key={kind} stroke={style.stroke} dashed={Boolean(style.dash)}>
-                {style.label}
-              </LegendLine>
-            );
-          })}
-        </div>
+      {focused
+        ? (
+          <>
+            <LegendLine stroke={FOCUS_STROKE.outgoing}>this uses →</LegendLine>
+            <LegendLine stroke={FOCUS_STROKE.incoming}>→ uses this</LegendLine>
+          </>
+        )
+        : (
+          <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+            {kinds.map((kind) => {
+              const style = edgeStyle(kind);
+              return (
+                <LegendLine key={kind} stroke={style.stroke} dashed={Boolean(style.dash)}>
+                  {style.label}
+                </LegendLine>
+              );
+            })}
+          </div>
+        )}
+      {view.truncated && (
+        <span className="text-warning-strong">View truncated: close a folder to see the rest</span>
       )}
-      {view.truncated && <span className="text-warning-strong">View truncated: close a folder to see the rest</span>}
     </div>
   );
 }
 
-function LegendLine({ stroke, dashed, children }: { stroke: string; dashed?: boolean; children: ReactNode }) {
+function LegendLine(
+  { stroke, dashed, children }: { stroke: string; dashed?: boolean; children: ReactNode },
+) {
   return (
     <span className="flex items-center gap-1.5">
       <svg aria-hidden width="14" height="2">
-        <line x1="0" y1="1" x2="14" y2="1" stroke={stroke} strokeWidth="2" strokeDasharray={dashed ? '3 3' : undefined} />
+        <line
+          x1="0"
+          y1="1"
+          x2="14"
+          y2="1"
+          stroke={stroke}
+          strokeWidth="2"
+          strokeDasharray={dashed ? '3 3' : undefined}
+        />
       </svg>
       {children}
     </span>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import AddRepoDialog from '@/shared/repos/add-repo-dialog';
+import { useRouter } from 'next/navigation';
+import { type ReactNode, useState, useSyncExternalStore } from 'react';
 import CommandMenu from './components/command-menu';
 import CreateWorkspaceDialog from './components/create-workspace-dialog';
 import Sidebar from './components/sidebar';
@@ -43,9 +43,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
         shortcut={shortcut}
       />
       <main className="min-w-0 flex-1">{children}</main>
-      <CommandMenu open={searching} onOpenChange={setSearching} onAddRepo={() => setAdding(true)} onCreateWorkspace={() => setCreating(true)} />
+      <CommandMenu
+        open={searching}
+        onOpenChange={setSearching}
+        onAddRepo={() => setAdding(true)}
+        onCreateWorkspace={() => setCreating(true)}
+      />
       <CreateWorkspaceDialog open={creating} onOpenChange={setCreating} />
-      <AddRepoDialog open={adding} onOpenChange={setAdding} onConnected={(repo) => router.push(`/dashboard?repo=${encodeURIComponent(repo)}`)} />
+      <AddRepoDialog
+        open={adding}
+        onOpenChange={setAdding}
+        onConnected={(repo) => router.push(`/dashboard?repo=${encodeURIComponent(repo)}`)}
+      />
     </div>
   );
 }

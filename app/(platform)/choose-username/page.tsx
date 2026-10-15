@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
 import { ChooseUsername } from '@/features/auth';
 import SessionGate from '@/shared/session/session-gate';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Choose a username · Overwatch' };
 

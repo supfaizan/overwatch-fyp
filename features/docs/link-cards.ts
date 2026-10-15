@@ -12,10 +12,15 @@ import { CARD_KIND, type CardKind } from './types';
 const CARD_KINDS: string[] = Object.values(CARD_KIND);
 
 /** A link on its own line: playing in the page where its site allows, a card otherwise. */
-export const cardFor = (schema: Schema, url: string) => schema.nodes[embedFor(url) ? CARD_KIND.embed : CARD_KIND.block].create({ url });
+export const cardFor = (schema: Schema, url: string) =>
+  schema.nodes[embedFor(url) ? CARD_KIND.embed : CARD_KIND.block].create({ url });
 
 const cardAttributes = {
-  url: { default: '', parseHTML: (element: HTMLElement) => element.getAttribute('href') ?? '', renderHTML: (attrs: Record<string, unknown>) => ({ href: attrs.url }) },
+  url: {
+    default: '',
+    parseHTML: (element: HTMLElement) => element.getAttribute('href') ?? '',
+    renderHTML: (attrs: Record<string, unknown>) => ({ href: attrs.url }),
+  },
   raw: { default: null, rendered: false },
 };
 
@@ -29,7 +34,9 @@ const card = (name: CardKind, inline: boolean) =>
     draggable: !inline,
 
     addAttributes() {
-      if (name !== CARD_KIND.embed) return cardAttributes;
+      if (name !== CARD_KIND.embed) {
+        return cardAttributes;
+      }
       const kept = { default: null, rendered: false };
       return { ...cardAttributes, layout: kept, width: kept, originalHeight: kept };
     },
@@ -40,7 +47,15 @@ const card = (name: CardKind, inline: boolean) =>
     },
 
     renderHTML({ HTMLAttributes }) {
-      return ['a', mergeAttributes(HTMLAttributes, { 'data-card': name, target: '_blank', rel: 'noopener noreferrer' }), String(HTMLAttributes.href ?? '')];
+      return [
+        'a',
+        mergeAttributes(HTMLAttributes, {
+          'data-card': name,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        }),
+        String(HTMLAttributes.href ?? ''),
+      ];
     },
 
     renderMarkdown: (node) => `<${node.attrs?.url ?? ''}>`,
@@ -58,7 +73,9 @@ export const EmbedCard = card(CARD_KIND.embed, false);
 export function setCardKind(editor: Editor, pos: number, kind: CardKind) {
   const { state } = editor;
   const node = state.doc.nodeAt(pos);
-  if (!node || !CARD_KINDS.includes(node.type.name)) return false;
+  if (!node || !CARD_KINDS.includes(node.type.name)) {
+    return false;
+  }
   const target = state.schema.nodes[kind];
   const next = target.create({ url: node.attrs.url });
   const { tr } = state;
@@ -71,10 +88,15 @@ export function setCardKind(editor: Editor, pos: number, kind: CardKind) {
     const $pos = state.doc.resolve(pos);
     const container = $pos.node($pos.depth - 1);
     const index = $pos.index($pos.depth - 1);
-    const alone = $pos.parent.childCount === 1 && container.canReplaceWith(index, index + 1, target);
-    if (alone) tr.replaceWith($pos.before(), $pos.after(), next);
-    else if (container.canReplaceWith(index + 1, index + 1, target)) tr.insert($pos.after(), next).delete(pos, pos + node.nodeSize);
-    else return false;
+    const alone = $pos.parent.childCount === 1
+      && container.canReplaceWith(index, index + 1, target);
+    if (alone) {
+      tr.replaceWith($pos.before(), $pos.after(), next);
+    } else if (container.canReplaceWith(index + 1, index + 1, target)) {
+      tr.insert($pos.after(), next).delete(pos, pos + node.nodeSize);
+    } else {
+      return false;
+    }
   }
   editor.view.dispatch(tr);
   editor.commands.focus();

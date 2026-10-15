@@ -1,12 +1,14 @@
+import { API_URL, type ApiEnvelope, toApiError } from '@/shared/api/envelope';
 import axios from 'axios';
 import { decodeJwt } from 'jose';
-import { API_URL, toApiError, type ApiEnvelope } from '@/shared/api/envelope';
 import { useSession } from './store';
 
 // tabs share the refresh cookie but not memory: new tokens and sign-outs are broadcast
 type SessionMessage = { type: 'token'; token: string } | { type: 'signed-out' };
 
-const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('overwatch-session');
+const channel = typeof BroadcastChannel === 'undefined'
+  ? null
+  : new BroadcastChannel('overwatch-session');
 // refresh calls skip the interceptors, so a failed refresh never tries to refresh itself
 const authHttp = axios.create({ baseURL: API_URL, withCredentials: true });
 
@@ -31,7 +33,9 @@ export function refreshSession(): Promise<string> {
   inFlight ??= withLock(async () => {
     // another tab may have refreshed (and broadcast) while this one waited for the lock
     const current = useSession.getState().token;
-    if (current && current !== before && expiresIn(current) > 60_000) return current;
+    if (current && current !== before && expiresIn(current) > 60_000) {
+      return current;
+    }
 
     try {
       const { data } = await authHttp.post<ApiEnvelope<{ access_token: string }>>('/auth/refresh');
@@ -56,16 +60,23 @@ export function endSession(): void {
 
 /** Mirror other tabs' refreshes and sign-outs; returns an unsubscribe function. */
 export function onSessionBroadcast(): () => void {
-  if (!channel) return () => undefined;
+  if (!channel) {
+    return () => undefined;
+  }
   const listener = ({ data }: MessageEvent<SessionMessage>) => {
-    if (data.type === 'token') useSession.getState().setToken(data.token);
-    else useSession.getState().clear();
+    if (data.type === 'token') {
+      useSession.getState().setToken(data.token);
+    } else {
+      useSession.getState().clear();
+    }
   };
   channel.addEventListener('message', listener);
   return () => channel.removeEventListener('message', listener);
 }
 
 function withLock<T>(task: () => Promise<T>): Promise<T> {
-  if (typeof navigator === 'undefined' || !navigator.locks) return task();
+  if (typeof navigator === 'undefined' || !navigator.locks) {
+    return task();
+  }
   return navigator.locks.request('overwatch-session-refresh', task) as Promise<T>;
 }

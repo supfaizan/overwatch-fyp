@@ -1,5 +1,5 @@
-import { Avatar as AvatarPrimitive } from 'radix-ui';
 import { cn } from '@/shared/lib/cn';
+import { Avatar as AvatarPrimitive } from 'radix-ui';
 
 const sizes = {
   sm: 'size-6 text-[10px]',
@@ -32,7 +32,11 @@ export default function Avatar({ src, name, size = 'md', className }: AvatarProp
 
   return (
     <AvatarPrimitive.Root
-      className={cn('inline-flex shrink-0 overflow-hidden rounded-full border border-border bg-fill-hover', sizes[size], className)}
+      className={cn(
+        'inline-flex shrink-0 overflow-hidden rounded-full border border-border bg-fill-hover',
+        sizes[size],
+        className,
+      )}
     >
       {src && <AvatarPrimitive.Image src={src} alt={name} className="size-full object-cover" />}
       <AvatarPrimitive.Fallback className="flex size-full items-center justify-center font-semibold text-muted">

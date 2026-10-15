@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Button from '@/shared/components/button';
 import GithubMark from '@/shared/components/github-mark';
+import { useState } from 'react';
 import { startGithubSignIn } from '../api';
 
 /** "or", then GitHub's own button: the foreground color, so it flips with the theme. */

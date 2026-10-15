@@ -1,6 +1,9 @@
 // mirrors the backend schemas (app/onboarding, app/connectors, app/workspaces)
 
-import type { ConnectorCategory, ConnectionStatus as TrackerStatus } from '@/shared/connections/constants';
+import type {
+  ConnectionStatus as TrackerStatus,
+  ConnectorCategory,
+} from '@/shared/connections/constants';
 import type { JobStatus } from '@/shared/lib/job-status';
 import type { ROLE, Role } from '@/shared/workspaces/types';
 

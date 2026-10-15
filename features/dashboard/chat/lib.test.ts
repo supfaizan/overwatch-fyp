@@ -1,9 +1,14 @@
-import { describe, expect, it } from 'vitest';
 import { API_URL } from '@/shared/api/envelope';
+import { describe, expect, it } from 'vitest';
 import { answerMarkdown, keptMentions, mentionQuery, questionSegments, safeImageSrc } from './lib';
 import type { ChatMessage, NodeRef } from './types';
 
-const node = (name: string, ref: string | null = null): NodeRef => ({ ref, node_id: `r:${name}`, module_id: 'r:m', name });
+const node = (name: string, ref: string | null = null): NodeRef => ({
+  ref,
+  node_id: `r:${name}`,
+  module_id: 'r:m',
+  name,
+});
 const message = (role: ChatMessage['role'], text: string, nodes: NodeRef[]): ChatMessage => ({
   id: '1',
   role,
@@ -18,7 +23,11 @@ describe('answerMarkdown', () => {
     const login = node('login', 'n1');
     const verify = node('verify', 'n2');
 
-    expect(answerMarkdown(message('assistant', '**login** [n1] calls `verify` [n2], see [n2].', [login, verify]))).toBe(
+    expect(
+      answerMarkdown(
+        message('assistant', '**login** [n1] calls `verify` [n2], see [n2].', [login, verify]),
+      ),
+    ).toBe(
       '`⟦n1⟧` calls `⟦n2⟧`, see `⟦n2⟧`.',
     );
   });
@@ -26,11 +35,19 @@ describe('answerMarkdown', () => {
   it('drops a reference it has no node for and leaves code blocks alone', () => {
     const text = 'Use it here [n9].\n\n```js\nconst a = [n1];\n```';
 
-    expect(answerMarkdown(message('assistant', text, [node('a', 'n1')]))).toBe('Use it here.\n\n```js\nconst a = [n1];\n```');
+    expect(answerMarkdown(message('assistant', text, [node('a', 'n1')]))).toBe(
+      'Use it here.\n\n```js\nconst a = [n1];\n```',
+    );
   });
 
   it('keeps markdown structure around chips', () => {
-    expect(answerMarkdown(message('assistant', '- **Auth**: handled by verifyToken [n1]', [node('verifyToken', 'n1')]))).toBe(
+    expect(
+      answerMarkdown(
+        message('assistant', '- **Auth**: handled by verifyToken [n1]', [
+          node('verifyToken', 'n1'),
+        ]),
+      ),
+    ).toBe(
       '- **Auth**: handled by `⟦n1⟧`',
     );
   });
@@ -41,13 +58,14 @@ describe('questionSegments', () => {
     const user = node('user');
     const userService = node('user_service');
 
-    expect(questionSegments(message('user', 'does @user_service call @user?', [user, userService]))).toEqual([
-      { type: 'text', text: 'does ' },
-      { type: 'node', node: userService },
-      { type: 'text', text: ' call ' },
-      { type: 'node', node: user },
-      { type: 'text', text: '?' },
-    ]);
+    expect(questionSegments(message('user', 'does @user_service call @user?', [user, userService])))
+      .toEqual([
+        { type: 'text', text: 'does ' },
+        { type: 'node', node: userService },
+        { type: 'text', text: ' call ' },
+        { type: 'node', node: user },
+        { type: 'text', text: '?' },
+      ]);
   });
 });
 
@@ -79,7 +97,9 @@ describe('safeImageSrc', () => {
   it('loads our attachments, relative or absolute, and inline raster data', () => {
     expect(safeImageSrc('/chat/attachments/a1.png')).toBe(`${api}/chat/attachments/a1.png`);
     expect(safeImageSrc(`${api}/chat/attachments/a1.png`)).toBe(`${api}/chat/attachments/a1.png`);
-    expect(safeImageSrc('data:image/png;base64,iVBORw0KGgo=')).toBe('data:image/png;base64,iVBORw0KGgo=');
+    expect(safeImageSrc('data:image/png;base64,iVBORw0KGgo=')).toBe(
+      'data:image/png;base64,iVBORw0KGgo=',
+    );
   });
 
   it('refuses other servers, other API paths, a climb out of attachments and svg data', () => {

@@ -19,15 +19,24 @@ describe('viewableRepos', () => {
   });
 
   it('drops repos never indexed or no longer reachable', () => {
-    const repos = [repo('acme/new', { indexed_at: null, parse_status: 'pending' }), repo('acme/gone', { access_status: 'revoked' })];
+    const repos = [
+      repo('acme/new', { indexed_at: null, parse_status: 'pending' }),
+      repo('acme/gone', { access_status: 'revoked' }),
+    ];
     expect(viewableRepos(repos)).toEqual([]);
   });
 });
 
 describe('pickRepo', () => {
   const fresh = repo('acme/new', { indexed_at: null, parse_status: 'pending' });
-  const repos = [repo('acme/api'), repo('acme/web'), fresh, repo('acme/gone', { access_status: 'revoked' })];
-  const pick = (requested: string | null, lastUsed: string | null = null) => pickRepo(repos, requested, lastUsed)?.repo_full_name;
+  const repos = [
+    repo('acme/api'),
+    repo('acme/web'),
+    fresh,
+    repo('acme/gone', { access_status: 'revoked' }),
+  ];
+  const pick = (requested: string | null, lastUsed: string | null = null) =>
+    pickRepo(repos, requested, lastUsed)?.repo_full_name;
 
   it('opens the requested repo, even while its first index runs', () => {
     expect(pick('acme/web')).toBe('acme/web');
@@ -64,7 +73,9 @@ describe('groupByOwner', () => {
   });
 
   it('groups by owner, alphabetical regardless of case', () => {
-    const groups = groupByOwner(['zeta/web', 'beta/api', 'zeta/Api-gateway', 'Acme/site'].map(available));
+    const groups = groupByOwner(
+      ['zeta/web', 'beta/api', 'zeta/Api-gateway', 'Acme/site'].map(available),
+    );
     expect(groups.map((group) => [group.owner, group.repos.map((r) => r.full_name)])).toEqual([
       ['Acme', ['Acme/site']],
       ['beta', ['beta/api']],

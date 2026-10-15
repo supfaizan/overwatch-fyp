@@ -34,9 +34,17 @@ export const useBoardViews = create<ViewState>()(
       setHidden: (key, columnId, hidden) =>
         set((state) => {
           const view = state.views[key] ?? EMPTY;
-          return { views: { ...state.views, [key]: { ...view, hidden: { ...view.hidden, [columnId]: hidden } } } };
+          return {
+            views: {
+              ...state.views,
+              [key]: { ...view, hidden: { ...view.hidden, [columnId]: hidden } },
+            },
+          };
         }),
-      setGroupBy: (key, groupBy) => set((state) => ({ views: { ...state.views, [key]: { ...(state.views[key] ?? EMPTY), groupBy } } })),
+      setGroupBy: (key, groupBy) =>
+        set((state) => ({
+          views: { ...state.views, [key]: { ...(state.views[key] ?? EMPTY), groupBy } },
+        })),
     }),
     { name: 'overwatch:board-views', storage: createJSONStorage(() => localStorage) },
   ),

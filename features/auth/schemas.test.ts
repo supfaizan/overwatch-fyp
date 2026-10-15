@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { resetPasswordSchema, signUpSchema, username } from './schemas';
 
-const ACCOUNT = { name: 'Ada', username: 'ada', email: 'ada@example.com', password: 'correct horse' };
+const ACCOUNT = {
+  name: 'Ada',
+  username: 'ada',
+  email: 'ada@example.com',
+  password: 'correct horse',
+};
 
 describe('sign-up rules', () => {
   it('judges passwords by length alone', () => {
@@ -18,7 +23,9 @@ describe('sign-up rules', () => {
 
   it('lowercases usernames and keeps to letters, digits and single separators', () => {
     expect(username.parse('Ada_L')).toBe('ada_l');
-    for (const bad of ['ab', '-ada', 'ada-', 'a--b', 'a b', 'x'.repeat(31)]) expect(username.safeParse(bad).success).toBe(false);
+    for (const bad of ['ab', '-ada', 'ada-', 'a--b', 'a b', 'x'.repeat(31)]) {
+      expect(username.safeParse(bad).success).toBe(false);
+    }
   });
 
   it('asks for the new password twice', () => {

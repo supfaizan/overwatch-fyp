@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import DocsLayout from '@/features/docs';
+import type { ReactNode } from 'react';
 
 const layout = ({ children }: { children: ReactNode }) => <DocsLayout>{children}</DocsLayout>;
 

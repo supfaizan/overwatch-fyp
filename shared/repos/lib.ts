@@ -1,7 +1,8 @@
 import { isRunning as isJobRunning } from '@/shared/lib/job-status';
 import { ACCESS_STATUS, type ConnectedRepo } from './types';
 
-export const isRunning = (repo: Pick<ConnectedRepo, 'parse_status'>) => isJobRunning(repo.parse_status);
+export const isRunning = (repo: Pick<ConnectedRepo, 'parse_status'>) =>
+  isJobRunning(repo.parse_status);
 
 const isReachable = (repo: ConnectedRepo) => repo.access_status === ACCESS_STATUS.active;
 
@@ -14,13 +15,20 @@ export function viewableRepos(repos: ConnectedRepo[]): ConnectedRepo[] {
  * The repo to show: the one asked for (even if its first index is still running), else the last one used,
  * else the first with a graph. Null when there's nothing to show.
  */
-export function pickRepo(repos: ConnectedRepo[], requested: string | null, lastUsed: string | null): ConnectedRepo | null {
-  const reachable = (name: string | null) => repos.find((repo) => repo.repo_full_name === name && isReachable(repo));
+export function pickRepo(
+  repos: ConnectedRepo[],
+  requested: string | null,
+  lastUsed: string | null,
+): ConnectedRepo | null {
+  const reachable = (name: string | null) =>
+    repos.find((repo) => repo.repo_full_name === name && isReachable(repo));
   return reachable(requested) ?? reachable(lastUsed) ?? viewableRepos(repos)[0] ?? null;
 }
 
 /** Repos by owner, owners and names alphabetical regardless of case. */
-export function groupByOwner<T extends { full_name: string }>(repos: T[]): { owner: string; repos: T[] }[] {
+export function groupByOwner<T extends { full_name: string }>(
+  repos: T[],
+): { owner: string; repos: T[] }[] {
   const byName = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' });
   const groups = new Map<string, T[]>();
   for (const repo of repos) {
@@ -29,11 +37,15 @@ export function groupByOwner<T extends { full_name: string }>(repos: T[]): { own
   }
   return [...groups.entries()]
     .sort(([a], [b]) => byName(a, b))
-    .map(([owner, list]) => ({ owner, repos: list.sort((a, b) => byName(a.full_name, b.full_name)) }));
+    .map(([owner, list]) => ({
+      owner,
+      repos: list.sort((a, b) => byName(a.full_name, b.full_name)),
+    }));
 }
 
 // keyed by user (browsers get shared) and workspace (each has its own repos)
-const lastRepoKey = (userId: string, workspaceId: string) => `ow_last_repo:${userId}:${workspaceId}`;
+const lastRepoKey = (userId: string, workspaceId: string) =>
+  `ow_last_repo:${userId}:${workspaceId}`;
 
 export function readLastRepo(userId: string, workspaceId: string): string | null {
   try {

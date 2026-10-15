@@ -1,5 +1,5 @@
-import { ChatCircle, FolderOpen, SquaresFour } from '@phosphor-icons/react/ssr';
 import SegmentedButton from '@/shared/components/segmented-button';
+import { ChatCircle, FolderOpen, SquaresFour } from '@phosphor-icons/react/ssr';
 
 export function Views() {
   return (

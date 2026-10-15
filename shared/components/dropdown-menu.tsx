@@ -1,13 +1,17 @@
-import { DropdownMenu as Menu } from 'radix-ui';
-import type { ComponentProps } from 'react';
 import { popIn } from '@/shared/lib/animations';
 import { cn } from '@/shared/lib/cn';
+import { DropdownMenu as Menu } from 'radix-ui';
+import type { ComponentProps } from 'react';
 
 /** A menu panel's look, shared with the context menu so both menus match. */
-export const MENU_CONTENT_CLASS = cn('z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-chrome shadow-border', popIn);
+export const MENU_CONTENT_CLASS = cn(
+  'z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-chrome shadow-border',
+  popIn,
+);
 
 /** A group heading's look, shared with the context menu. */
-export const MENU_LABEL_CLASS = 'px-2 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase';
+export const MENU_LABEL_CLASS =
+  'px-2 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase';
 
 /** A menu item's look, shared with the context menu. */
 export const menuItemClass = (danger?: boolean) =>
@@ -27,7 +31,9 @@ export const DropdownMenuTrigger = Menu.Trigger;
  * - Put destructive items last, after a separator, with `danger`.
  * - Keep it short; group related items with `DropdownMenuLabel` and separators.
  */
-export function DropdownMenuContent({ className, sideOffset = 6, ...props }: ComponentProps<typeof Menu.Content>) {
+export function DropdownMenuContent(
+  { className, sideOffset = 6, ...props }: ComponentProps<typeof Menu.Content>,
+) {
   return (
     <Menu.Portal>
       <Menu.Content
@@ -60,6 +66,8 @@ export function DropdownMenuLabel({ className, ...props }: ComponentProps<typeof
 }
 
 /** Thin line between groups of items. */
-export function DropdownMenuSeparator({ className, ...props }: ComponentProps<typeof Menu.Separator>) {
+export function DropdownMenuSeparator(
+  { className, ...props }: ComponentProps<typeof Menu.Separator>,
+) {
   return <Menu.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
 }

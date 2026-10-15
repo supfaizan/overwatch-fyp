@@ -6,6 +6,8 @@ const SIGN_IN_ERRORS: Record<string, string> = {
 };
 
 export function signInErrorMessage(code: string | undefined): string | null {
-  if (!code) return null;
+  if (!code) {
+    return null;
+  }
   return SIGN_IN_ERRORS[code] ?? 'Sign-in failed. Please try again.';
 }

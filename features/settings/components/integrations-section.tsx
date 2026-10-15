@@ -38,9 +38,15 @@ import { SettingsSection } from './settings-layout';
 
 // what a tracker's OAuth callback reports, e.g. ?jira=connected
 const OUTCOMES: Record<string, () => void> = {
-  connected: () => toast.success('Connected.'),
-  denied: () => toast.error('Authorization was cancelled.'),
-  error: () => toast.error("Couldn't connect. Please try again."),
+  connected: () => {
+    return toast.success('Connected.');
+  },
+  denied: () => {
+    return toast.error('Authorization was cancelled.');
+  },
+  error: () => {
+    return toast.error("Couldn't connect. Please try again.");
+  },
 };
 
 export default function IntegrationsSection({ outcome }: { outcome?: string }) {
@@ -67,7 +73,9 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
           action={
             <Button
               size="sm"
-              onClick={() => status.refetch()}
+              onClick={() => {
+                return status.refetch();
+              }}
             >
               Retry
             </Button>
@@ -118,7 +126,9 @@ function IntegrationCard(
 function SourceControl({ authorized, needsReauth }: { authorized: boolean; needsReauth: boolean }) {
   const installations = useInstallations(authorized);
   const accounts = installations.data?.installations ?? [];
-  const hasGithub = useSession((state) => Boolean(state.user?.github_login));
+  const hasGithub = useSession((state) => {
+    return Boolean(state.user?.github_login);
+  });
   useGithubLinkResult();
 
   return (
@@ -148,19 +158,21 @@ function SourceControl({ authorized, needsReauth }: { authorized: boolean; needs
         )}
       {accounts.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm">
-          {accounts.map((account) => (
-            <li key={account.id} className="flex items-center justify-between gap-2">
-              <span>
-                {account.account_login}{' '}
-                <span className="text-muted">({account.account_type.toLowerCase()})</span>
-              </span>
-              <span className="text-xs text-muted">
-                {account.repository_selection === 'all'
-                  ? 'All repositories'
-                  : 'Selected repositories'}
-              </span>
-            </li>
-          ))}
+          {accounts.map((account) => {
+            return (
+              <li key={account.id} className="flex items-center justify-between gap-2">
+                <span>
+                  {account.account_login}{' '}
+                  <span className="text-muted">({account.account_type.toLowerCase()})</span>
+                </span>
+                <span className="text-xs text-muted">
+                  {account.repository_selection === 'all'
+                    ? 'All repositories'
+                    : 'Selected repositories'}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
       {installations.data && (
@@ -196,7 +208,9 @@ const CATEGORY_COPY: Record<
     reconnect: 'to edit, move and create its tickets from the board',
     disconnect:
       'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
-    targetLabel: (target) => (target.name ? `${target.key} · ${target.name}` : target.key),
+    targetLabel: (target) => {
+      return (target.name ? `${target.key} · ${target.name}` : target.key);
+    },
   },
   [CONNECTOR_CATEGORY.documents]: {
     icon: <BookOpen />,
@@ -205,7 +219,9 @@ const CATEGORY_COPY: Record<
     reconnect: 'to edit its pages in Docs',
     disconnect:
       'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
-    targetLabel: (target) => [target.name ?? target.key, target.id].filter(Boolean).join(' · '),
+    targetLabel: (target) => {
+      return [target.name ?? target.key, target.id].filter(Boolean).join(' · ');
+    },
   },
 };
 
@@ -222,7 +238,9 @@ function Connectors() {
         action={
           <Button
             size="sm"
-            onClick={() => connections.refetch()}
+            onClick={() => {
+              return connections.refetch();
+            }}
           >
             Retry
           </Button>
@@ -232,9 +250,9 @@ function Connectors() {
       </Banner>
     );
   }
-  return connections.data.map((connection) => (
-    <ConnectorCard key={connection.provider} connection={connection} />
-  ));
+  return connections.data.map((connection) => {
+    return <ConnectorCard key={connection.provider} connection={connection} />;
+  });
 }
 
 function ConnectorCard({ connection }: { connection: Connection }) {
@@ -265,7 +283,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
             <Button
               size="sm"
               loading={connect.isPending}
-              onClick={() => connect.mutate(provider)}
+              onClick={() => {
+                return connect.mutate(provider);
+              }}
             >
               Reconnect
             </Button>
@@ -281,22 +301,24 @@ function ConnectorCard({ connection }: { connection: Connection }) {
       )}
       {targets.length > 0 && (
         <ul className="flex flex-col gap-1.5 text-sm">
-          {targets.map((target) => (
-            <li key={target.key} className="flex items-center justify-between gap-2">
-              <span className="min-w-0 truncate">
-                {category === CONNECTOR_CATEGORY.documents
-                  ? <span className="font-medium">{target.name ?? target.key}</span>
-                  : (
-                    <>
-                      <span className="font-medium">{target.key}</span>
-                      {target.name && <span className="text-muted">· {target.name}</span>}
-                    </>
-                  )}
-                {target.sync_error && <span className="text-danger">· {target.sync_error}</span>}
-              </span>
-              <StatusTag status={target.sync_status} done="Synced" />
-            </li>
-          ))}
+          {targets.map((target) => {
+            return (
+              <li key={target.key} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate">
+                  {category === CONNECTOR_CATEGORY.documents
+                    ? <span className="font-medium">{target.name ?? target.key}</span>
+                    : (
+                      <>
+                        <span className="font-medium">{target.key}</span>
+                        {target.name && <span className="text-muted">· {target.name}</span>}
+                      </>
+                    )}
+                  {target.sync_error && <span className="text-danger">· {target.sync_error}</span>}
+                </span>
+                <StatusTag status={target.sync_status} done="Synced" />
+              </li>
+            );
+          })}
         </ul>
       )}
       {isAdmin && connected && (
@@ -304,7 +326,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           provider={provider}
           noun={copy.target}
           label={copy.targetLabel}
-          synced={targets.map((t) => t.key)}
+          synced={targets.map((t) => {
+            return t.key;
+          })}
         />
       )}
       {isAdmin && (
@@ -316,7 +340,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
                   <Button
                     size="sm"
                     loading={sync.isPending}
-                    onClick={() => sync.mutate(provider)}
+                    onClick={() => {
+                      return sync.mutate(provider);
+                    }}
                   >
                     Sync now
                   </Button>
@@ -327,7 +353,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
                   description={copy.disconnect}
                   confirmLabel={`Disconnect ${name}`}
                   pending={disconnect.isPending}
-                  onConfirm={(close) => disconnect.mutate(provider, { onSuccess: close })}
+                  onConfirm={(close) => {
+                    return disconnect.mutate(provider, { onSuccess: close });
+                  }}
                 />
               </>
             )
@@ -336,7 +364,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
                 size="sm"
                 variant="primary"
                 loading={connect.isPending}
-                onClick={() => connect.mutate(provider)}
+                onClick={() => {
+                  return connect.mutate(provider);
+                }}
               >
                 {status === CONNECTION_STATUS.needsReauth ? `Reconnect ${name}` : `Connect ${name}`}
               </Button>
@@ -358,8 +388,12 @@ function AddTarget(
   const available = useAvailableTargets(provider);
   const add = useAddTarget();
   const [selected, setSelected] = useState('');
-  const options = (available.data ?? []).filter((target) => !synced.includes(target.key));
-  const target = options.find((option) => option.key === selected);
+  const options = (available.data ?? []).filter((target) => {
+    return !synced.includes(target.key);
+  });
+  const target = options.find((option) => {
+    return option.key === selected;
+  });
 
   if (available.isPending) {
     return <Skeleton className="h-9 w-full" />;
@@ -377,19 +411,26 @@ function AddTarget(
           placeholder={`Add a ${noun} to sync`}
         />
         <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.key} value={option.key}>
-              {label(option)}
-            </SelectItem>
-          ))}
+          {options.map((option) => {
+            return (
+              <SelectItem key={option.key} value={option.key}>
+                {label(option)}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
       <Button
         size="sm"
         disabled={!target}
         loading={add.isPending}
-        onClick={() =>
-          target && add.mutate({ provider, target }, { onSuccess: () => setSelected('') })}
+        onClick={() => {
+          return target && add.mutate({ provider, target }, {
+            onSuccess: () => {
+              return setSelected('');
+            },
+          });
+        }}
       >
         Add
       </Button>

@@ -7,19 +7,25 @@ import { Mark, mergeAttributes, Node } from '@tiptap/react';
  */
 type SourceOptions = { sourceName: string };
 
-const rawAttribute = (tag: string) => ({
-  default: null,
-  parseHTML: (element: HTMLElement) => {
-    try {
-      return JSON.parse(element.getAttribute(tag) ?? 'null');
-    } catch {
-      return null;
-    }
-  },
-  renderHTML: (attrs: Record<string, unknown>) => ({ [tag]: JSON.stringify(attrs.raw ?? null) }),
-});
+const rawAttribute = (tag: string) => {
+  return {
+    default: null,
+    parseHTML: (element: HTMLElement) => {
+      try {
+        return JSON.parse(element.getAttribute(tag) ?? 'null');
+      } catch {
+        return null;
+      }
+    },
+    renderHTML: (attrs: Record<string, unknown>) => {
+      return { [tag]: JSON.stringify(attrs.raw ?? null) };
+    },
+  };
+};
 
-const hint = (label: string, sourceName: string) => `${label} · edit it in ${sourceName}`;
+const hint = (label: string, sourceName: string) => {
+  return `${label} · edit it in ${sourceName}`;
+};
 
 export const SourceBlock = Node.create<SourceOptions>({
   name: 'sourceBlock',
@@ -28,19 +34,28 @@ export const SourceBlock = Node.create<SourceOptions>({
   draggable: true,
   selectable: true,
 
-  addOptions: () => ({ sourceName: 'its source' }),
+  addOptions: () => {
+    return { sourceName: 'its source' };
+  },
 
   addAttributes() {
     return {
       raw: rawAttribute('data-source-block'),
-      label: { default: 'Content', renderHTML: () => ({}) },
+      label: {
+        default: 'Content',
+        renderHTML: () => {
+          return {};
+        },
+      },
     };
   },
 
   parseHTML() {
     return [{
       tag: 'div[data-source-block]',
-      getAttrs: (element) => ({ label: element.getAttribute('data-label') ?? 'Content' }),
+      getAttrs: (element) => {
+        return { label: element.getAttribute('data-label') ?? 'Content' };
+      },
     }];
   },
 
@@ -53,7 +68,9 @@ export const SourceBlock = Node.create<SourceOptions>({
     ];
   },
 
-  renderMarkdown: (node) => `_[${node.attrs?.label ?? 'Content'}]_`,
+  renderMarkdown: (node) => {
+    return `_[${node.attrs?.label ?? 'Content'}]_`;
+  },
 });
 
 export const SourceInline = Node.create<SourceOptions>({
@@ -63,19 +80,28 @@ export const SourceInline = Node.create<SourceOptions>({
   atom: true,
   selectable: true,
 
-  addOptions: () => ({ sourceName: 'its source' }),
+  addOptions: () => {
+    return { sourceName: 'its source' };
+  },
 
   addAttributes() {
     return {
       raw: rawAttribute('data-source-inline'),
-      label: { default: '', renderHTML: () => ({}) },
+      label: {
+        default: '',
+        renderHTML: () => {
+          return {};
+        },
+      },
     };
   },
 
   parseHTML() {
     return [{
       tag: 'span[data-source-inline]',
-      getAttrs: (element) => ({ label: element.textContent ?? '' }),
+      getAttrs: (element) => {
+        return { label: element.textContent ?? '' };
+      },
     }];
   },
 
@@ -90,7 +116,9 @@ export const SourceInline = Node.create<SourceOptions>({
     ];
   },
 
-  renderMarkdown: (node) => String(node.attrs?.label ?? ''),
+  renderMarkdown: (node) => {
+    return String(node.attrs?.label ?? '');
+  },
 });
 
 /** Formatting this editor lacks (text colour, sub/superscript), kept on the text it was on. */
@@ -108,9 +136,11 @@ export const SourceMark = Mark.create({
             return [];
           }
         },
-        renderHTML: (attrs: Record<string, unknown>) => ({
-          'data-source-mark': JSON.stringify(attrs.marks ?? []),
-        }),
+        renderHTML: (attrs: Record<string, unknown>) => {
+          return {
+            'data-source-mark': JSON.stringify(attrs.marks ?? []),
+          };
+        },
       },
     };
   },

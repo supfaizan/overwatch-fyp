@@ -14,9 +14,15 @@ const handle = '!size-1.5 !border-0 !bg-border-strong';
 
 /** One box: what it is, what it holds, and the control that opens or shuts it. */
 export default function NodeCard({ id, data }: NodeProps<GraphFlowNode>) {
-  const open = useViewStore((state) => state.open);
-  const close = useViewStore((state) => state.close);
-  const active = useViewStore((state) => state.hovered === id || state.selected === id);
+  const open = useViewStore((state) => {
+    return state.open;
+  });
+  const close = useViewStore((state) => {
+    return state.close;
+  });
+  const active = useViewStore((state) => {
+    return state.hovered === id || state.selected === id;
+  });
   const { data: options } = useViewOptions();
 
   const isRoot = data.label === 'Repository';
@@ -64,7 +70,12 @@ export default function NodeCard({ id, data }: NodeProps<GraphFlowNode>) {
         {!isRoot
           && (data.expanded
             ? (
-              <LevelButton label="Close this folder" onClick={() => close(id)}>
+              <LevelButton
+                label="Close this folder"
+                onClick={() => {
+                  return close(id);
+                }}
+              >
                 <CaretUp aria-hidden />
               </LevelButton>
             )
@@ -74,7 +85,9 @@ export default function NodeCard({ id, data }: NodeProps<GraphFlowNode>) {
                   label={paged
                     ? `Open: ${data.child_count} inside, first ${options?.page_size} drawn`
                     : `Open: ${data.child_count} inside`}
-                  onClick={() => open(id)}
+                  onClick={() => {
+                    return open(id);
+                  }}
                   warn={paged}
                 >
                   <CaretDown aria-hidden />

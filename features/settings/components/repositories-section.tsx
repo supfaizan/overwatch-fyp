@@ -42,7 +42,13 @@ export default function RepositoriesSection() {
       title="Repositories"
       description="The repositories Overwatch indexes and keeps in sync on every push."
       action={isAdmin && (
-        <Button variant="primary" size="sm" onClick={() => setAdding(true)}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => {
+            return setAdding(true);
+          }}
+        >
           <Plus /> Add repository
         </Button>
       )}
@@ -54,7 +60,9 @@ export default function RepositoriesSection() {
           action={
             <Button
               size="sm"
-              onClick={() => repos.refetch()}
+              onClick={() => {
+                return repos.refetch();
+              }}
             >
               Retry
             </Button>
@@ -69,9 +77,9 @@ export default function RepositoriesSection() {
             ? <p className="p-4 text-sm text-muted">No repositories connected yet.</p>
             : (
               <ul className="divide-y divide-border">
-                {repos.data.map((repo) => (
-                  <RepoRow key={repo.repo_full_name} repo={repo} canDisconnect={isAdmin} />
-                ))}
+                {repos.data.map((repo) => {
+                  return <RepoRow key={repo.repo_full_name} repo={repo} canDisconnect={isAdmin} />;
+                })}
               </ul>
             )}
         </Card>
@@ -89,7 +97,9 @@ export default function RepositoriesSection() {
       <AddRepoDialog
         open={adding}
         onOpenChange={setAdding}
-        onConnected={(repo) => router.push(`/dashboard?repo=${encodeURIComponent(repo)}`)}
+        onConnected={(repo) => {
+          return router.push(`/dashboard?repo=${encodeURIComponent(repo)}`);
+        }}
       />
     </SettingsSection>
   );
@@ -138,7 +148,9 @@ function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: 
               aria-label={`Re-index ${repo.repo_full_name}`}
               disabled={running || repo.access_status !== ACCESS_STATUS.active}
               loading={reindex.isPending}
-              onClick={() => reindex.mutate(repo.repo_full_name)}
+              onClick={() => {
+                return reindex.mutate(repo.repo_full_name);
+              }}
             >
               <ArrowsClockwise />
             </Button>
@@ -163,7 +175,9 @@ function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: 
             description="Overwatch stops tracking it for this workspace. Its copy of the code and its graph are deleted once no other workspace uses them."
             confirmLabel="Disconnect repository"
             pending={disconnect.isPending}
-            onConfirm={(close) => disconnect.mutate(repo.repo_full_name, { onSuccess: close })}
+            onConfirm={(close) => {
+              return disconnect.mutate(repo.repo_full_name, { onSuccess: close });
+            }}
           />
         )}
       </div>

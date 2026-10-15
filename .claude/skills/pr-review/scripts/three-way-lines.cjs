@@ -27,7 +27,7 @@ const [base, ours, theirs] = args;
 
 const root = repoRoot();
 const names = (a, b) =>
-  git(root, ['diff', '--name-only', a, b]).split(/\r?\n/).filter(Boolean);
+  {return git(root, ['diff', '--name-only', a, b]).split(/\r?\n/).filter(Boolean)};
 const files = [...new Set([...names(base, ours), ...names(base, theirs)])]
   .sort();
 

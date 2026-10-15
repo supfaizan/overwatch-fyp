@@ -22,8 +22,12 @@ export default function GithubStep() {
   const connected = status.data?.github.repos ?? [];
   const hasInstallation = (installations.data?.installations.length ?? 0) > 0;
   const repos = useAvailableRepos(hasInstallation && connected.length === 0);
-  const connect = useConnectRepo(() => router.push('/onboarding/jira'));
-  const hasGithub = useSession((state) => Boolean(state.user?.github_login));
+  const connect = useConnectRepo(() => {
+    return router.push('/onboarding/jira');
+  });
+  const hasGithub = useSession((state) => {
+    return Boolean(state.user?.github_login);
+  });
   useGithubLinkResult();
 
   if (status.data && !status.data.github.authorized) {
@@ -88,7 +92,9 @@ export default function GithubStep() {
       actions={connected.length > 0 && (
         <Button
           variant="primary"
-          onClick={() => router.push('/onboarding/jira')}
+          onClick={() => {
+            return router.push('/onboarding/jira');
+          }}
         >
           Continue
         </Button>
@@ -97,14 +103,16 @@ export default function GithubStep() {
       {connected.length > 0
         ? (
           <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-            {connected.map((repo) => (
-              <li key={repo.repo_full_name} className="flex items-center gap-3 px-3 py-2 text-sm">
-                <GitBranch weight="fill" className="size-4 shrink-0 text-accent-blue" />
-                <span className="flex-1 truncate font-medium">{repo.repo_full_name}</span>
-                <StatusTag status={repo.parse_status} />
-                <DisconnectRepo repoFullName={repo.repo_full_name} />
-              </li>
-            ))}
+            {connected.map((repo) => {
+              return (
+                <li key={repo.repo_full_name} className="flex items-center gap-3 px-3 py-2 text-sm">
+                  <GitBranch weight="fill" className="size-4 shrink-0 text-accent-blue" />
+                  <span className="flex-1 truncate font-medium">{repo.repo_full_name}</span>
+                  <StatusTag status={repo.parse_status} />
+                  <DisconnectRepo repoFullName={repo.repo_full_name} />
+                </li>
+              );
+            })}
           </ul>
         )
         : (
@@ -113,13 +121,19 @@ export default function GithubStep() {
               ? <p className="text-sm text-danger">{repos.error.message}</p>
               : (
                 <RepoPicker
-                  repos={repos.data?.filter((repo) => !repo.connected) ?? []}
+                  repos={repos.data?.filter((repo) => {
+                    return !repo.connected;
+                  }) ?? []}
                   loading={repos.isPending}
                   pending={connect.isPending ? (connect.variables ?? null) : null}
-                  onSelect={(name) => connect.mutate(name)}
+                  onSelect={(name) => {
+                    return connect.mutate(name);
+                  }}
                 />
               )}
-            {repos.isSuccess && repos.data.every((repo) => repo.connected) && (
+            {repos.isSuccess && repos.data.every((repo) => {
+              return repo.connected;
+            }) && (
               <p className="text-sm text-muted">
                 The GitHub App can&apos;t see any repositories yet. Add some below.
               </p>

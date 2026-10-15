@@ -12,8 +12,12 @@ export const CHOOSE_USERNAME_PATH = '/choose-username';
  * accounts without a username to choose one first.
  */
 export default function SessionGate({ children }: { children: ReactNode }) {
-  const status = useSession((state) => state.status);
-  const needsUsername = useSession((state) => state.user !== null && !state.user.username);
+  const status = useSession((state) => {
+    return state.status;
+  });
+  const needsUsername = useSession((state) => {
+    return state.user !== null && !state.user.username;
+  });
   const pathname = usePathname();
   const router = useRouter();
   const choosing = pathname === CHOOSE_USERNAME_PATH;

@@ -29,7 +29,9 @@ export default function ResumeOnboarding() {
         action={
           <Button
             size="sm"
-            onClick={() => status.refetch()}
+            onClick={() => {
+              return status.refetch();
+            }}
           >
             Retry
           </Button>

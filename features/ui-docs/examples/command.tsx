@@ -46,7 +46,13 @@ export function Palette() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Open palette</Button>
+      <Button
+        onClick={() => {
+          return setOpen(true);
+        }}
+      >
+        Open palette
+      </Button>
       <CommandDialog open={open} onOpenChange={setOpen} title="Command menu">
         <CommandInput placeholder="Type a command or search…" />
         <CommandList>{items}</CommandList>

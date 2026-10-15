@@ -70,18 +70,24 @@ export default function SwimlaneBoard(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const colors = Object.fromEntries(columns.map((column) => [column.id, columnColor(column)]));
+  const colors = Object.fromEntries(columns.map((column) => {
+    return [column.id, columnColor(column)];
+  }));
   // one grid for header and lanes, so every lane's cells line up under their column
   const grid = { gridTemplateColumns: `repeat(${columns.length}, 18rem)` };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setDragging(null);
-    const item = items.find((candidate) => candidate.id === active.id);
+    const item = items.find((candidate) => {
+      return candidate.id === active.id;
+    });
     const target = over && item && laneDropTarget(items, columns, by, item.id, String(over.id));
     if (!item || !target) {
       return;
     }
-    const column = columns.find((candidate) => candidate.id === target.columnId);
+    const column = columns.find((candidate) => {
+      return candidate.id === target.columnId;
+    });
     if (column && hintFor(column)?.allowed === false) {
       toast.error(BLOCKED_MESSAGE);
       return;
@@ -93,30 +99,42 @@ export default function SwimlaneBoard(
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
-      onDragStart={({ active }) => setDragging(items.find((item) => item.id === active.id) ?? null)}
-      onDragCancel={() => setDragging(null)}
+      onDragStart={({ active }) => {
+        return setDragging(
+          items.find((item) => {
+            return item.id === active.id;
+          }) ?? null,
+        );
+      }}
+      onDragCancel={() => {
+        return setDragging(null);
+      }}
       onDragEnd={onDragEnd}
     >
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="sticky top-0 z-10 grid gap-4 bg-background pb-2" style={grid}>
-          {columns.map((column) => (
-            <h2 key={column.id} className="flex flex-col gap-1 px-1 text-sm font-medium">
-              <span className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)}
-                />
-                {column.name}
-              </span>
-              <HintLabel hint={hintFor(column)} />
-            </h2>
-          ))}
+          {columns.map((column) => {
+            return (
+              <h2 key={column.id} className="flex flex-col gap-1 px-1 text-sm font-medium">
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={cn('size-2 rounded-full', COLOR_CLASSES[colors[column.id]].dot)}
+                  />
+                  {column.name}
+                </span>
+                <HintLabel hint={hintFor(column)} />
+              </h2>
+            );
+          })}
         </div>
         <div className="flex flex-col gap-4">
           {lanes.map((lane) => {
             // cards are placed by what they say now, so a reassigned card shows in its new lane at once
             const cellsOfLane = groupByColumn(
-              items.filter((item) => laneOf(item, by) === lane.key),
+              items.filter((item) => {
+                return laneOf(item, by) === lane.key;
+              }),
               columns,
             );
             const open = !collapsed[lane.key];
@@ -125,7 +143,11 @@ export default function SwimlaneBoard(
                 <button
                   type="button"
                   aria-expanded={open}
-                  onClick={() => setCollapsed((state) => ({ ...state, [lane.key]: open }))}
+                  onClick={() => {
+                    return setCollapsed((state) => {
+                      return { ...state, [lane.key]: open };
+                    });
+                  }}
                   className="flex items-center gap-2 self-start rounded px-1 text-sm font-semibold hover:bg-fill-hover"
                 >
                   {open ? <CaretDown className="size-3.5" /> : <CaretRight className="size-3.5" />}
@@ -168,7 +190,9 @@ export default function SwimlaneBoard(
             color={colors[dragging.column_id]}
             onOpen={() => {}}
             onMoveTo={() => {}}
-            linkOf={() => ''}
+            linkOf={() => {
+              return '';
+            }}
           />
         )}
       </DragOverlay>
@@ -206,7 +230,9 @@ function HintLabel({ hint }: { hint: DropHint | undefined }) {
   }
   return (
     <span className="text-xs font-normal text-primary">
-      {hint.zones.map((zone) => zone.label).join(' · ')}
+      {hint.zones.map((zone) => {
+        return zone.label;
+      }).join(' · ')}
     </span>
   );
 }
@@ -236,18 +262,24 @@ function Cell(
     if (!hasMore || loadingMore || !sentinel.current) {
       return;
     }
-    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && onLoadMore(id), {
+    const observer = new IntersectionObserver(([entry]) => {
+      return entry.isIntersecting && onLoadMore(id);
+    }, {
       root: list.current,
       rootMargin: '0px 0px 120px 0px',
     });
     observer.observe(sentinel.current);
-    return () => observer.disconnect();
+    return () => {
+      return observer.disconnect();
+    };
   }, [hasMore, loadingMore, items.length, id, onLoadMore]);
 
   return (
     <SortableContext
       id={id}
-      items={items.map((item) => item.id)}
+      items={items.map((item) => {
+        return item.id;
+      })}
       strategy={verticalListSortingStrategy}
     >
       <ul
@@ -261,17 +293,19 @@ function Cell(
           blocked && 'opacity-40',
         )}
       >
-        {items.map((item) => (
-          <WorkItemCard
-            key={item.id}
-            item={item}
-            columns={columns}
-            color={color}
-            onOpen={onOpen}
-            onMoveTo={onMoveTo}
-            linkOf={linkOf}
-          />
-        ))}
+        {items.map((item) => {
+          return (
+            <WorkItemCard
+              key={item.id}
+              item={item}
+              columns={columns}
+              color={color}
+              onOpen={onOpen}
+              onMoveTo={onMoveTo}
+              linkOf={linkOf}
+            />
+          );
+        })}
         {hasMore && (
           <li ref={sentinel} className="flex list-none justify-center py-2" aria-live="polite">
             {loadingMore && <Spinner className="size-4 text-muted" />}

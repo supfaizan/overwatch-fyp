@@ -13,15 +13,22 @@ import { useRouter } from 'next/navigation';
 import { SettingsSection } from './settings-layout';
 
 export default function ProfileSection() {
-  const user = useSession((state) => state.user);
+  const user = useSession((state) => {
+    return state.user;
+  });
   const router = useRouter();
   if (!user) {
     return null;
   }
 
   const name = displayName(user);
-  const leave = (everywhere: boolean) => () =>
-    void signOut({ everywhere }).finally(() => router.replace('/sign-in'));
+  const leave = (everywhere: boolean) => {
+    return () => {
+      return void signOut({ everywhere }).finally(() => {
+        return router.replace('/sign-in');
+      });
+    };
+  };
 
   return (
     <SettingsSection

@@ -1,5 +1,7 @@
 import { ProfileSection } from '@/features/settings';
 
-const page = () => <ProfileSection />;
+const page = () => {
+  return <ProfileSection />;
+};
 
 export default page;

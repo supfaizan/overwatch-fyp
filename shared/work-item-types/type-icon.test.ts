@@ -2,14 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { typeOf } from './type-icon';
 import type { WorkItemType } from './types';
 
-const type = (id: string, name: string): WorkItemType => ({
-  id,
-  name,
-  icon: 'Circle',
-  color: 'gray',
-  source: 'native',
-  created_at: '',
-});
+const type = (id: string, name: string): WorkItemType => {
+  return {
+    id,
+    name,
+    icon: 'Circle',
+    color: 'gray',
+    source: 'native',
+    created_at: '',
+  };
+};
 
 describe('typeOf', () => {
   const types = [type('b', 'Bug'), type('t', 'Task')];

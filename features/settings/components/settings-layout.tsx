@@ -37,28 +37,32 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
           aria-label="Settings"
           className="flex shrink-0 gap-1 overflow-x-auto border-b border-border pb-2 md:w-48 md:flex-col md:gap-4 md:overflow-visible md:border-r md:border-b-0 md:self-start md:pr-4"
         >
-          {GROUPS.map((group) => (
-            <div key={group.label} className="flex gap-1 md:flex-col">
-              <span className="hidden px-2 pb-1 text-xs font-semibold tracking-wide text-foreground uppercase md:block">
-                {group.label}
-              </span>
-              {group.pages.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={pathname === href ? 'page' : undefined}
-                  className={cn(
-                    'flex h-8 shrink-0 items-center rounded-md px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-primary',
-                    pathname === href
-                      ? 'bg-fill-active font-medium'
-                      : 'text-muted hover:bg-fill-hover hover:text-foreground',
-                  )}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {GROUPS.map((group) => {
+            return (
+              <div key={group.label} className="flex gap-1 md:flex-col">
+                <span className="hidden px-2 pb-1 text-xs font-semibold tracking-wide text-foreground uppercase md:block">
+                  {group.label}
+                </span>
+                {group.pages.map(({ href, label }) => {
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      aria-current={pathname === href ? 'page' : undefined}
+                      className={cn(
+                        'flex h-8 shrink-0 items-center rounded-md px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-primary',
+                        pathname === href
+                          ? 'bg-fill-active font-medium'
+                          : 'text-muted hover:bg-fill-hover hover:text-foreground',
+                      )}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
         <div className="min-w-0 flex-1 pb-6">{children}</div>
       </div>

@@ -13,7 +13,9 @@ export default function ThemeToggle() {
       variant="tertiary"
       iconOnly
       aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      onClick={() => {
+        return setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+      }}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />

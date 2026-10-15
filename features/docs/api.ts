@@ -20,28 +20,42 @@ export const getChildren = async (parentId: string | null, offset: number): Prom
   return { nodes: data, total: typeof meta.total === 'number' ? meta.total : data.length, offset };
 };
 
-export const getDocument = (id: string) => api.get<Document>(`/documents/${id}`);
-export const createDocument = (body: CreateDocument) => api.post<Document>('/documents', body);
-export const renameDocument = ({ id, title }: { id: string; title: string }) =>
-  api.patch<Document>(`/documents/${id}`, { title });
-export const saveContent = ({ id, ...body }: ContentSave & { id: string }) =>
-  api.patch<Document>(`/documents/${id}`, body);
+export const getDocument = (id: string) => {
+  return api.get<Document>(`/documents/${id}`);
+};
+export const createDocument = (body: CreateDocument) => {
+  return api.post<Document>('/documents', body);
+};
+export const renameDocument = ({ id, title }: { id: string; title: string }) => {
+  return api.patch<Document>(`/documents/${id}`, { title });
+};
+export const saveContent = ({ id, ...body }: ContentSave & { id: string }) => {
+  return api.patch<Document>(`/documents/${id}`, body);
+};
 
 /** What happens to what's inside: archived with it, or moved first (`move_to` null is the top level). */
 export type ArchiveChoice = { children: 'archive' } | { children: 'move'; move_to: string | null };
 
-export const archiveDocument = ({ id, ...choice }: ArchiveChoice & { id: string }) =>
-  api.post<null>(`/documents/${id}/archive`, choice);
-export const restoreDocument = (id: string) => api.post<Document>(`/documents/${id}/restore`, {});
+export const archiveDocument = ({ id, ...choice }: ArchiveChoice & { id: string }) => {
+  return api.post<null>(`/documents/${id}/archive`, choice);
+};
+export const restoreDocument = (id: string) => {
+  return api.post<Document>(`/documents/${id}/restore`, {});
+};
 /** Deletes an archive for good (and at its source, for pages archived from here). */
-export const deleteArchived = (id: string) => api.delete<null>(`/documents/${id}`);
+export const deleteArchived = (id: string) => {
+  return api.delete<null>(`/documents/${id}`);
+};
 export const resolveConflict = (
   { id, ...body }: { id: string; action: ConflictAction; base_version: number },
-) => api.post<Document>(`/documents/${id}/resolve-conflict`, body);
+) => {
+  return api.post<Document>(`/documents/${id}/resolve-conflict`, body);
+};
 
 /** What a link shows as a card; read by the server, which only reaches public sites. */
-export const getLinkPreview = (url: string) =>
-  api.get<LinkPreview>('/link-previews', { params: { url } });
+export const getLinkPreview = (url: string) => {
+  return api.get<LinkPreview>('/link-previews', { params: { url } });
+};
 
 export const ARCHIVE_PAGE_SIZE = 50;
 
@@ -67,7 +81,9 @@ async function send(target: UploadTarget, file: File) {
   let body: BodyInit = file;
   if (fields.length) {
     const form = new FormData();
-    fields.forEach(([name, value]) => form.append(name, value));
+    fields.forEach(([name, value]) => {
+      return form.append(name, value);
+    });
     form.append('file', file); // last: form uploads (S3) ignore fields after the file
     body = form;
   }

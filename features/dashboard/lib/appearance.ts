@@ -20,8 +20,9 @@ const EDGE_STYLES: Record<EdgeType, EdgeStyle> = {
   RECEIVES: { stroke: primary, dash: '6 3', label: 'handles message' },
 };
 
-export const edgeStyle = (type: EdgeType): EdgeStyle =>
-  EDGE_STYLES[type] ?? { stroke: line, label: 'relates to' };
+export const edgeStyle = (type: EdgeType): EdgeStyle => {
+  return EDGE_STYLES[type] ?? { stroke: line, label: 'relates to' };
+};
 
 /** With a node in focus, "what this uses" and "what uses this" are coloured apart. */
 export const FOCUS_STROKE = { outgoing: primary, incoming: warning } as const;

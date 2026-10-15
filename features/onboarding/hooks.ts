@@ -12,17 +12,21 @@ import { isRunning } from './steps';
 const keys = {
   jiraProjects: [...queryKeys.connections, PROVIDER.jira, 'projects'] as const,
 };
-const showError = (error: ApiError) => toast.error(error.message);
+const showError = (error: ApiError) => {
+  return toast.error(error.message);
+};
 
 export function useOnboardingStatus() {
   return useQuery({
     queryKey: queryKeys.onboardingStatus,
     queryFn: onboardingApi.getStatus,
     // poll only while something is indexing or syncing in the background
-    refetchInterval: ({ state }) =>
-      state.data && (state.data.github.repos.some(isRunning) || isRunning(state.data.jira.project))
+    refetchInterval: ({ state }) => {
+      return state.data
+          && (state.data.github.repos.some(isRunning) || isRunning(state.data.jira.project))
         ? JOB_POLL_MS
-        : false,
+        : false;
+    },
   });
 }
 
@@ -48,30 +52,41 @@ function useOnboardingMutation<TArg, TResult>(
   });
 }
 
-export const useReindexRepo = () => useOnboardingMutation(onboardingApi.reindexRepo);
+export const useReindexRepo = () => {
+  return useOnboardingMutation(onboardingApi.reindexRepo);
+};
 
-export const useDisconnectRepo = () =>
-  useOnboardingMutation(
+export const useDisconnectRepo = () => {
+  return useOnboardingMutation(
     onboardingApi.disconnectRepo,
-    (_, repoFullName) => toast.success(`Disconnected ${repoFullName}.`),
+    (_, repoFullName) => {
+      return toast.success(`Disconnected ${repoFullName}.`);
+    },
   );
+};
 
-export const useConnectJiraProject = (onConnected: () => void) =>
-  useOnboardingMutation(onboardingApi.connectJiraProject, (project) => {
+export const useConnectJiraProject = (onConnected: () => void) => {
+  return useOnboardingMutation(onboardingApi.connectJiraProject, (project) => {
     toast.success(`Connected ${project.key}. Tickets are syncing.`);
     onConnected();
   });
+};
 
-export const useDisconnectJira = () =>
-  useOnboardingMutation(
+export const useDisconnectJira = () => {
+  return useOnboardingMutation(
     onboardingApi.disconnectJira,
-    () => toast.success('Jira disconnected. Imported tickets are kept.'),
+    () => {
+      return toast.success('Jira disconnected. Imported tickets are kept.');
+    },
   );
+};
 
 export function useStartJiraAuthorization() {
   return useMutation<{ authorization_url: string }, ApiError>({
     mutationFn: onboardingApi.startJiraAuthorization,
-    onSuccess: ({ authorization_url }) => window.location.assign(authorization_url),
+    onSuccess: ({ authorization_url }) => {
+      return window.location.assign(authorization_url);
+    },
     onError: showError,
   });
 }

@@ -63,13 +63,17 @@ export default function CommandMenu(
       onOpenChange(!open);
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      return window.removeEventListener('keydown', onKeyDown);
+    };
   }, [open, onOpenChange]);
 
   // close first, so the next page or dialog gets focus rather than the palette
-  const run = (action: () => void) => () => {
-    onOpenChange(false);
-    action();
+  const run = (action: () => void) => {
+    return () => {
+      onOpenChange(false);
+      action();
+    };
   };
 
   return (
@@ -78,37 +82,49 @@ export default function CommandMenu(
       <CommandList>
         <CommandEmpty>No results.</CommandEmpty>
         <CommandGroup heading="Go to">
-          {PAGES.map(({ href, label, icon: Icon, color }) => (
-            <CommandItem
-              key={href}
-              onSelect={run(() => router.push(href))}
-            >
-              <Icon weight="fill" className={color} /> {label}
-            </CommandItem>
-          ))}
+          {PAGES.map(({ href, label, icon: Icon, color }) => {
+            return (
+              <CommandItem
+                key={href}
+                onSelect={run(() => {
+                  return router.push(href);
+                })}
+              >
+                <Icon weight="fill" className={color} /> {label}
+              </CommandItem>
+            );
+          })}
           {/* features/dashboard opens its chat for this param; the URL is the contract between the two */}
           <CommandItem
             keywords={['chat', 'ai', 'question', 'ask']}
-            onSelect={run(() => router.push('/dashboard?chat=open'))}
+            onSelect={run(() => {
+              return router.push('/dashboard?chat=open');
+            })}
           >
             <ChatCircleDots weight="fill" className="text-accent-blue" /> Ask about this repository
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Repositories">
           {repos.data
-            ?.filter((repo) => repo.access_status === ACCESS_STATUS.active)
-            .map((repo) => (
-              <CommandItem
-                key={repo.repo_full_name}
-                value={`Switch to ${repo.repo_full_name}`}
-                keywords={['repo', 'repository', 'switch']}
-                onSelect={run(() =>
-                  router.push(`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`)
-                )}
-              >
-                <GitBranch weight="fill" className="text-accent-blue" /> {repo.repo_full_name}
-              </CommandItem>
-            ))}
+            ?.filter((repo) => {
+              return repo.access_status === ACCESS_STATUS.active;
+            })
+            .map((repo) => {
+              return (
+                <CommandItem
+                  key={repo.repo_full_name}
+                  value={`Switch to ${repo.repo_full_name}`}
+                  keywords={['repo', 'repository', 'switch']}
+                  onSelect={run(() => {
+                    return router.push(
+                      `/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`,
+                    );
+                  })}
+                >
+                  <GitBranch weight="fill" className="text-accent-blue" /> {repo.repo_full_name}
+                </CommandItem>
+              );
+            })}
           {hasRole(current?.role, ROLE.admin) && (
             <CommandItem keywords={['repo', 'repository', 'connect']} onSelect={run(onAddRepo)}>
               <Plus /> Add repository…
@@ -117,49 +133,67 @@ export default function CommandMenu(
         </CommandGroup>
         <CommandGroup heading="Workspaces">
           {workspaces.data
-            ?.filter((workspace) => workspace.id !== current?.id)
-            .map((workspace) => (
-              <CommandItem
-                key={workspace.id}
-                value={`Switch to workspace ${workspace.name}`}
-                keywords={['workspace', 'team', 'switch']}
-                onSelect={run(() => switchWorkspace(workspace.id))}
-              >
-                <Buildings weight="fill" className="text-accent-purple" /> {workspace.name}
-              </CommandItem>
-            ))}
+            ?.filter((workspace) => {
+              return workspace.id !== current?.id;
+            })
+            .map((workspace) => {
+              return (
+                <CommandItem
+                  key={workspace.id}
+                  value={`Switch to workspace ${workspace.name}`}
+                  keywords={['workspace', 'team', 'switch']}
+                  onSelect={run(() => {
+                    return switchWorkspace(workspace.id);
+                  })}
+                >
+                  <Buildings weight="fill" className="text-accent-purple" /> {workspace.name}
+                </CommandItem>
+              );
+            })}
           <CommandItem keywords={['workspace', 'team', 'new']} onSelect={run(onCreateWorkspace)}>
             <Plus /> Create workspace…
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Settings">
-          {SETTINGS_PAGES.map(({ href, label, icon: Icon, color }) => (
-            <CommandItem
-              key={href}
-              value={`Settings ${label}`}
-              keywords={['settings']}
-              onSelect={run(() => router.push(href))}
-            >
-              <Icon weight="fill" className={color} /> {label}
-            </CommandItem>
-          ))}
+          {SETTINGS_PAGES.map(({ href, label, icon: Icon, color }) => {
+            return (
+              <CommandItem
+                key={href}
+                value={`Settings ${label}`}
+                keywords={['settings']}
+                onSelect={run(() => {
+                  return router.push(href);
+                })}
+              >
+                <Icon weight="fill" className={color} /> {label}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
         <CommandGroup heading="Theme">
-          {THEMES.map(({ value, label, icon: Icon, color }) => (
-            <CommandItem
-              key={value}
-              value={`Theme ${label}`}
-              keywords={['theme', 'appearance']}
-              onSelect={run(() => setTheme(value))}
-            >
-              <Icon weight="fill" className={color} /> {label}
-            </CommandItem>
-          ))}
+          {THEMES.map(({ value, label, icon: Icon, color }) => {
+            return (
+              <CommandItem
+                key={value}
+                value={`Theme ${label}`}
+                keywords={['theme', 'appearance']}
+                onSelect={run(() => {
+                  return setTheme(value);
+                })}
+              >
+                <Icon weight="fill" className={color} /> {label}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
         <CommandGroup heading="Account">
           <CommandItem
             keywords={['log out', 'logout']}
-            onSelect={run(() => void signOut().finally(() => router.replace('/sign-in')))}
+            onSelect={run(() => {
+              return void signOut().finally(() => {
+                return router.replace('/sign-in');
+              });
+            })}
           >
             <SignOut weight="fill" className="text-danger" /> Sign out
           </CommandItem>

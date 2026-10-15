@@ -17,7 +17,9 @@ describe('sign-up rules', () => {
 
   it('puts each problem on its own field', () => {
     const result = signUpSchema.safeParse({ ...ACCOUNT, email: 'nope', name: ' ' });
-    const fields = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    const fields = result.success ? [] : result.error.issues.map((issue) => {
+      return issue.path[0];
+    });
     expect(fields.sort()).toEqual(['email', 'name']);
   });
 

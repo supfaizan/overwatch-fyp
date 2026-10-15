@@ -47,9 +47,13 @@ import {
 import PriorityIcon from './priority-icon';
 
 // heavy, and only needed once someone edits
-const RichTextEditor = dynamic(() => import('@/shared/components/rich-text-editor'), {
+const RichTextEditor = dynamic(() => {
+  return import('@/shared/components/rich-text-editor');
+}, {
   ssr: false,
-  loading: () => <Skeleton className="h-32 w-full" />,
+  loading: () => {
+    return <Skeleton className="h-32 w-full" />;
+  },
 });
 
 /** How the backend shows media embedded in a Jira description; they can't be written back from here. */
@@ -83,8 +87,9 @@ export default function ItemDetailsDialog(
   const readOnly = !item.editable;
   const tracker = item.source !== NATIVE_SOURCE;
 
-  const save = (changes: WorkItemChanges) =>
-    update.mutate({ id: item.id, ...changes }, { onSuccess: setItem });
+  const save = (changes: WorkItemChanges) => {
+    return update.mutate({ id: item.id, ...changes }, { onSuccess: setItem });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,13 +118,17 @@ export default function ItemDetailsDialog(
             <TitleField
               value={item.title}
               disabled={readOnly}
-              onSave={(title) => save({ title })}
+              onSave={(title) => {
+                return save({ title });
+              }}
             />
             <DescriptionField
               item={item}
               disabled={readOnly}
               saving={update.isPending}
-              onSave={(description) => save({ description })}
+              onSave={(description) => {
+                return save({ description });
+              }}
             />
             {item.subtasks.length > 0 && <Linked title="Subtasks" items={item.subtasks} />}
             {item.links.length > 0 && <Linked title="Linked work items" items={item.links} />}
@@ -137,20 +146,22 @@ export default function ItemDetailsDialog(
             >
               <SelectTrigger aria-label="Status" placeholder="Status" className="font-medium" />
               <SelectContent>
-                {board.columns.map((column) => (
-                  <SelectItem key={column.id} value={column.id}>
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          'size-2 rounded-full',
-                          COLOR_CLASSES[columnColor(column)].dot,
-                        )}
-                      />
-                      {column.name}
-                    </span>
-                  </SelectItem>
-                ))}
+                {board.columns.map((column) => {
+                  return (
+                    <SelectItem key={column.id} value={column.id}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'size-2 rounded-full',
+                            COLOR_CLASSES[columnColor(column)].dot,
+                          )}
+                        />
+                        {column.name}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -160,7 +171,9 @@ export default function ItemDetailsDialog(
                 <TypeField
                   item={item}
                   disabled={readOnly}
-                  onSave={(type_id) => save({ type_id })}
+                  onSave={(type_id) => {
+                    return save({ type_id });
+                  }}
                 />
               </Detail>
               <Detail label="Assignee">
@@ -168,7 +181,9 @@ export default function ItemDetailsDialog(
                   item={item}
                   board={board}
                   disabled={readOnly}
-                  onSave={(assignee_id) => save({ assignee_id })}
+                  onSave={(assignee_id) => {
+                    return save({ assignee_id });
+                  }}
                 />
               </Detail>
               {board.kind === BOARD_KIND.scrum && (
@@ -176,8 +191,8 @@ export default function ItemDetailsDialog(
                   <Select
                     value={item.sprint_id ?? BACKLOG}
                     disabled={readOnly}
-                    onValueChange={(value) =>
-                      setSprint.mutate(
+                    onValueChange={(value) => {
+                      return setSprint.mutate(
                         {
                           boardId: board.id,
                           item,
@@ -187,13 +202,16 @@ export default function ItemDetailsDialog(
                           rank: Date.now() / 1000,
                         },
                         { onSuccess: setItem },
-                      )}
+                      );
+                    }}
                   >
                     <SelectTrigger aria-label="Sprint" size="sm" />
                     <SelectContent>
-                      {sprints.map((sprint) => (
-                        <SelectItem key={sprint.id} value={sprint.id}>{sprint.name}</SelectItem>
-                      ))}
+                      {sprints.map((sprint) => {
+                        return (
+                          <SelectItem key={sprint.id} value={sprint.id}>{sprint.name}</SelectItem>
+                        );
+                      })}
                       <SelectItem value={BACKLOG}>Backlog</SelectItem>
                     </SelectContent>
                   </Select>
@@ -204,14 +222,18 @@ export default function ItemDetailsDialog(
                   boardId={board.id}
                   value={item.priority}
                   disabled={readOnly}
-                  onSave={(priority) => save({ priority })}
+                  onSave={(priority) => {
+                    return save({ priority });
+                  }}
                 />
               </Detail>
               <Detail label="Labels">
                 <LabelsField
                   value={item.labels}
                   disabled={readOnly}
-                  onSave={(labels) => save({ labels })}
+                  onSave={(labels) => {
+                    return save({ labels });
+                  }}
                 />
               </Detail>
               <Detail label="Story points">
@@ -297,13 +319,14 @@ export default function ItemDetailsDialog(
                     : "This can't be undone."}
                   confirmLabel="Delete"
                   pending={remove.isPending}
-                  onConfirm={(done) =>
-                    remove.mutate(item.id, {
+                  onConfirm={(done) => {
+                    return remove.mutate(item.id, {
                       onSuccess: () => {
                         done();
                         onOpenChange(false);
                       },
-                    })}
+                    });
+                  }}
                 />
               )}
             </div>
@@ -346,9 +369,13 @@ function TitleField(
       value={draft}
       maxLength={255}
       disabled={disabled}
-      onChange={(e) => setDraft(e.target.value)}
+      onChange={(e) => {
+        return setDraft(e.target.value);
+      }}
       onBlur={commit}
-      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+      onKeyDown={(e) => {
+        return e.key === 'Enter' && e.currentTarget.blur();
+      }}
     />
   );
 }
@@ -393,7 +420,9 @@ function DescriptionField(
               value={draft}
               onChange={setDraft}
               onSubmit={saveDraft}
-              onCancel={() => setEditing(false)}
+              onCancel={() => {
+                return setEditing(false);
+              }}
               placeholder="Describe the work… Markdown shortcuts work."
               autoFocus
             />
@@ -404,7 +433,14 @@ function DescriptionField(
               </p>
             )}
             <div className="flex justify-end gap-2">
-              <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  return setEditing(false);
+                }}
+              >
+                Cancel
+              </Button>
               <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>
             </div>
           </>
@@ -448,24 +484,28 @@ function Linked({ title, items }: { title: string; items: LinkedItem[] }) {
     <section className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold">{title}</h3>
       <ul className="flex flex-col gap-1">
-        {items.map((linked) => (
-          <li
-            key={`${linked.type}-${linked.key}`}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            {linked.type && <span className="w-28 shrink-0 text-xs text-muted">{linked.type}</span>}
-            <span
-              className={cn(
-                'w-20 shrink-0 font-medium',
-                linked.status_category === STATUS_CATEGORY.done && 'line-through',
-              )}
+        {items.map((linked) => {
+          return (
+            <li
+              key={`${linked.type}-${linked.key}`}
+              className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
             >
-              {linked.key}
-            </span>
-            <span className="min-w-0 flex-1 truncate">{linked.title}</span>
-            {linked.status && <Tag>{linked.status}</Tag>}
-          </li>
-        ))}
+              {linked.type && (
+                <span className="w-28 shrink-0 text-xs text-muted">{linked.type}</span>
+              )}
+              <span
+                className={cn(
+                  'w-20 shrink-0 font-medium',
+                  linked.status_category === STATUS_CATEGORY.done && 'line-through',
+                )}
+              >
+                {linked.key}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{linked.title}</span>
+              {linked.status && <Tag>{linked.status}</Tag>}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -484,7 +524,9 @@ function AssigneeField(
     <Select
       value={item.assignee?.id ?? NONE}
       disabled={disabled}
-      onValueChange={(value) => onSave(value === NONE ? null : value)}
+      onValueChange={(value) => {
+        return onSave(value === NONE ? null : value);
+      }}
     >
       <SelectTrigger
         aria-label="Assignee"
@@ -493,11 +535,13 @@ function AssigneeField(
       />
       <SelectContent>
         <SelectItem value={NONE}>Unassigned</SelectItem>
-        {people.data?.map((person) => (
-          <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-        ))}
+        {people.data?.map((person) => {
+          return <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>;
+        })}
         {/* keep the current assignee selectable while the list loads */}
-        {item.assignee?.id && !people.data?.some((p) => p.id === item.assignee?.id) && (
+        {item.assignee?.id && !people.data?.some((p) => {
+          return p.id === item.assignee?.id;
+        }) && (
           <SelectItem value={item.assignee.id}>{item.assignee.name ?? item.assignee.id}</SelectItem>
         )}
       </SelectContent>
@@ -522,7 +566,9 @@ function TypeField(
       value={current}
       allowed={allowed.data?.type_ids ?? null}
       disabled={disabled}
-      onChange={(typeId) => typeId !== current && onSave(typeId)}
+      onChange={(typeId) => {
+        return typeId !== current && onSave(typeId);
+      }}
     />
   );
 }
@@ -540,7 +586,9 @@ function PriorityField(
     <Select
       value={value ?? NONE}
       disabled={disabled}
-      onValueChange={(next) => onSave(next === NONE ? null : next)}
+      onValueChange={(next) => {
+        return onSave(next === NONE ? null : next);
+      }}
     >
       <SelectTrigger aria-label="Priority" size="sm" />
       <SelectContent>
@@ -548,14 +596,16 @@ function PriorityField(
         {[
           ...(priorities.data ?? []),
           ...(value && !priorities.data?.includes(value) ? [value] : []),
-        ].map((priority) => (
-          <SelectItem key={priority} value={priority}>
-            {/* the trigger repeats an item's content, so the selected priority shows its arrow too */}
-            <span className="flex items-center gap-2">
-              <PriorityIcon priority={priority} /> {priority}
-            </span>
-          </SelectItem>
-        ))}
+        ].map((priority) => {
+          return (
+            <SelectItem key={priority} value={priority}>
+              {/* the trigger repeats an item's content, so the selected priority shows its arrow too */}
+              <span className="flex items-center gap-2">
+                <PriorityIcon priority={priority} /> {priority}
+              </span>
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );
@@ -600,7 +650,11 @@ function Comments({ itemId, disabled }: { itemId: string; disabled: boolean }) {
           className="flex flex-col gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            add.mutate({ itemId, body: draft.trim() }, { onSuccess: () => setDraft('') });
+            add.mutate({ itemId, body: draft.trim() }, {
+              onSuccess: () => {
+                return setDraft('');
+              },
+            });
           }}
         >
           <TextArea
@@ -609,7 +663,9 @@ function Comments({ itemId, disabled }: { itemId: string; disabled: boolean }) {
             rows={3}
             maxLength={20_000}
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              return setDraft(e.target.value);
+            }}
           />
           <div className="flex justify-end">
             <Button
@@ -632,9 +688,9 @@ function Comments({ itemId, disabled }: { itemId: string; disabled: boolean }) {
         ? <p className="text-sm text-muted">No comments yet.</p>
         : (
           <ol className="flex flex-col gap-4">
-            {[...comments.data].reverse().map((comment) => (
-              <CommentRow key={comment.id} itemId={itemId} comment={comment} />
-            ))}
+            {[...comments.data].reverse().map((comment) => {
+              return <CommentRow key={comment.id} itemId={itemId} comment={comment} />;
+            })}
           </ol>
         )}
     </section>
@@ -675,7 +731,9 @@ function CommentRow({ itemId, comment }: { itemId: string; comment: Comment }) {
               description="This can't be undone."
               confirmLabel="Delete"
               pending={remove.isPending}
-              onConfirm={(done) => remove.mutate({ itemId, id: comment.id }, { onSuccess: done })}
+              onConfirm={(done) => {
+                return remove.mutate({ itemId, id: comment.id }, { onSuccess: done });
+              }}
             />
           )}
         </div>
@@ -687,20 +745,32 @@ function CommentRow({ itemId, comment }: { itemId: string; comment: Comment }) {
                 rows={3}
                 maxLength={20_000}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  return setDraft(e.target.value);
+                }}
                 autoFocus
               />
               <div className="flex justify-end gap-2">
-                <Button size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    return setEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
                 <Button
                   size="sm"
                   variant="primary"
                   loading={update.isPending}
                   disabled={!draft.trim()}
-                  onClick={() =>
-                    update.mutate({ itemId, id: comment.id, body: draft.trim() }, {
-                      onSuccess: () => setEditing(false),
-                    })}
+                  onClick={() => {
+                    return update.mutate({ itemId, id: comment.id, body: draft.trim() }, {
+                      onSuccess: () => {
+                        return setEditing(false);
+                      },
+                    });
+                  }}
                 >
                   Save
                 </Button>

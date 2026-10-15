@@ -25,7 +25,9 @@ export default function IndexingStep() {
         <Button
           variant="primary"
           disabled={!status.data?.ready}
-          onClick={() => router.push('/onboarding/ready')}
+          onClick={() => {
+            return router.push('/onboarding/ready');
+          }}
         >
           Continue
         </Button>
@@ -35,9 +37,9 @@ export default function IndexingStep() {
         ? <Skeleton className="h-12 w-full" />
         : (
           <ul className="flex flex-col gap-3">
-            {status.data?.github.repos.map((repo) => (
-              <RepoProgress key={repo.repo_full_name} repo={repo} />
-            ))}
+            {status.data?.github.repos.map((repo) => {
+              return <RepoProgress key={repo.repo_full_name} repo={repo} />;
+            })}
           </ul>
         )}
     </StepCard>
@@ -66,7 +68,9 @@ function RepoProgress({ repo }: { repo: OnboardingRepo }) {
               <Button
                 size="sm"
                 loading={reindex.isPending}
-                onClick={() => reindex.mutate(repo.repo_full_name)}
+                onClick={() => {
+                  return reindex.mutate(repo.repo_full_name);
+                }}
               >
                 Retry
               </Button>

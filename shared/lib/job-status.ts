@@ -12,5 +12,6 @@ export type JobStatus = (typeof JOB_STATUS)[keyof typeof JOB_STATUS];
 export const JOB_POLL_MS = 3_000;
 
 /** Still working in the background, so worth polling. */
-export const isRunning = (status: JobStatus | null | undefined) =>
-  status === JOB_STATUS.pending || status === JOB_STATUS.inProgress;
+export const isRunning = (status: JobStatus | null | undefined) => {
+  return status === JOB_STATUS.pending || status === JOB_STATUS.inProgress;
+};

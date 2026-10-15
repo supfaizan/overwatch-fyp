@@ -40,9 +40,15 @@ const RECEDED = { node: 0.18, edge: 0.07 };
 
 export default function DiagramCanvas({ repo }: { repo: string }) {
   const { data, isPending, isError, error, refetch, isPlaceholderData } = useGraphView(repo);
-  const hovered = useViewStore((state) => state.hovered);
-  const selected = useViewStore((state) => state.selected);
-  const highlighted = useViewStore((state) => state.highlighted);
+  const hovered = useViewStore((state) => {
+    return state.hovered;
+  });
+  const selected = useViewStore((state) => {
+    return state.selected;
+  });
+  const highlighted = useViewStore((state) => {
+    return state.highlighted;
+  });
   const { open, hover, select } = useViewStore.getState();
   const { resolvedTheme } = useTheme();
 
@@ -51,9 +57,15 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
 
   // hover wins over the chat's highlight, which wins over the selection, so you can look around without losing your place
   const focusId = hovered ?? (highlighted.length > 0 ? null : selected);
-  const inFocus = useMemo(() => neighbourhood(data?.edges ?? [], focusId), [data, focusId]);
+  const inFocus = useMemo(() => {
+    return neighbourhood(data?.edges ?? [], focusId);
+  }, [data, focusId]);
   // which nodes are on screen, not how they look: restyling must not refit the viewport
-  const signature = useMemo(() => (data?.nodes ?? []).map((node) => node.id).join('|'), [data]);
+  const signature = useMemo(() => {
+    return (data?.nodes ?? []).map((node) => {
+      return node.id;
+    }).join('|');
+  }, [data]);
   const dense = (data?.nodes.length ?? 0) > DENSE;
 
   useEffect(() => {
@@ -61,20 +73,30 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
       return;
     }
     // a closed folder holding a highlighted node stands in for it
-    const lit = (id: string) => highlighted.some((nodeId) => isInside(nodeId, id));
+    const lit = (id: string) => {
+      return highlighted.some((nodeId) => {
+        return isInside(nodeId, id);
+      });
+    };
     const opacityOf = (id: string) => {
       if (focusId) {
         return inFocus.has(id) ? 1 : RECEDED.node;
       }
       return highlighted.length === 0 || lit(id) ? 1 : RECEDED.node;
     };
-    setNodes((current) => restyleNodes(current, data.nodes, opacityOf));
+    setNodes((current) => {
+      return restyleNodes(current, data.nodes, opacityOf);
+    });
     const relations = styleEdges(data.edges, focusId);
     // quietest first, so lines in focus paint over the rest
     setEdges([
       ...treeEdges(data.view.containment),
-      ...relations.filter((edge) => !edge.zIndex),
-      ...relations.filter((edge) => edge.zIndex),
+      ...relations.filter((edge) => {
+        return !edge.zIndex;
+      }),
+      ...relations.filter((edge) => {
+        return edge.zIndex;
+      }),
     ]);
   }, [data, focusId, inFocus, highlighted, setNodes, setEdges]);
 
@@ -88,7 +110,19 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
   if (isError) {
     return (
       <Notice>
-        <Banner type="error" action={<Button size="sm" onClick={() => refetch()}>Retry</Button>}>
+        <Banner
+          type="error"
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                return refetch();
+              }}
+            >
+              Retry
+            </Button>
+          }
+        >
           {error.message}
         </Banner>
       </Notice>
@@ -131,11 +165,19 @@ export default function DiagramCanvas({ repo }: { repo: string }) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        onNodeClick={(_, node) => node.type === 'graphNode' && select(node.id)}
-        onNodeDoubleClick={(_, node) =>
-          node.type === 'graphNode' && node.data.expandable && !node.data.expanded && open(node.id)}
-        onNodeMouseEnter={(_, node) => hover(node.id)}
-        onNodeMouseLeave={() => hover(null)}
+        onNodeClick={(_, node) => {
+          return node.type === 'graphNode' && select(node.id);
+        }}
+        onNodeDoubleClick={(_, node) => {
+          return node.type === 'graphNode' && node.data.expandable && !node.data.expanded
+            && open(node.id);
+        }}
+        onNodeMouseEnter={(_, node) => {
+          return hover(node.id);
+        }}
+        onNodeMouseLeave={() => {
+          return hover(null);
+        }}
         onPaneClick={() => {
           select(null);
           hover(null);
@@ -201,7 +243,9 @@ function FitToContent({ signature, dense }: { signature: string; dense: boolean 
 function FocusOnRequest(
   { view, ready, signature }: { view: GraphView; ready: boolean; signature: string },
 ) {
-  const request = useViewStore((state) => state.focusRequest);
+  const request = useViewStore((state) => {
+    return state.focusRequest;
+  });
   const { fitView, getNode } = useReactFlow();
   const measured = useNodesInitialized();
 
@@ -209,8 +253,12 @@ function FocusOnRequest(
     if (!request || !ready || !measured) {
       return;
     }
-    const drawn = new Set(view.nodes.map((node) => node.id));
-    const target = [request.nodeId, ...[...request.ancestors].reverse()].find((id) => drawn.has(id))
+    const drawn = new Set(view.nodes.map((node) => {
+      return node.id;
+    }));
+    const target = [request.nodeId, ...[...request.ancestors].reverse()].find((id) => {
+      return drawn.has(id);
+    })
       ?? null;
     // React Flow takes the new nodes an effect later; wait for this one to be there to pan to
     if (target && !getNode(target)) {
@@ -231,7 +279,9 @@ function restyleNodes(
   next: CanvasNode[],
   opacityOf: (id: string) => number,
 ): CanvasNode[] {
-  const previous = new Map(current.map((node) => [node.id, node]));
+  const previous = new Map(current.map((node) => {
+    return [node.id, node];
+  }));
   return next.map((node) => {
     const opacity = opacityOf(node.id);
     const prior = previous.get(node.id);
@@ -280,15 +330,17 @@ function styleEdges(edges: RelationEdge[], focusId: string | null): Edge[] {
 }
 
 function treeEdges(lines: GraphView['containment']): Edge[] {
-  return lines.map((line) => ({
-    id: `${line.parent}>${line.child}`,
-    source: line.parent,
-    target: line.child,
-    selectable: false,
-    focusable: false,
-    interactionWidth: 0,
-    style: { stroke: TREE_STROKE, strokeWidth: 1.5 },
-  }));
+  return lines.map((line) => {
+    return {
+      id: `${line.parent}>${line.child}`,
+      source: line.parent,
+      target: line.child,
+      selectable: false,
+      focusable: false,
+      interactionWidth: 0,
+      style: { stroke: TREE_STROKE, strokeWidth: 1.5 },
+    };
+  });
 }
 
 /** Explains only the lines on screen; with a node in focus, the focus colours instead. */
@@ -296,7 +348,13 @@ function EdgeLegend(
   { view, edges, focused }: { view: GraphView; edges: RelationEdge[]; focused: boolean },
 ) {
   const kinds = useMemo(
-    () => [...new Set(edges.flatMap((edge) => edge.data?.types ?? []))].sort() as EdgeType[],
+    () => {
+      return [
+        ...new Set(edges.flatMap((edge) => {
+          return edge.data?.types ?? [];
+        })),
+      ].sort() as EdgeType[];
+    },
     [edges],
   );
   if (kinds.length === 0 && !view.truncated) {

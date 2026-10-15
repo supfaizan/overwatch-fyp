@@ -12,20 +12,25 @@ import { CARD_KIND, type CardKind } from './types';
 const CARD_KINDS: string[] = Object.values(CARD_KIND);
 
 /** A link on its own line: playing in the page where its site allows, a card otherwise. */
-export const cardFor = (schema: Schema, url: string) =>
-  schema.nodes[embedFor(url) ? CARD_KIND.embed : CARD_KIND.block].create({ url });
+export const cardFor = (schema: Schema, url: string) => {
+  return schema.nodes[embedFor(url) ? CARD_KIND.embed : CARD_KIND.block].create({ url });
+};
 
 const cardAttributes = {
   url: {
     default: '',
-    parseHTML: (element: HTMLElement) => element.getAttribute('href') ?? '',
-    renderHTML: (attrs: Record<string, unknown>) => ({ href: attrs.url }),
+    parseHTML: (element: HTMLElement) => {
+      return element.getAttribute('href') ?? '';
+    },
+    renderHTML: (attrs: Record<string, unknown>) => {
+      return { href: attrs.url };
+    },
   },
   raw: { default: null, rendered: false },
 };
 
-const card = (name: CardKind, inline: boolean) =>
-  Node.create({
+const card = (name: CardKind, inline: boolean) => {
+  return Node.create({
     name,
     group: inline ? 'inline' : 'block',
     inline,
@@ -58,12 +63,15 @@ const card = (name: CardKind, inline: boolean) =>
       ];
     },
 
-    renderMarkdown: (node) => `<${node.attrs?.url ?? ''}>`,
+    renderMarkdown: (node) => {
+      return `<${node.attrs?.url ?? ''}>`;
+    },
 
     addNodeView() {
       return ReactNodeViewRenderer(LinkCardView, inline ? { as: 'span' } : undefined);
     },
   });
+};
 
 export const InlineCard = card(CARD_KIND.inline, true);
 export const BlockCard = card(CARD_KIND.block, false);

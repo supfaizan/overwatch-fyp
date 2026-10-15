@@ -21,8 +21,12 @@ import { acceptInvite, INVITE_KIND, type InvitePreview, previewInvite, publicPre
 import { forgetInviteToken, takeInviteToken } from './token';
 
 const keys = {
-  preview: (token: string) => ['invite', token] as const,
-  publicPreview: (token: string) => ['invite', 'public', token] as const,
+  preview: (token: string) => {
+    return ['invite', token] as const;
+  },
+  publicPreview: (token: string) => {
+    return ['invite', 'public', token] as const;
+  },
 };
 const INVITE_ERROR = { wrongAccount: 'invite_wrong_account' } as const;
 
@@ -42,9 +46,13 @@ function invitedAs(preview: InvitePreview): string {
 
 /** Join a workspace from an invite link: signed in, accept it; signed out, sign in or create an account first. */
 export default function Invite({ renderSignIn, renderSignUp }: InviteProps) {
-  const status = useSession((state) => state.status);
+  const status = useSession((state) => {
+    return state.status;
+  });
   const [token, setToken] = useState<string | null | undefined>(undefined);
-  useEffect(() => setToken(takeInviteToken()), []);
+  useEffect(() => {
+    return setToken(takeInviteToken());
+  }, []);
 
   if (token === undefined || status === 'loading') {
     return (
@@ -98,7 +106,9 @@ function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { toke
   // a used or expired link stays that way, so a failed preview isn't retried
   const preview = useQuery({
     queryKey: keys.publicPreview(token),
-    queryFn: () => publicPreview(token),
+    queryFn: () => {
+      return publicPreview(token);
+    },
     retry: false,
   });
 
@@ -152,16 +162,22 @@ function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { toke
 }
 
 function AcceptInvite({ token }: { token: string }) {
-  const user = useSession((state) => state.user);
+  const user = useSession((state) => {
+    return state.user;
+  });
   const queryClient = useQueryClient();
   const switchTo = useSwitchWorkspace();
   const preview = useQuery<InvitePreview, ApiError>({
     queryKey: keys.preview(token),
-    queryFn: () => previewInvite(token),
+    queryFn: () => {
+      return previewInvite(token);
+    },
     retry: false,
   });
   const accept = useMutation<Workspace, ApiError>({
-    mutationFn: () => acceptInvite(token),
+    mutationFn: () => {
+      return acceptInvite(token);
+    },
     onSuccess: async (workspace) => {
       forgetInviteToken();
       // the new workspace must be in the list before switching, or the gate would pick another one
@@ -169,7 +185,9 @@ function AcceptInvite({ token }: { token: string }) {
       toast.success(`You joined ${workspace.name}.`);
       switchTo(workspace.id);
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => {
+      return toast.error(error.message);
+    },
   });
 
   if (preview.isPending) {
@@ -189,7 +207,15 @@ function AcceptInvite({ token }: { token: string }) {
         </Banner>
         <div className="flex justify-end gap-2">
           {/* the token stays in this tab, so the invite opens again once signed out */}
-          {wrongAccount && <Button onClick={() => void signOut()}>Sign out and continue</Button>}
+          {wrongAccount && (
+            <Button
+              onClick={() => {
+                return void signOut();
+              }}
+            >
+              Sign out and continue
+            </Button>
+          )}
           <Button asChild variant={wrongAccount ? 'secondary' : 'primary'}>
             <Link href="/dashboard">Go to your dashboard</Link>
           </Button>
@@ -204,7 +230,13 @@ function AcceptInvite({ token }: { token: string }) {
         <Button asChild>
           <Link href="/dashboard">Not now</Link>
         </Button>
-        <Button variant="primary" loading={accept.isPending} onClick={() => accept.mutate()}>
+        <Button
+          variant="primary"
+          loading={accept.isPending}
+          onClick={() => {
+            return accept.mutate();
+          }}
+        >
           Join workspace
         </Button>
       </div>

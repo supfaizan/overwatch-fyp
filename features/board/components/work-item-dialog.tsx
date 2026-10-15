@@ -50,7 +50,11 @@ export default function WorkItemDialog(
         sprint_id: sprintId,
         type_id: chosenType ?? null,
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => {
+          return onOpenChange(false);
+        },
+      },
     );
   };
 
@@ -82,7 +86,9 @@ export default function WorkItemDialog(
             placeholder="What needs doing?"
             maxLength={255}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              return setTitle(e.target.value);
+            }}
             autoFocus
           />
           <TextArea
@@ -91,16 +97,18 @@ export default function WorkItemDialog(
             rows={5}
             maxLength={20_000}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              return setDescription(e.target.value);
+            }}
           />
           <div className="grid grid-cols-2 gap-3">
             <TypeSelect value={chosenType} onChange={setTypeId} />
             <Select value={columnId} onValueChange={setColumnId}>
               <SelectTrigger aria-label="Column" />
               <SelectContent>
-                {board.columns.map((column) => (
-                  <SelectItem key={column.id} value={column.id}>{column.name}</SelectItem>
-                ))}
+                {board.columns.map((column) => {
+                  return <SelectItem key={column.id} value={column.id}>{column.name}</SelectItem>;
+                })}
               </SelectContent>
             </Select>
             <Select value={assignee} onValueChange={setAssignee}>
@@ -110,9 +118,9 @@ export default function WorkItemDialog(
               />
               <SelectContent>
                 <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
-                {people.data?.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-                ))}
+                {people.data?.map((person) => {
+                  return <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>;
+                })}
               </SelectContent>
             </Select>
           </div>

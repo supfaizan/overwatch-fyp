@@ -69,26 +69,38 @@ export default function WorkspaceSwitcher(
         : trigger}
       <DropdownMenuContent side={collapsed ? 'right' : 'bottom'} align="start" className="w-64">
         <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-        {workspaces.data?.map((workspace) => (
-          <DropdownMenuItem
-            key={workspace.id}
-            onSelect={() => workspace.id !== current.id && switchTo(workspace.id)}
-          >
-            <Check className={cn(workspace.id !== current.id && 'invisible')} />
-            <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
-            {workspace.personal && <span className="text-xs text-muted">Personal</span>}
-          </DropdownMenuItem>
-        ))}
+        {workspaces.data?.map((workspace) => {
+          return (
+            <DropdownMenuItem
+              key={workspace.id}
+              onSelect={() => {
+                return workspace.id !== current.id && switchTo(workspace.id);
+              }}
+            >
+              <Check className={cn(workspace.id !== current.id && 'invisible')} />
+              <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+              {workspace.personal && <span className="text-xs text-muted">Personal</span>}
+            </DropdownMenuItem>
+          );
+        })}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onCreate}>
           <Plus /> Create workspace…
         </DropdownMenuItem>
         {hasRole(current.role, ROLE.admin) && (
-          <DropdownMenuItem onSelect={() => router.push('/settings/members')}>
+          <DropdownMenuItem
+            onSelect={() => {
+              return router.push('/settings/members');
+            }}
+          >
             <UserPlus /> Invite people
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => router.push('/settings/workspace')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            return router.push('/settings/workspace');
+          }}
+        >
           <GearSix /> Workspace settings
         </DropdownMenuItem>
       </DropdownMenuContent>

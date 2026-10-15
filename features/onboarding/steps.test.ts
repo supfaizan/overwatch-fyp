@@ -5,13 +5,15 @@ import type { OnboardingRepo, OnboardingStatus } from './types';
 const repo = (
   parse_status: 'pending' | 'done',
   access_status: 'active' | 'revoked' = 'active',
-): OnboardingRepo => ({
-  repo_full_name: 'acme/api',
-  parse_status,
-  parse_error: null,
-  access_status,
-  graph_stats: null,
-});
+): OnboardingRepo => {
+  return {
+    repo_full_name: 'acme/api',
+    parse_status,
+    parse_error: null,
+    access_status,
+    graph_stats: null,
+  };
+};
 
 function status(
   overrides: {

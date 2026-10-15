@@ -2,16 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { groupByOwner, pickRepo, viewableRepos } from './lib';
 import type { AvailableRepo, ConnectedRepo } from './types';
 
-const repo = (name: string, overrides: Partial<ConnectedRepo> = {}): ConnectedRepo => ({
-  repo_full_name: name,
-  default_branch: 'main',
-  access_status: 'active',
-  parse_status: 'done',
-  parse_error: null,
-  indexed_at: '2026-10-01T00:00:00Z',
-  graph_stats: null,
-  ...overrides,
-});
+const repo = (name: string, overrides: Partial<ConnectedRepo> = {}): ConnectedRepo => {
+  return {
+    repo_full_name: name,
+    default_branch: 'main',
+    access_status: 'active',
+    parse_status: 'done',
+    parse_error: null,
+    indexed_at: '2026-10-01T00:00:00Z',
+    graph_stats: null,
+    ...overrides,
+  };
+};
 
 describe('viewableRepos', () => {
   it('keeps a repo being re-indexed, since its last graph is still there', () => {
@@ -35,8 +37,9 @@ describe('pickRepo', () => {
     fresh,
     repo('acme/gone', { access_status: 'revoked' }),
   ];
-  const pick = (requested: string | null, lastUsed: string | null = null) =>
-    pickRepo(repos, requested, lastUsed)?.repo_full_name;
+  const pick = (requested: string | null, lastUsed: string | null = null) => {
+    return pickRepo(repos, requested, lastUsed)?.repo_full_name;
+  };
 
   it('opens the requested repo, even while its first index runs', () => {
     expect(pick('acme/web')).toBe('acme/web');
@@ -63,20 +66,29 @@ describe('pickRepo', () => {
 });
 
 describe('groupByOwner', () => {
-  const available = (full_name: string): AvailableRepo => ({
-    id: full_name.length,
-    full_name,
-    private: false,
-    default_branch: 'main',
-    installation_id: 1,
-    connected: false,
-  });
+  const available = (full_name: string): AvailableRepo => {
+    return {
+      id: full_name.length,
+      full_name,
+      private: false,
+      default_branch: 'main',
+      installation_id: 1,
+      connected: false,
+    };
+  };
 
   it('groups by owner, alphabetical regardless of case', () => {
     const groups = groupByOwner(
       ['zeta/web', 'beta/api', 'zeta/Api-gateway', 'Acme/site'].map(available),
     );
-    expect(groups.map((group) => [group.owner, group.repos.map((r) => r.full_name)])).toEqual([
+    expect(groups.map((group) => {
+      return [
+        group.owner,
+        group.repos.map((r) => {
+          return r.full_name;
+        }),
+      ];
+    })).toEqual([
       ['Acme', ['Acme/site']],
       ['beta', ['beta/api']],
       ['zeta', ['zeta/Api-gateway', 'zeta/web']],

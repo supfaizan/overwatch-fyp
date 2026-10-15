@@ -48,25 +48,33 @@ export default function RepoPicker(
             </div>
           )
           : <CommandEmpty>No repositories match.</CommandEmpty>}
-        {groupByOwner(repos).map((group) => (
-          <CommandGroup key={group.owner} heading={group.owner}>
-            {group.repos.map((repo) => (
-              <CommandItem
-                key={repo.id}
-                value={repo.full_name}
-                disabled={pending !== null}
-                onSelect={() => onSelect(repo.full_name)}
-              >
-                <GitBranch />
-                <span className="min-w-0 flex-1 truncate">
-                  {repo.full_name.slice(group.owner.length + 1)}
-                </span>
-                {repo.private && <LockSimple aria-label="Private" />}
-                {pending === repo.full_name ? <Spinner /> : repo.connected && <Tag>Connected</Tag>}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        ))}
+        {groupByOwner(repos).map((group) => {
+          return (
+            <CommandGroup key={group.owner} heading={group.owner}>
+              {group.repos.map((repo) => {
+                return (
+                  <CommandItem
+                    key={repo.id}
+                    value={repo.full_name}
+                    disabled={pending !== null}
+                    onSelect={() => {
+                      return onSelect(repo.full_name);
+                    }}
+                  >
+                    <GitBranch />
+                    <span className="min-w-0 flex-1 truncate">
+                      {repo.full_name.slice(group.owner.length + 1)}
+                    </span>
+                    {repo.private && <LockSimple aria-label="Private" />}
+                    {pending === repo.full_name
+                      ? <Spinner />
+                      : repo.connected && <Tag>Connected</Tag>}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          );
+        })}
       </CommandList>
     </Command>
   );

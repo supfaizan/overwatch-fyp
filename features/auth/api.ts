@@ -25,19 +25,35 @@ export function startGithubSignIn(from: string | undefined): void {
   window.location.assign(GITHUB_SIGN_IN_URL);
 }
 
-export const signUp = (values: SignUpValues) => api.post<ChallengeIssued>('/auth/signup', values);
-export const signUpWithInvite = (values: InviteSignUpValues & { token: string }) =>
-  api.post<AccessToken & { workspace: Workspace }>('/auth/signup/invite', values);
-export const signIn = (values: SignInValues) => api.post<AccessToken>('/auth/login', values);
-export const verifyEmail = (challengeId: string, code: string) =>
-  api.post<AccessToken>('/auth/email/verify', { challenge_id: challengeId, code });
-export const resendCode = (challengeId: string) =>
-  api.post<{ resend_available_in: number }>('/auth/otp/resend', { challenge_id: challengeId });
-export const requestPasswordReset = (values: ForgotPasswordValues) =>
-  api.post<ChallengeIssued>('/auth/password/forgot', values);
-export const resetPassword = (challengeId: string, code: string, password: string) =>
-  api.post<null>('/auth/password/reset', { challenge_id: challengeId, code, password });
-export const checkUsername = (username: string, signal?: AbortSignal) =>
-  api.get<UsernameAvailability>('/auth/username-availability', { params: { username }, signal });
-export const setUsername = (username: string) =>
-  api.request<User>({ method: 'PUT', url: '/me/username', data: { username } });
+export const signUp = (values: SignUpValues) => {
+  return api.post<ChallengeIssued>('/auth/signup', values);
+};
+export const signUpWithInvite = (values: InviteSignUpValues & { token: string }) => {
+  return api.post<AccessToken & { workspace: Workspace }>('/auth/signup/invite', values);
+};
+export const signIn = (values: SignInValues) => {
+  return api.post<AccessToken>('/auth/login', values);
+};
+export const verifyEmail = (challengeId: string, code: string) => {
+  return api.post<AccessToken>('/auth/email/verify', { challenge_id: challengeId, code });
+};
+export const resendCode = (challengeId: string) => {
+  return api.post<{ resend_available_in: number }>('/auth/otp/resend', {
+    challenge_id: challengeId,
+  });
+};
+export const requestPasswordReset = (values: ForgotPasswordValues) => {
+  return api.post<ChallengeIssued>('/auth/password/forgot', values);
+};
+export const resetPassword = (challengeId: string, code: string, password: string) => {
+  return api.post<null>('/auth/password/reset', { challenge_id: challengeId, code, password });
+};
+export const checkUsername = (username: string, signal?: AbortSignal) => {
+  return api.get<UsernameAvailability>('/auth/username-availability', {
+    params: { username },
+    signal,
+  });
+};
+export const setUsername = (username: string) => {
+  return api.request<User>({ method: 'PUT', url: '/me/username', data: { username } });
+};

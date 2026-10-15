@@ -31,7 +31,9 @@ import { type FormEvent, useState } from 'react';
 import { SettingsSection } from './settings-layout';
 
 const NATIVE = 'native';
-const trackerName = (source: string) => source.charAt(0).toUpperCase() + source.slice(1);
+const trackerName = (source: string) => {
+  return source.charAt(0).toUpperCase() + source.slice(1);
+};
 
 /** The workspace's work item types (Task, Bug, ...): admins add and style them; everyone picks from them. */
 export default function WorkItemTypesSection() {
@@ -52,7 +54,9 @@ export default function WorkItemTypesSection() {
           action={
             <Button
               size="sm"
-              onClick={() => types.refetch()}
+              onClick={() => {
+                return types.refetch();
+              }}
             >
               Retry
             </Button>
@@ -64,57 +68,73 @@ export default function WorkItemTypesSection() {
       {types.isSuccess && (
         <Card className="p-0">
           <ul className="divide-y divide-border">
-            {types.data.map((type) => (
-              <li key={type.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                <TypeIcon type={type} className="size-5" />
-                <span className="font-medium">{type.name}</span>
-                {type.source !== NATIVE && <Tag>From {trackerName(type.source)}</Tag>}
-                <span className="flex-1" />
-                {isAdmin && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="tertiary"
-                      iconOnly
-                      aria-label={`Edit ${type.name}`}
-                      onClick={() => setEditing(type)}
-                    >
-                      <PencilSimple />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="tertiary"
-                      iconOnly
-                      aria-label={`Remove ${type.name}`}
-                      disabled={types.data.length <= 1}
-                      onClick={() =>
-                        setRemoving(type)}
-                    >
-                      <Trash />
-                    </Button>
-                  </>
-                )}
-              </li>
-            ))}
+            {types.data.map((type) => {
+              return (
+                <li key={type.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                  <TypeIcon type={type} className="size-5" />
+                  <span className="font-medium">{type.name}</span>
+                  {type.source !== NATIVE && <Tag>From {trackerName(type.source)}</Tag>}
+                  <span className="flex-1" />
+                  {isAdmin && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="tertiary"
+                        iconOnly
+                        aria-label={`Edit ${type.name}`}
+                        onClick={() => {
+                          return setEditing(type);
+                        }}
+                      >
+                        <PencilSimple />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="tertiary"
+                        iconOnly
+                        aria-label={`Remove ${type.name}`}
+                        disabled={types.data.length <= 1}
+                        onClick={() => {
+                          return setRemoving(type);
+                        }}
+                      >
+                        <Trash />
+                      </Button>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </Card>
       )}
       {isAdmin && (
-        <Button className="self-start" onClick={() => setEditing('new')}>
+        <Button
+          className="self-start"
+          onClick={() => {
+            return setEditing('new');
+          }}
+        >
           <Plus /> Add type
         </Button>
       )}
       {editing && (
         <TypeDialog
           type={editing === 'new' ? null : editing}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            return setEditing(null);
+          }}
         />
       )}
       {removing && types.data && (
         <RemoveDialog
           type={removing}
-          others={types.data.filter((t) => t.id !== removing.id)}
-          onClose={() => setRemoving(null)}
+          others={types.data.filter((t) => {
+            return t.id !== removing.id;
+          })}
+          onClose={() => {
+            return setRemoving(null);
+          }}
         />
       )}
     </SettingsSection>
@@ -144,7 +164,12 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
   };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent
         title={type ? `Edit ${type.name}` : 'Add a type'}
         description={fromTracker
@@ -176,7 +201,9 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
               maxLength={40}
               value={name}
               disabled={fromTracker}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                return setName(e.target.value);
+              }}
               autoFocus={!fromTracker}
             />
           </div>
@@ -192,7 +219,9 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
                     role="radio"
                     aria-checked={icon === option}
                     aria-label={option}
-                    onClick={() => setIcon(option)}
+                    onClick={() => {
+                      return setIcon(option);
+                    }}
                     className={cn(
                       'flex size-9 cursor-pointer items-center justify-center rounded-md border border-transparent hover:bg-fill-hover focus-visible:outline-2 focus-visible:outline-primary',
                       icon === option && 'border-primary bg-fill-active',
@@ -207,21 +236,25 @@ function TypeDialog({ type, onClose }: { type: WorkItemType | null; onClose: () 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-xs font-medium text-muted">Color</legend>
             <div role="radiogroup" aria-label="Color" className="flex flex-wrap gap-2">
-              {TYPE_COLORS.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={color === option}
-                  aria-label={option}
-                  onClick={() => setColor(option)}
-                  className={cn(
-                    'size-7 cursor-pointer rounded-full border-2 border-transparent focus-visible:outline-2 focus-visible:outline-primary',
-                    TYPE_COLOR_CLASSES[option].swatch,
-                    color === option && 'border-foreground',
-                  )}
-                />
-              ))}
+              {TYPE_COLORS.map((option) => {
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={color === option}
+                    aria-label={option}
+                    onClick={() => {
+                      return setColor(option);
+                    }}
+                    className={cn(
+                      'size-7 cursor-pointer rounded-full border-2 border-transparent focus-visible:outline-2 focus-visible:outline-primary',
+                      TYPE_COLOR_CLASSES[option].swatch,
+                      color === option && 'border-foreground',
+                    )}
+                  />
+                );
+              })}
             </div>
           </fieldset>
         </form>
@@ -237,7 +270,12 @@ function RemoveDialog(
   const [reassignTo, setReassignTo] = useState(others[0]?.id ?? '');
   const remove = useDeleteType();
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent
         title={`Remove ${type.name}?`}
         description="Items of this type change to the type you pick."
@@ -250,7 +288,9 @@ function RemoveDialog(
               variant="danger"
               loading={remove.isPending}
               disabled={!reassignTo}
-              onClick={() => remove.mutate({ id: type.id, reassignTo }, { onSuccess: onClose })}
+              onClick={() => {
+                return remove.mutate({ id: type.id, reassignTo }, { onSuccess: onClose });
+              }}
             >
               Remove {type.name}
             </Button>
@@ -260,14 +300,16 @@ function RemoveDialog(
         <Select value={reassignTo} onValueChange={setReassignTo}>
           <SelectTrigger aria-label="Change its items to" />
           <SelectContent>
-            {others.map((other) => (
-              <SelectItem key={other.id} value={other.id}>
-                <span className="flex items-center gap-2">
-                  <TypeIcon type={other} />
-                  {other.name}
-                </span>
-              </SelectItem>
-            ))}
+            {others.map((other) => {
+              return (
+                <SelectItem key={other.id} value={other.id}>
+                  <span className="flex items-center gap-2">
+                    <TypeIcon type={other} />
+                    {other.name}
+                  </span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </DialogContent>

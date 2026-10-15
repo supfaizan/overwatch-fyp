@@ -26,7 +26,11 @@ export function pinColumnWidths(view: EditorView, tableDom: HTMLTableElement) {
   const start = $inside.start(depth);
   const map = TableMap.get(table);
   const cells = [...new Set(map.map)];
-  if (cells.every((offset) => table.nodeAt(offset)?.attrs.colwidth?.every(Boolean))) {
+  if (
+    cells.every((offset) => {
+      return table.nodeAt(offset)?.attrs.colwidth?.every(Boolean);
+    })
+  ) {
     return;
   }
 
@@ -41,7 +45,11 @@ export function pinColumnWidths(view: EditorView, tableDom: HTMLTableElement) {
       (dom instanceof HTMLElement ? dom.getBoundingClientRect().width : 0) / span,
     );
   }
-  if (widths.some((width) => !width)) {
+  if (
+    widths.some((width) => {
+      return !width;
+    })
+  ) {
     return;
   }
 
@@ -101,8 +109,9 @@ export function dragInnerColumnEdge(view: EditorView, event: MouseEvent): boolea
   if (!cols || cols.length < map.width) {
     return false;
   }
-  const widthOf = (col: number) =>
-    table.nodeAt(map.map[col])?.attrs.colwidth?.[col - map.colCount(map.map[col])] ?? 0;
+  const widthOf = (col: number) => {
+    return table.nodeAt(map.map[col])?.attrs.colwidth?.[col - map.colCount(map.map[col])] ?? 0;
+  };
   const [startLeft, startRight] = [widthOf(left), widthOf(right)];
   if (!startLeft || !startRight) {
     return false;
@@ -140,10 +149,14 @@ export function dragInnerColumnEdge(view: EditorView, event: MouseEvent): boolea
         continue;
       }
       const first = map.colCount(offset);
-      const covered = node.attrs.colwidth?.map((width: number, index: number) =>
-        widths[first + index] ?? width
-      );
-      if (covered?.some((width: number, index: number) => width !== node.attrs.colwidth[index])) {
+      const covered = node.attrs.colwidth?.map((width: number, index: number) => {
+        return widths[first + index] ?? width;
+      });
+      if (
+        covered?.some((width: number, index: number) => {
+          return width !== node.attrs.colwidth[index];
+        })
+      ) {
         tr.setNodeMarkup(start + offset, undefined, { ...node.attrs, colwidth: covered });
       }
     }

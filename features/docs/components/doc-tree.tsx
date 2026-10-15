@@ -50,16 +50,28 @@ export default function DocTree({ activeId }: TreeProps) {
   const [opened, setOpened] = useState<Set<string>>(new Set());
   const [closed, setClosed] = useState<Set<string>>(new Set());
   // the open page's ancestors show unless the user closed them
-  const ancestors = active.data?.breadcrumbs.map((crumb) => crumb.id) ?? [];
-  const isOpen = (id: string) => opened.has(id) || (ancestors.includes(id) && !closed.has(id));
+  const ancestors = active.data?.breadcrumbs.map((crumb) => {
+    return crumb.id;
+  }) ?? [];
+  const isOpen = (id: string) => {
+    return opened.has(id) || (ancestors.includes(id) && !closed.has(id));
+  };
   const toggle = (id: string) => {
     const open = !isOpen(id);
-    setOpened((previous) => withMember(previous, id, open));
-    setClosed((previous) => withMember(previous, id, !open));
+    setOpened((previous) => {
+      return withMember(previous, id, open);
+    });
+    setClosed((previous) => {
+      return withMember(previous, id, !open);
+    });
   };
   const open = (id: string) => {
-    setOpened((previous) => withMember(previous, id, true));
-    setClosed((previous) => withMember(previous, id, false));
+    setOpened((previous) => {
+      return withMember(previous, id, true);
+    });
+    setClosed((previous) => {
+      return withMember(previous, id, false);
+    });
   };
 
   return (
@@ -120,7 +132,9 @@ function Level({ parentId, depth, ...props }: LevelProps) {
         <button
           type="button"
           className="cursor-pointer text-primary"
-          onClick={() => void refetch()}
+          onClick={() => {
+            return void refetch();
+          }}
         >
           Retry
         </button>
@@ -135,13 +149,17 @@ function Level({ parentId, depth, ...props }: LevelProps) {
   }
   return (
     <>
-      {nodes.map((node) => <Row key={node.id} node={node} depth={depth} {...props} />)}
+      {nodes.map((node) => {
+        return <Row key={node.id} node={node} depth={depth} {...props} />;
+      })}
       {hasNextPage && (
         <li style={padding}>
           <button
             type="button"
             disabled={isFetchingNextPage}
-            onClick={() => void fetchNextPage()}
+            onClick={() => {
+              return void fetchNextPage();
+            }}
             className="cursor-pointer py-1 text-xs text-primary"
           >
             {isFetchingNextPage ? 'Loading…' : 'Show more'}
@@ -156,7 +174,9 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
   const { activeId, activeAncestors, isOpen, toggle, open } = props;
   const [renaming, setRenaming] = useState(false);
   const [archiving, setArchiving] = useState(false);
-  const { add } = useAddDocument(node.id, () => open(node.id));
+  const { add } = useAddDocument(node.id, () => {
+    return open(node.id);
+  });
   const router = useRouter();
   const folder = node.kind === DOCUMENT_KIND.folder;
   const expandable = folder || node.has_children;
@@ -166,17 +186,45 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
   const native = node.source === NATIVE_SOURCE;
   // a mirrored node takes new pages (made at its source) but not folders, and only its pages change here
   const actions = [
-    node.editable && { label: 'Rename', icon: PencilSimple, onSelect: () => setRenaming(true) },
+    node.editable && {
+      label: 'Rename',
+      icon: PencilSimple,
+      onSelect: () => {
+        return setRenaming(true);
+      },
+    },
     node.can_add_pages
-    && { label: 'New page inside', icon: FilePlus, onSelect: () => add(DOCUMENT_KIND.page) },
+    && {
+      label: 'New page inside',
+      icon: FilePlus,
+      onSelect: () => {
+        return add(DOCUMENT_KIND.page);
+      },
+    },
     native
-    && { label: 'New folder inside', icon: FolderPlus, onSelect: () => add(DOCUMENT_KIND.folder) },
+    && {
+      label: 'New folder inside',
+      icon: FolderPlus,
+      onSelect: () => {
+        return add(DOCUMENT_KIND.folder);
+      },
+    },
     node.editable
-    && { label: 'Archive', icon: Archive, onSelect: () => setArchiving(true), danger: true },
-  ].filter((action): action is NodeAction => Boolean(action));
+    && {
+      label: 'Archive',
+      icon: Archive,
+      onSelect: () => {
+        return setArchiving(true);
+      },
+      danger: true,
+    },
+  ].filter((action): action is NodeAction => {
+    return Boolean(action);
+  });
   // the open page goes away with what's archived around it
-  const leaveIfGone = () =>
-    (node.id === activeId || activeAncestors.includes(node.id)) && router.push('/documents');
+  const leaveIfGone = () => {
+    return (node.id === activeId || activeAncestors.includes(node.id)) && router.push('/documents');
+  };
 
   const row = (
     <div
@@ -189,7 +237,9 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
       <button
         type="button"
         aria-label={expanded ? 'Collapse' : 'Expand'}
-        onClick={() => toggle(node.id)}
+        onClick={() => {
+          return toggle(node.id);
+        }}
         className={cn(
           'flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted hover:text-foreground',
           !expandable && 'invisible',
@@ -204,7 +254,12 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
         ? (
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <NodeIcon folder={folder} Icon={FolderIcon} />
-            <InlineRename node={node} onDone={() => setRenaming(false)} />
+            <InlineRename
+              node={node}
+              onDone={() => {
+                return setRenaming(false);
+              }}
+            />
           </div>
         )
         : (
@@ -231,16 +286,23 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
               <DotsThree aria-hidden weight="bold" className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" onCloseAutoFocus={(event) => event.preventDefault()}>
-            {actions.map((action, index) => (
-              <Fragment key={action.label}>
-                {action.danger && index > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuItem danger={action.danger} onSelect={action.onSelect}>
-                  <action.icon aria-hidden />
-                  {action.label}
-                </DropdownMenuItem>
-              </Fragment>
-            ))}
+          <DropdownMenuContent
+            align="start"
+            onCloseAutoFocus={(event) => {
+              return event.preventDefault();
+            }}
+          >
+            {actions.map((action, index) => {
+              return (
+                <Fragment key={action.label}>
+                  {action.danger && index > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuItem danger={action.danger} onSelect={action.onSelect}>
+                    <action.icon aria-hidden />
+                    {action.label}
+                  </DropdownMenuItem>
+                </Fragment>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
@@ -257,16 +319,22 @@ function Row({ node, depth, ...props }: Omit<LevelProps, 'parentId'> & { node: D
         ? (
           <ContextMenu modal={false}>
             <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
-            <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>
-              {actions.map((action, index) => (
-                <Fragment key={action.label}>
-                  {action.danger && index > 0 && <ContextMenuSeparator />}
-                  <ContextMenuItem danger={action.danger} onSelect={action.onSelect}>
-                    <action.icon aria-hidden />
-                    {action.label}
-                  </ContextMenuItem>
-                </Fragment>
-              ))}
+            <ContextMenuContent
+              onCloseAutoFocus={(event) => {
+                return event.preventDefault();
+              }}
+            >
+              {actions.map((action, index) => {
+                return (
+                  <Fragment key={action.label}>
+                    {action.danger && index > 0 && <ContextMenuSeparator />}
+                    <ContextMenuItem danger={action.danger} onSelect={action.onSelect}>
+                      <action.icon aria-hidden />
+                      {action.label}
+                    </ContextMenuItem>
+                  </Fragment>
+                );
+              })}
             </ContextMenuContent>
           </ContextMenu>
         )
@@ -314,9 +382,15 @@ function InlineRename({ node, onDone }: { node: DocumentSummary; onDone: () => v
       value={title}
       maxLength={255}
       aria-label="Rename"
-      onFocus={(event) => event.target.select()}
-      onChange={(event) => setTitle(event.target.value)}
-      onBlur={() => finish(true)}
+      onFocus={(event) => {
+        return event.target.select();
+      }}
+      onChange={(event) => {
+        return setTitle(event.target.value);
+      }}
+      onBlur={() => {
+        return finish(true);
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Enter') {
           finish(true);
@@ -334,18 +408,24 @@ function InlineRename({ node, onDone }: { node: DocumentSummary; onDone: () => v
 function useAddDocument(parentId: string | null, onCreated?: () => void) {
   const create = useCreateDocument();
   const router = useRouter();
-  const add = (kind: DocumentKind) =>
-    create.mutate({ kind, parent_id: parentId }, {
+  const add = (kind: DocumentKind) => {
+    return create.mutate({ kind, parent_id: parentId }, {
       onSuccess: (doc) => {
         onCreated?.();
         if (kind === DOCUMENT_KIND.page) {
           return router.push(`/documents/${doc.id}`);
         }
         toast.success('Folder created', {
-          action: { label: 'Open', onClick: () => router.push(`/documents/${doc.id}`) },
+          action: {
+            label: 'Open',
+            onClick: () => {
+              return router.push(`/documents/${doc.id}`);
+            },
+          },
         });
       },
     });
+  };
   return { add, pending: create.isPending };
 }
 
@@ -390,11 +470,19 @@ export function NewMenu(
         )
         : <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>}
       <DropdownMenuContent align={iconOnly ? 'start' : 'end'} side={iconOnly ? 'right' : 'bottom'}>
-        <DropdownMenuItem onSelect={() => add(DOCUMENT_KIND.page)}>
+        <DropdownMenuItem
+          onSelect={() => {
+            return add(DOCUMENT_KIND.page);
+          }}
+        >
           <FileText aria-hidden />Page
         </DropdownMenuItem>
         {!pagesOnly && (
-          <DropdownMenuItem onSelect={() => add(DOCUMENT_KIND.folder)}>
+          <DropdownMenuItem
+            onSelect={() => {
+              return add(DOCUMENT_KIND.folder);
+            }}
+          >
             <Folder aria-hidden />Folder
           </DropdownMenuItem>
         )}

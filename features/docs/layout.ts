@@ -15,12 +15,16 @@ export const LayoutColumn = Node.create({
     return {
       width: {
         default: null,
-        parseHTML: (element) => Number(element.getAttribute('data-width')) || null,
+        parseHTML: (element) => {
+          return Number(element.getAttribute('data-width')) || null;
+        },
         renderHTML: (
           attrs,
-        ) => (attrs.width
-          ? { 'data-width': attrs.width, style: `flex: ${attrs.width} 1 0%` }
-          : { style: 'flex: 1 1 0%' }),
+        ) => {
+          return (attrs.width
+            ? { 'data-width': attrs.width, style: `flex: ${attrs.width} 1 0%` }
+            : { style: 'flex: 1 1 0%' });
+        },
       },
     };
   },
@@ -33,7 +37,9 @@ export const LayoutColumn = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-layout-column': '' }), 0];
   },
 
-  renderMarkdown: (node, h) => h.renderChildren(node.content ?? [], '\n\n'),
+  renderMarkdown: (node, h) => {
+    return h.renderChildren(node.content ?? [], '\n\n');
+  },
 });
 
 export const LayoutSection = Node.create({
@@ -55,7 +61,9 @@ export const LayoutSection = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-layout-section': '' }), 0];
   },
 
-  renderMarkdown: (node, h) => h.renderChildren(node.content ?? [], '\n\n'),
+  renderMarkdown: (node, h) => {
+    return h.renderChildren(node.content ?? [], '\n\n');
+  },
 });
 
 /** Puts `count` empty columns of even width where the selection is; not inside other columns. */
@@ -67,7 +75,9 @@ export function insertColumns(editor: Editor, count: number) {
   const column = { type: LayoutColumn.name, attrs: { width }, content: [{ type: 'paragraph' }] };
   return editor.chain().focus().insertContent({
     type: LayoutSection.name,
-    content: Array.from({ length: count }, () => column),
+    content: Array.from({ length: count }, () => {
+      return column;
+    }),
   }).run();
 }
 
@@ -81,7 +91,11 @@ export function removeColumns(editor: Editor) {
       continue;
     }
     const blocks: (typeof node)[] = [];
-    node.forEach((column) => column.forEach((block) => void blocks.push(block)));
+    node.forEach((column) => {
+      return column.forEach((block) => {
+        return void blocks.push(block);
+      });
+    });
     editor.view.dispatch(state.tr.replaceWith($from.before(depth), $from.after(depth), blocks));
     editor.commands.focus();
     return true;

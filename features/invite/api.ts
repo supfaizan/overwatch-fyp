@@ -17,8 +17,12 @@ export type PublicInvitePreview = InvitePreview & {
 };
 
 // the token goes in the body, out of URLs and access logs
-export const publicPreview = (token: string) =>
-  api.post<PublicInvitePreview>('/invites/public-preview', { token });
-export const previewInvite = (token: string) =>
-  api.post<InvitePreview>('/invites/preview', { token });
-export const acceptInvite = (token: string) => api.post<Workspace>('/invites/accept', { token });
+export const publicPreview = (token: string) => {
+  return api.post<PublicInvitePreview>('/invites/public-preview', { token });
+};
+export const previewInvite = (token: string) => {
+  return api.post<InvitePreview>('/invites/preview', { token });
+};
+export const acceptInvite = (token: string) => {
+  return api.post<Workspace>('/invites/accept', { token });
+};

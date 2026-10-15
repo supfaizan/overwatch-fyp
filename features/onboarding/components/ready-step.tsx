@@ -9,8 +9,9 @@ import StepCard from './step-card';
 
 export default function ReadyStep() {
   const status = useOnboardingStatus();
-  const indexed =
-    status.data?.github.repos.filter((repo) => repo.parse_status === JOB_STATUS.done).length ?? 0;
+  const indexed = status.data?.github.repos.filter((repo) => {
+    return repo.parse_status === JOB_STATUS.done;
+  }).length ?? 0;
   const project = status.data?.jira.project;
 
   return (

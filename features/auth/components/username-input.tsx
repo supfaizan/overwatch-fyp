@@ -13,7 +13,9 @@ import FormField, { describedBy } from './form-field';
 
 const CHECK_AFTER_MS = 300;
 const keys = {
-  availability: (username: string) => ['auth', 'username-availability', username] as const,
+  availability: (username: string) => {
+    return ['auth', 'username-availability', username] as const;
+  },
 };
 
 export type UsernameAvailability = ReturnType<typeof useUsernameAvailability>;
@@ -26,14 +28,20 @@ export function useUsernameAvailability(value: string) {
   const candidate = value.trim().toLowerCase();
   const [settled, setSettled] = useState(candidate);
   useEffect(() => {
-    const timer = setTimeout(() => setSettled(candidate), CHECK_AFTER_MS);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      return setSettled(candidate);
+    }, CHECK_AFTER_MS);
+    return () => {
+      return clearTimeout(timer);
+    };
   }, [candidate]);
 
   const fits = usernameRule.safeParse(settled).success;
   const query = useQuery({
     queryKey: keys.availability(settled),
-    queryFn: ({ signal }) => checkUsername(settled, signal),
+    queryFn: ({ signal }) => {
+      return checkUsername(settled, signal);
+    },
     enabled: fits,
     staleTime: 30_000,
     retry: false,

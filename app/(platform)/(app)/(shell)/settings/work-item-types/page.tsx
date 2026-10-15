@@ -1,5 +1,7 @@
 import { WorkItemTypesSection } from '@/features/settings';
 
-const page = () => <WorkItemTypesSection />;
+const page = () => {
+  return <WorkItemTypesSection />;
+};
 
 export default page;

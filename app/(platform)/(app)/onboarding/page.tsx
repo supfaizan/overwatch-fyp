@@ -1,5 +1,7 @@
 import { ResumeOnboarding } from '@/features/onboarding';
 
-const page = () => <ResumeOnboarding />;
+const page = () => {
+  return <ResumeOnboarding />;
+};
 
 export default page;

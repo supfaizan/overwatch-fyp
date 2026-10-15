@@ -24,17 +24,21 @@ type SessionState = {
   clear: () => void;
 };
 
-export const useSession = create<SessionState>()((set) => ({
-  status: 'loading',
-  token: null,
-  user: null,
-  setToken: (token) => {
-    Cookies.set(SESSION_HINT_COOKIE, '1', { expires: 30, sameSite: 'lax', path: '/' });
-    set({ token });
-  },
-  setUser: (user) => set({ user, status: 'authenticated' }),
-  clear: () => {
-    Cookies.remove(SESSION_HINT_COOKIE, { path: '/' });
-    set({ token: null, user: null, status: 'guest' });
-  },
-}));
+export const useSession = create<SessionState>()((set) => {
+  return {
+    status: 'loading',
+    token: null,
+    user: null,
+    setToken: (token) => {
+      Cookies.set(SESSION_HINT_COOKIE, '1', { expires: 30, sameSite: 'lax', path: '/' });
+      set({ token });
+    },
+    setUser: (user) => {
+      return set({ user, status: 'authenticated' });
+    },
+    clear: () => {
+      Cookies.remove(SESSION_HINT_COOKIE, { path: '/' });
+      set({ token: null, user: null, status: 'guest' });
+    },
+  };
+});

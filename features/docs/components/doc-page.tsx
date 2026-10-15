@@ -37,9 +37,13 @@ import {
 import EditorToolbar from './editor-toolbar';
 import TitleInput from './title-input';
 
-const DocEditor = dynamic(() => import('./doc-editor'), {
+const DocEditor = dynamic(() => {
+  return import('./doc-editor');
+}, {
   ssr: false,
-  loading: () => <Skeleton className="h-64 w-full" />,
+  loading: () => {
+    return <Skeleton className="h-64 w-full" />;
+  },
 });
 
 const SAVE_DELAY = 1500;
@@ -54,8 +58,9 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
   [SAVE_STATUS.error]: "Couldn't save, retrying…",
 };
 
-const seedOf = (doc: Document) =>
-  withImageLinks(doc.content ?? { type: 'doc', content: [] }, doc.attachment_urls);
+const seedOf = (doc: Document) => {
+  return withImageLinks(doc.content ?? { type: 'doc', content: [] }, doc.attachment_urls);
+};
 
 /**
  * A page: its title, and a body saved as it's written; a save never overwrites someone else's.
@@ -74,8 +79,8 @@ export default function DocPage({ doc }: { doc: Document }) {
   const storeSaved = useStoreSaved();
 
   const autosave = useMemo(
-    () =>
-      createAutosave({
+    () => {
+      return createAutosave({
         delay: SAVE_DELAY,
         retryDelay: RETRY_DELAY,
         save: async () => {
@@ -92,9 +97,12 @@ export default function DocPage({ doc }: { doc: Document }) {
           baseVersion.current = saved.version;
           storeSaved(saved);
         },
-        isConflict: (error) => toApiError(error).errorCode === CONFLICT,
+        isConflict: (error) => {
+          return toApiError(error).errorCode === CONFLICT;
+        },
         onStatus: setStatus,
-      }),
+      });
+    },
     // one queue per page and per loaded version
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [doc.id, seed.key],
@@ -102,8 +110,12 @@ export default function DocPage({ doc }: { doc: Document }) {
 
   // leaving or hiding the page saves at once; closing the tab with unsaved changes asks first
   useEffect(() => {
-    const onHide = () => document.visibilityState === 'hidden' && void autosave.flush();
-    const onUnload = (event: BeforeUnloadEvent) => autosave.hasUnsaved() && event.preventDefault();
+    const onHide = () => {
+      return document.visibilityState === 'hidden' && void autosave.flush();
+    };
+    const onUnload = (event: BeforeUnloadEvent) => {
+      return autosave.hasUnsaved() && event.preventDefault();
+    };
     document.addEventListener('visibilitychange', onHide);
     window.addEventListener('beforeunload', onUnload);
     return () => {
@@ -123,9 +135,13 @@ export default function DocPage({ doc }: { doc: Document }) {
     baseVersion.current = latest.version;
     storeSaved(latest);
     setStatus(SAVE_STATUS.saved);
-    setSeed((previous) => ({ content: seedOf(latest), key: previous.key + 1 }));
+    setSeed((previous) => {
+      return { content: seedOf(latest), key: previous.key + 1 };
+    });
   };
-  const loadTheirs = async () => load(await docsApi.getDocument(doc.id));
+  const loadTheirs = async () => {
+    return load(await docsApi.getDocument(doc.id));
+  };
 
   // the source changed while our edits were on their way: its version is now the page's, so show it
   useEffect(() => {
@@ -133,11 +149,18 @@ export default function DocPage({ doc }: { doc: Document }) {
       return;
     }
     baseVersion.current = doc.version;
-    setSeed((previous) => ({ content: seedOf(doc), key: previous.key + 1 }));
+    setSeed((previous) => {
+      return { content: seedOf(doc), key: previous.key + 1 };
+    });
   }, [doc]);
 
   return (
-    <div className="flex min-h-full flex-col" onBlur={() => void autosave.flush()}>
+    <div
+      className="flex min-h-full flex-col"
+      onBlur={() => {
+        return void autosave.flush();
+      }}
+    >
       <div className="sticky top-0 z-10 flex flex-col gap-2 border-b border-border bg-background/95 px-6 pt-3 pb-2 backdrop-blur">
         <div className="flex items-center justify-between gap-3 text-xs text-muted">
           <Breadcrumbs doc={doc} />
@@ -158,7 +181,9 @@ export default function DocPage({ doc }: { doc: Document }) {
         {doc.editable && toolbarEditor && (
           <EditorToolbar
             editor={toolbarEditor}
-            onImages={mirrored ? undefined : (files) => insertImages(toolbarEditor, doc.id, files)}
+            onImages={mirrored ? undefined : (files) => {
+              return insertImages(toolbarEditor, doc.id, files);
+            }}
           />
         )}
       </div>
@@ -169,8 +194,21 @@ export default function DocPage({ doc }: { doc: Document }) {
             type="warning"
             action={
               <div className="flex gap-2">
-                <Button size="sm" onClick={() => void loadTheirs()}>Use theirs</Button>
-                <Button size="sm" variant="primary" onClick={() => void keepMine()}>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    return void loadTheirs();
+                  }}
+                >
+                  Use theirs
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => {
+                    return void keepMine();
+                  }}
+                >
                   Keep mine
                 </Button>
               </div>
@@ -184,7 +222,9 @@ export default function DocPage({ doc }: { doc: Document }) {
           <TitleInput
             key={seed.key}
             doc={doc}
-            onEnter={() => editor.current?.commands.focus('start')}
+            onEnter={() => {
+              return editor.current?.commands.focus('start');
+            }}
           />
           <PageDetails doc={doc} />
         </div>
@@ -226,11 +266,14 @@ function SourceConflict(
     return null;
   }
 
-  const settle = (action: ConflictAction) =>
-    resolve.mutate({ id: doc.id, action, base_version: doc.version }, { onSuccess: onResolved });
+  const settle = (action: ConflictAction) => {
+    return resolve.mutate({ id: doc.id, action, base_version: doc.version }, {
+      onSuccess: onResolved,
+    });
+  };
   // a copy of ours as a page of its own here, then theirs stays
-  const copyMine = () =>
-    create.mutate(
+  const copyMine = () => {
+    return create.mutate(
       {
         kind: DOCUMENT_KIND.page,
         title: `${conflict.title} (my version)`,
@@ -240,12 +283,18 @@ function SourceConflict(
       {
         onSuccess: (copy) => {
           toast.success('Your version was saved as a new page.', {
-            action: { label: 'Open', onClick: () => router.push(`/documents/${copy.id}`) },
+            action: {
+              label: 'Open',
+              onClick: () => {
+                return router.push(`/documents/${copy.id}`);
+              },
+            },
           });
           settle(CONFLICT_ACTION.keepSource);
         },
       },
     );
+  };
 
   return (
     <Banner
@@ -255,7 +304,9 @@ function SourceConflict(
           <Button
             size="sm"
             loading={resolve.isPending}
-            onClick={() => settle(CONFLICT_ACTION.keepSource)}
+            onClick={() => {
+              return settle(CONFLICT_ACTION.keepSource);
+            }}
           >
             Keep {name}&apos;s
           </Button>
@@ -266,7 +317,9 @@ function SourceConflict(
             size="sm"
             variant="primary"
             loading={resolve.isPending}
-            onClick={() => settle(CONFLICT_ACTION.overwrite)}
+            onClick={() => {
+              return settle(CONFLICT_ACTION.overwrite);
+            }}
           >
             Overwrite with mine
           </Button>
@@ -323,14 +376,16 @@ function Breadcrumbs({ doc }: { doc: Document }) {
   }
   return (
     <nav aria-label="Breadcrumb" className="min-w-0 truncate">
-      {doc.breadcrumbs.map((crumb, index) => (
-        <span key={crumb.id}>
-          {index > 0 && <span className="px-1.5">/</span>}
-          <Link href={`/documents/${crumb.id}`} className="hover:text-foreground">
-            {crumb.title || 'Untitled'}
-          </Link>
-        </span>
-      ))}
+      {doc.breadcrumbs.map((crumb, index) => {
+        return (
+          <span key={crumb.id}>
+            {index > 0 && <span className="px-1.5">/</span>}
+            <Link href={`/documents/${crumb.id}`} className="hover:text-foreground">
+              {crumb.title || 'Untitled'}
+            </Link>
+          </span>
+        );
+      })}
     </nav>
   );
 }

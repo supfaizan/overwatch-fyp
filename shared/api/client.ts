@@ -60,15 +60,22 @@ async function requestWithMeta<T>(
 
 export const api = {
   /** Any method, for a request described elsewhere (e.g. an upload target from the backend). */
-  request: <T>(config: AxiosRequestConfig) => request<T>(config),
-  get: <T>(url: string, config?: AxiosRequestConfig) =>
-    request<T>({ ...config, method: 'GET', url }),
-  getWithMeta: <T>(url: string, config?: AxiosRequestConfig) =>
-    requestWithMeta<T>({ ...config, method: 'GET', url }),
-  post: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) =>
-    request<T>({ ...config, method: 'POST', url, data: body }),
-  patch: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) =>
-    request<T>({ ...config, method: 'PATCH', url, data: body }),
-  delete: <T>(url: string, config?: AxiosRequestConfig) =>
-    request<T>({ ...config, method: 'DELETE', url }),
+  request: <T>(config: AxiosRequestConfig) => {
+    return request<T>(config);
+  },
+  get: <T>(url: string, config?: AxiosRequestConfig) => {
+    return request<T>({ ...config, method: 'GET', url });
+  },
+  getWithMeta: <T>(url: string, config?: AxiosRequestConfig) => {
+    return requestWithMeta<T>({ ...config, method: 'GET', url });
+  },
+  post: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => {
+    return request<T>({ ...config, method: 'POST', url, data: body });
+  },
+  patch: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => {
+    return request<T>({ ...config, method: 'PATCH', url, data: body });
+  },
+  delete: <T>(url: string, config?: AxiosRequestConfig) => {
+    return request<T>({ ...config, method: 'DELETE', url });
+  },
 };

@@ -86,8 +86,12 @@ export default function ChatDock({ children }: { children: ReactNode }) {
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={onPointerMove}
-        onPointerUp={() => saveWidth(width)}
-        onDoubleClick={() => saveWidth(resize(DEFAULT_WIDTH))}
+        onPointerUp={() => {
+          return saveWidth(width);
+        }}
+        onDoubleClick={() => {
+          return saveWidth(resize(DEFAULT_WIDTH));
+        }}
         onKeyDown={onKeyDown}
       >
         <span className="mx-auto block h-full w-0.5 transition-colors group-hover:bg-primary group-focus-visible:bg-primary group-active:bg-primary" />

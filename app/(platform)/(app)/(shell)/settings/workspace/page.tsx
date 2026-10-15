@@ -1,5 +1,7 @@
 import { WorkspaceSection } from '@/features/settings';
 
-const page = () => <WorkspaceSection />;
+const page = () => {
+  return <WorkspaceSection />;
+};
 
 export default page;

@@ -1,5 +1,7 @@
 import { AuthComplete } from '@/features/auth';
 
-const page = () => <AuthComplete />;
+const page = () => {
+  return <AuthComplete />;
+};
 
 export default page;

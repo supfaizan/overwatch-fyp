@@ -20,7 +20,9 @@ export function useConnectedRepos() {
   return useQuery({
     queryKey: repoKeys.connected,
     queryFn: reposApi.getConnectedRepos,
-    refetchInterval: ({ state }) => (state.data?.some(isRunning) ? JOB_POLL_MS : false),
+    refetchInterval: ({ state }) => {
+      return (state.data?.some(isRunning) ? JOB_POLL_MS : false);
+    },
   });
 }
 
@@ -52,16 +54,21 @@ export function useConnectRepo(onConnected: (repo: ConnectedRepo) => void) {
       // in the cache before navigating, or the dashboard wouldn't know the repo yet and open another one
       queryClient.setQueryData<ConnectedRepo[]>(
         repoKeys.connected,
-        (repos) =>
-          repos && !repos.some((known) => known.repo_full_name === repo.repo_full_name)
+        (repos) => {
+          return repos && !repos.some((known) => {
+              return known.repo_full_name === repo.repo_full_name;
+            })
             ? [...repos, repo]
-            : repos,
+            : repos;
+        },
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.github });
       void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingStatus });
       toast.success(`Connected ${repo.repo_full_name}. Indexing has started.`);
       onConnected(repo);
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => {
+      return toast.error(error.message);
+    },
   });
 }

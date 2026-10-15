@@ -27,7 +27,9 @@ export default function DisconnectRepo({ repoFullName }: { repoFullName: string 
       description="Overwatch stops tracking it and deletes its copy of the code and its graph."
       confirmLabel="Disconnect repository"
       pending={disconnect.isPending}
-      onConfirm={(close) => disconnect.mutate(repoFullName, { onSuccess: close })}
+      onConfirm={(close) => {
+        return disconnect.mutate(repoFullName, { onSuccess: close });
+      }}
     />
   );
 }

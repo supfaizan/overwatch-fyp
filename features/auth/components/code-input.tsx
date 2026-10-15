@@ -9,7 +9,9 @@ import {
 import { OTP_LENGTH } from '../constants';
 
 const HALF = OTP_LENGTH / 2;
-const SLOTS = Array.from({ length: OTP_LENGTH }, (_, index) => index);
+const SLOTS = Array.from({ length: OTP_LENGTH }, (_, index) => {
+  return index;
+});
 
 /** The emailed six-digit code, as 123–456; submits itself once complete. */
 export default function CodeInput({
@@ -40,11 +42,15 @@ export default function CodeInput({
       containerClassName="justify-center"
     >
       <InputOTPGroup>
-        {SLOTS.slice(0, HALF).map((index) => <InputOTPSlot key={index} index={index} />)}
+        {SLOTS.slice(0, HALF).map((index) => {
+          return <InputOTPSlot key={index} index={index} />;
+        })}
       </InputOTPGroup>
       <InputOTPSeparator />
       <InputOTPGroup>
-        {SLOTS.slice(HALF).map((index) => <InputOTPSlot key={index} index={index} />)}
+        {SLOTS.slice(HALF).map((index) => {
+          return <InputOTPSlot key={index} index={index} />;
+        })}
       </InputOTPGroup>
     </InputOTP>
   );

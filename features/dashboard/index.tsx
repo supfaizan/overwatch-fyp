@@ -28,8 +28,12 @@ export default function Dashboard() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const requested = searchParams.get('repo');
-  const userId = useSession((state) => state.user?.id ?? '');
-  const workspaceId = useWorkspace((state) => state.id ?? '');
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const workspaceId = useWorkspace((state) => {
+    return state.id ?? '';
+  });
   const lastUsed = readLastRepo(userId, workspaceId);
   const repos = useConnectedRepos();
   const repoName = repos.data
@@ -75,7 +79,16 @@ export default function Dashboard() {
       <Banner
         type="error"
         className="mx-auto mt-10 max-w-xl"
-        action={<Button size="sm" onClick={() => repos.refetch()}>Retry</Button>}
+        action={
+          <Button
+            size="sm"
+            onClick={() => {
+              return repos.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
       >
         {repos.error.message}
       </Banner>
@@ -93,7 +106,9 @@ export default function Dashboard() {
           size="sm"
           variant={chatOpen ? 'secondary' : 'primary'}
           aria-pressed={chatOpen}
-          onClick={() => setChatOpen(!chatOpen)}
+          onClick={() => {
+            return setChatOpen(!chatOpen);
+          }}
         >
           <ChatCircleDots /> Ask
         </Button>
@@ -106,7 +121,13 @@ export default function Dashboard() {
         </div>
         {chatOpen && (
           <ChatDock>
-            <ChatPanel key={repoName} repo={repoName} onClose={() => setChatOpen(false)} />
+            <ChatPanel
+              key={repoName}
+              repo={repoName}
+              onClose={() => {
+                return setChatOpen(false);
+              }}
+            />
           </ChatDock>
         )}
       </div>

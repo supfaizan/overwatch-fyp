@@ -16,8 +16,11 @@ const THEMES: { value: Theme; label: string; icon: ReactNode }[] = [
   { value: 'system', label: 'System', icon: <Monitor /> },
 ];
 
-const isTheme = (value: string | undefined): value is Theme =>
-  THEMES.some((theme) => theme.value === value);
+const isTheme = (value: string | undefined): value is Theme => {
+  return THEMES.some((theme) => {
+    return theme.value === value;
+  });
+};
 
 export default function PreferencesSection() {
   const { theme, setTheme } = useTheme();

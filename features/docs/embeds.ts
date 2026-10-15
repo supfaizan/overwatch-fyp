@@ -12,7 +12,9 @@ type EmbedProvider = {
   player: (url: URL) => string | null;
 };
 
-const lastSegment = (url: URL) => url.pathname.split('/').filter(Boolean).at(-1) ?? '';
+const lastSegment = (url: URL) => {
+  return url.pathname.split('/').filter(Boolean).at(-1) ?? '';
+};
 
 const PROVIDERS: EmbedProvider[] = [
   {
@@ -21,9 +23,11 @@ const PROVIDERS: EmbedProvider[] = [
     frames: ['https://www.loom.com'],
     player: (
       url,
-    ) => (/^\/(share|embed)\//.test(url.pathname)
-      ? `https://www.loom.com/embed/${lastSegment(url)}`
-      : null),
+    ) => {
+      return (/^\/(share|embed)\//.test(url.pathname)
+        ? `https://www.loom.com/embed/${lastSegment(url)}`
+        : null);
+    },
   },
   {
     name: 'YouTube',
@@ -43,21 +47,24 @@ const PROVIDERS: EmbedProvider[] = [
     frames: ['https://player.vimeo.com'],
     player: (
       url,
-    ) => (/^\d+$/.test(lastSegment(url))
-      ? `https://player.vimeo.com/video/${lastSegment(url)}`
-      : null),
+    ) => {
+      return (/^\d+$/.test(lastSegment(url))
+        ? `https://player.vimeo.com/video/${lastSegment(url)}`
+        : null);
+    },
   },
   {
     name: 'Figma',
     hosts: ['figma.com'],
     frames: ['https://embed.figma.com'],
-    player: (url) =>
-      /^\/(file|design|proto|board|slides)\//.test(url.pathname)
+    player: (url) => {
+      return /^\/(file|design|proto|board|slides)\//.test(url.pathname)
         ? `https://embed.figma.com${url.pathname}?${new URLSearchParams({
           ...Object.fromEntries(url.searchParams),
           'embed-host': 'overwatch',
         })}`
-        : null,
+        : null;
+    },
   },
   {
     name: 'Google Docs',
@@ -71,10 +78,14 @@ const PROVIDERS: EmbedProvider[] = [
 ];
 
 /** The sites that can play in a page, for telling people which. */
-export const EMBED_PROVIDERS = PROVIDERS.map((provider) => provider.name);
+export const EMBED_PROVIDERS = PROVIDERS.map((provider) => {
+  return provider.name;
+});
 
 /** Where the browser may frame pages from. */
-export const EMBED_ORIGINS = PROVIDERS.flatMap((provider) => provider.frames);
+export const EMBED_ORIGINS = PROVIDERS.flatMap((provider) => {
+  return provider.frames;
+});
 
 const parse = (link: string) => {
   try {
@@ -85,14 +96,19 @@ const parse = (link: string) => {
   }
 };
 
-const matches = (hostname: string, host: string) =>
-  hostname === host || hostname.endsWith(`.${host}`);
+const matches = (hostname: string, host: string) => {
+  return hostname === host || hostname.endsWith(`.${host}`);
+};
 
 /** The player for a link and whose it is, or null when it isn't one of the embeddable sites. */
 export function embedFor(link: string): { src: string; provider: string } | null {
   const url = parse(link);
   const provider = url
-    && PROVIDERS.find((candidate) => candidate.hosts.some((host) => matches(url.hostname, host)));
+    && PROVIDERS.find((candidate) => {
+      return candidate.hosts.some((host) => {
+        return matches(url.hostname, host);
+      });
+    });
   const src = url && provider?.player(url);
   return src && provider ? { src, provider: provider.name } : null;
 }
@@ -103,4 +119,6 @@ export function hostOf(link: string): string {
 }
 
 /** Whether pasted text is just one web link. */
-export const isWebLink = (text: string) => !/\s/.test(text.trim()) && parse(text.trim()) !== null;
+export const isWebLink = (text: string) => {
+  return !/\s/.test(text.trim()) && parse(text.trim()) !== null;
+};

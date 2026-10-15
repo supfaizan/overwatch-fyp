@@ -24,7 +24,9 @@ export function layoutPositions(
     marginx: 40,
     marginy: 40,
   });
-  graph.setDefaultEdgeLabel(() => ({}));
+  graph.setDefaultEdgeLabel(() => {
+    return {};
+  });
 
   // inserted in id order so the same graph always draws the same way
   for (const id of [...nodeIds].sort()) {
@@ -57,7 +59,9 @@ function seatChildrenInOrder(
   nodeIds: string[],
   tree: { parent: string; child: string }[],
 ) {
-  const parentOf = new Map(tree.map((line) => [line.child, line.parent]));
+  const parentOf = new Map(tree.map((line) => {
+    return [line.child, line.parent];
+  }));
   const siblings = new Map<string, string[]>();
   for (const id of nodeIds) {
     const parent = parentOf.get(id);
@@ -68,7 +72,11 @@ function seatChildrenInOrder(
 
   const seated = { ...positions };
   for (const children of siblings.values()) {
-    const seats = children.map((id) => seated[id].x).sort((a, b) => a - b);
+    const seats = children.map((id) => {
+      return seated[id].x;
+    }).sort((a, b) => {
+      return a - b;
+    });
     children.forEach((id, index) => {
       seated[id] = { ...seated[id], x: seats[index] };
     });

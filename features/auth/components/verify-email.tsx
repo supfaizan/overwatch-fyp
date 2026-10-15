@@ -23,7 +23,9 @@ export default function VerifyEmail() {
   const [error, setError] = useState<{ message: string; locked: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => setChallenge(readChallenge(CHALLENGE_PURPOSE.verifyEmail)), []);
+  useEffect(() => {
+    return setChallenge(readChallenge(CHALLENGE_PURPOSE.verifyEmail));
+  }, []);
 
   if (challenge === undefined) {
     return null;
@@ -79,7 +81,9 @@ export default function VerifyEmail() {
               setError(null);
             }
           }}
-          onComplete={(value) => void submit(value)}
+          onComplete={(value) => {
+            return void submit(value);
+          }}
           invalid={Boolean(error)}
           disabled={submitting || error?.locked}
         />
@@ -100,8 +104,12 @@ export default function VerifyEmail() {
       </form>
       <ResendCode
         challenge={challenge}
-        onResent={() => setError(null)}
-        onExpired={() => setChallenge(null)}
+        onResent={() => {
+          return setError(null);
+        }}
+        onExpired={() => {
+          return setChallenge(null);
+        }}
       />
       <p className="text-center text-sm text-muted">
         Wrong address?{' '}

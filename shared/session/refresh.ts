@@ -61,7 +61,9 @@ export function endSession(): void {
 /** Mirror other tabs' refreshes and sign-outs; returns an unsubscribe function. */
 export function onSessionBroadcast(): () => void {
   if (!channel) {
-    return () => undefined;
+    return () => {
+      return undefined;
+    };
   }
   const listener = ({ data }: MessageEvent<SessionMessage>) => {
     if (data.type === 'token') {
@@ -71,7 +73,9 @@ export function onSessionBroadcast(): () => void {
     }
   };
   channel.addEventListener('message', listener);
-  return () => channel.removeEventListener('message', listener);
+  return () => {
+    return channel.removeEventListener('message', listener);
+  };
 }
 
 function withLock<T>(task: () => Promise<T>): Promise<T> {

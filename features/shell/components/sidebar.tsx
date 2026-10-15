@@ -31,7 +31,9 @@ export default function Sidebar(
   { collapsed, onToggle, onSearch, onAddRepo, onCreateWorkspace, shortcut }: SidebarProps,
 ) {
   const pathname = usePathname();
-  const user = useSession((state) => state.user);
+  const user = useSession((state) => {
+    return state.user;
+  });
   const name = user ? displayName(user) : '';
   // collapsed items are squares the size of the toggle, so every icon sits on the same line
   const item = cn(
@@ -86,14 +88,16 @@ export default function Sidebar(
         </button>
       </Hint>
 
-      {PAGES.map(({ href, label: text, icon: Icon, color }) => (
-        <Hint key={href} label={text} show={collapsed}>
-          <NavLink href={href} active={isActive(pathname, href)} className={item}>
-            <Icon weight="fill" className={color} aria-hidden />
-            <span className={label}>{text}</span>
-          </NavLink>
-        </Hint>
-      ))}
+      {PAGES.map(({ href, label: text, icon: Icon, color }) => {
+        return (
+          <Hint key={href} label={text} show={collapsed}>
+            <NavLink href={href} active={isActive(pathname, href)} className={item}>
+              <Icon weight="fill" className={color} aria-hidden />
+              <span className={label}>{text}</span>
+            </NavLink>
+          </Hint>
+        );
+      })}
 
       <div className="mt-auto flex flex-col gap-1 border-t border-border pt-2">
         <Hint label="Settings" show={collapsed}>

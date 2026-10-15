@@ -33,7 +33,9 @@ export const inviteSignUpSchema = z.object({ name, username, password: newPasswo
 export const forgotPasswordSchema = z.object({ email });
 export const resetPasswordSchema = z
   .object({ password: newPassword, confirm: z.string() })
-  .refine((values) => values.password === values.confirm, {
+  .refine((values) => {
+    return values.password === values.confirm;
+  }, {
     message: "Passwords don't match",
     path: ['confirm'],
   });

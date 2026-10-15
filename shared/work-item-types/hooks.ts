@@ -9,12 +9,13 @@ import * as typesApi from './api';
 // types change rarely; every card reads them
 const TYPES_STALE_MS = 5 * 60_000;
 
-export const useWorkItemTypes = () =>
-  useQuery({
+export const useWorkItemTypes = () => {
+  return useQuery({
     queryKey: queryKeys.workItemTypes,
     queryFn: typesApi.getTypes,
     staleTime: TYPES_STALE_MS,
   });
+};
 
 /** Adding, editing and removing types: lists refetch, and a removal also refetches the items that changed type. */
 function useTypeMutation<TArg, TResult>(
@@ -29,10 +30,18 @@ function useTypeMutation<TArg, TResult>(
       void queryClient.invalidateQueries({ queryKey: queryKeys.workItems });
       toast.success(success);
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => {
+      return toast.error(error.message);
+    },
   });
 }
 
-export const useCreateType = () => useTypeMutation(typesApi.createType, 'Type added.');
-export const useUpdateType = () => useTypeMutation(typesApi.updateType, 'Type saved.');
-export const useDeleteType = () => useTypeMutation(typesApi.deleteType, 'Type removed.');
+export const useCreateType = () => {
+  return useTypeMutation(typesApi.createType, 'Type added.');
+};
+export const useUpdateType = () => {
+  return useTypeMutation(typesApi.updateType, 'Type saved.');
+};
+export const useDeleteType = () => {
+  return useTypeMutation(typesApi.deleteType, 'Type removed.');
+};

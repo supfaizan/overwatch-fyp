@@ -23,7 +23,9 @@ export function proxy(request: NextRequest) {
   }
 
   const isPublic = PUBLIC_PATHS.has(pathname)
-    || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    || PUBLIC_PREFIXES.some((prefix) => {
+      return pathname.startsWith(prefix);
+    });
   if (isPublic || request.cookies.has(SESSION_HINT_COOKIE)) {
     return NextResponse.next();
   }

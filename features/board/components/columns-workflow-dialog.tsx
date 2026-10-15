@@ -61,7 +61,9 @@ const PRESETS: { value: WorkflowPreset; label: string }[] = [
   { value: WORKFLOW_PRESET.custom, label: 'Custom' },
 ];
 
-const newId = () => `col-${crypto.randomUUID().slice(0, 8)}`;
+const newId = () => {
+  return `col-${crypto.randomUUID().slice(0, 8)}`;
+};
 
 /**
  * A native board's columns and workflow, edited together and saved at once (admins). Moves are open
@@ -71,60 +73,91 @@ export default function ColumnsWorkflowDialog(
   { board, onClose }: { board: Board; onClose: () => void },
 ) {
   const [tab, setTab] = useState<Tab>(TAB.columns);
-  const [columns, setColumns] = useState<DraftColumn[]>(() =>
-    board.columns.map((column) => ({
-      id: column.id,
-      name: column.name,
-      status_category: column.status_category,
-      color: column.color ?? null,
-      next: column.next ?? null,
-    }))
-  );
+  const [columns, setColumns] = useState<DraftColumn[]>(() => {
+    return board.columns.map((column) => {
+      return {
+        id: column.id,
+        name: column.name,
+        status_category: column.status_category,
+        color: column.color ?? null,
+        next: column.next ?? null,
+      };
+    });
+  });
   // removed columns' items go to the column picked here (the first, until picked)
   const [reassign, setReassign] = useState<Record<string, string>>({});
   const save = useSetNativeColumns();
-  const removed = board.columns.filter((column) =>
-    !columns.some((draft) => draft.id === column.id)
-  );
-  const names = columns.map((column) => column.name.trim().toLowerCase());
-  const invalid = names.some((name) => !name) || new Set(names).size !== names.length;
+  const removed = board.columns.filter((column) => {
+    return !columns.some((draft) => {
+      return draft.id === column.id;
+    });
+  });
+  const names = columns.map((column) => {
+    return column.name.trim().toLowerCase();
+  });
+  const invalid = names.some((name) => {
+    return !name;
+  }) || new Set(names).size !== names.length;
 
-  const update = (id: string, changes: Partial<DraftColumn>) =>
-    setColumns((all) =>
-      all.map((column) => (column.id === id ? { ...column, ...changes } : column))
-    );
-  const remove = (id: string) =>
-    setColumns((all) =>
-      all.filter((column) => column.id !== id).map((column) => ({
-        ...column,
-        next: column.next && column.next.filter((target) => target !== id),
-      }))
-    );
-  const add = () =>
-    setColumns((
+  const update = (id: string, changes: Partial<DraftColumn>) => {
+    return setColumns((all) => {
+      return all.map((column) => {
+        return (column.id === id ? { ...column, ...changes } : column);
+      });
+    });
+  };
+  const remove = (id: string) => {
+    return setColumns((all) => {
+      return all.filter((column) => {
+        return column.id !== id;
+      }).map((column) => {
+        return {
+          ...column,
+          next: column.next && column.next.filter((target) => {
+            return target !== id;
+          }),
+        };
+      });
+    });
+  };
+  const add = () => {
+    return setColumns((
       all,
-    ) => [...all, {
-      id: newId(),
-      name: `Column ${all.length + 1}`,
-      status_category: STATUS_CATEGORY.inProgress,
-      color: null,
-      next: null,
-    }]);
+    ) => {
+      return [...all, {
+        id: newId(),
+        name: `Column ${all.length + 1}`,
+        status_category: STATUS_CATEGORY.inProgress,
+        color: null,
+        next: null,
+      }];
+    });
+  };
 
-  const submit = () =>
-    save.mutate(
+  const submit = () => {
+    return save.mutate(
       {
         boardId: board.id,
-        columns: columns.map((column) => ({ ...column, name: column.name.trim() })),
+        columns: columns.map((column) => {
+          return { ...column, name: column.name.trim() };
+        }),
         reassign: Object.fromEntries(
-          removed.map((column) => [column.id, reassign[column.id] ?? columns[0].id]),
+          removed.map((column) => {
+            return [column.id, reassign[column.id] ?? columns[0].id];
+          }),
         ),
       },
       { onSuccess: onClose },
     );
+  };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent
         title="Columns & workflow"
         description="The board's columns for everyone, and where cards can move from each."
@@ -166,27 +199,34 @@ export default function ColumnsWorkflowDialog(
           {removed.length > 0 && (
             <section className="flex flex-col gap-2 rounded-lg border border-border p-3">
               <h3 className="text-sm font-medium">Removed columns</h3>
-              {removed.map((column) => (
-                <div key={column.id} className="flex items-center gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate">Move items in {column.name} to</span>
-                  <Select
-                    value={reassign[column.id] ?? columns[0].id}
-                    onValueChange={(value) =>
-                      setReassign((all) => ({ ...all, [column.id]: value }))}
-                  >
-                    <SelectTrigger
-                      size="sm"
-                      className="w-44"
-                      aria-label={`Where ${column.name}'s items go`}
-                    />
-                    <SelectContent>
-                      {columns.map((target) => (
-                        <SelectItem key={target.id} value={target.id}>{target.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+              {removed.map((column) => {
+                return (
+                  <div key={column.id} className="flex items-center gap-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate">Move items in {column.name} to</span>
+                    <Select
+                      value={reassign[column.id] ?? columns[0].id}
+                      onValueChange={(value) => {
+                        return setReassign((all) => {
+                          return { ...all, [column.id]: value };
+                        });
+                      }}
+                    >
+                      <SelectTrigger
+                        size="sm"
+                        className="w-44"
+                        aria-label={`Where ${column.name}'s items go`}
+                      />
+                      <SelectContent>
+                        {columns.map((target) => {
+                          return (
+                            <SelectItem key={target.id} value={target.id}>{target.name}</SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })}
             </section>
           )}
         </div>
@@ -216,32 +256,42 @@ function ColumnsTab(
     if (!over || active.id === over.id) {
       return;
     }
-    setColumns((all) =>
-      arrayMove(
+    setColumns((all) => {
+      return arrayMove(
         all,
-        all.findIndex((c) => c.id === active.id),
-        all.findIndex((c) => c.id === over.id),
-      )
-    );
+        all.findIndex((c) => {
+          return c.id === active.id;
+        }),
+        all.findIndex((c) => {
+          return c.id === over.id;
+        }),
+      );
+    });
   };
   return (
     <div className="flex flex-col gap-2">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext
-          items={columns.map((column) => column.id)}
+          items={columns.map((column) => {
+            return column.id;
+          })}
           strategy={verticalListSortingStrategy}
         >
           <ul className="flex flex-col gap-1">
-            {columns.map((column) => (
-              <ColumnRow
-                key={column.id}
-                column={column}
-                update={update}
-                onRemove={columns.length > 1
-                  ? () => remove(column.id)
-                  : undefined}
-              />
-            ))}
+            {columns.map((column) => {
+              return (
+                <ColumnRow
+                  key={column.id}
+                  column={column}
+                  update={update}
+                  onRemove={columns.length > 1
+                    ? () => {
+                      return remove(column.id);
+                    }
+                    : undefined}
+                />
+              );
+            })}
           </ul>
         </SortableContext>
       </DndContext>
@@ -298,18 +348,26 @@ function ColumnRow(
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onSelect={() => update(column.id, { color: null })}>
+          <DropdownMenuItem
+            onSelect={() => {
+              return update(column.id, { color: null });
+            }}
+          >
             Default
           </DropdownMenuItem>
-          {Object.values(COLUMN_COLOR).map((option: ColumnColor) => (
-            <DropdownMenuItem
-              key={option}
-              onSelect={() => update(column.id, { color: option })}
-            >
-              <span className={cn('size-3 rounded-full', COLOR_CLASSES[option].dot)} />
-              <span className="capitalize">{option}</span>
-            </DropdownMenuItem>
-          ))}
+          {Object.values(COLUMN_COLOR).map((option: ColumnColor) => {
+            return (
+              <DropdownMenuItem
+                key={option}
+                onSelect={() => {
+                  return update(column.id, { color: option });
+                }}
+              >
+                <span className={cn('size-3 rounded-full', COLOR_CLASSES[option].dot)} />
+                <span className="capitalize">{option}</span>
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
       <Input
@@ -317,19 +375,22 @@ function ColumnRow(
         aria-label="Column name"
         maxLength={40}
         value={column.name}
-        onChange={(e) => update(column.id, { name: e.target.value })}
+        onChange={(e) => {
+          return update(column.id, { name: e.target.value });
+        }}
         className="flex-1"
       />
       <Select
         value={column.status_category}
-        onValueChange={(value) =>
-          update(column.id, { status_category: value as DraftColumn['status_category'] })}
+        onValueChange={(value) => {
+          return update(column.id, { status_category: value as DraftColumn['status_category'] });
+        }}
       >
         <SelectTrigger size="sm" className="w-36" aria-label={`Category of ${column.name}`} />
         <SelectContent>
-          {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-            <SelectItem key={value} value={value}>{label}</SelectItem>
-          ))}
+          {Object.entries(CATEGORY_LABELS).map(([value, label]) => {
+            return <SelectItem key={value} value={value}>{label}</SelectItem>;
+          })}
         </SelectContent>
       </Select>
       <Button
@@ -350,7 +411,11 @@ function WorkflowTab({ columns, setColumns, update }: EditProps) {
   const preset = presetOf(columns);
   const unreachable = unreachableColumns(columns);
   const deadEnds = deadEndColumns(columns);
-  const nameOf = (id: string) => columns.find((column) => column.id === id)?.name ?? id;
+  const nameOf = (id: string) => {
+    return columns.find((column) => {
+      return column.id === id;
+    })?.name ?? id;
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -358,8 +423,11 @@ function WorkflowTab({ columns, setColumns, update }: EditProps) {
         size="sm"
         aria-label="Preset"
         value={preset}
-        onValueChange={(value) =>
-          value !== WORKFLOW_PRESET.custom && setColumns((all) => presetNext(all, value))}
+        onValueChange={(value) => {
+          return value !== WORKFLOW_PRESET.custom && setColumns((all) => {
+            return presetNext(all, value);
+          });
+        }}
         options={PRESETS}
       />
       {preset === WORKFLOW_PRESET.open && (
@@ -368,52 +436,63 @@ function WorkflowTab({ columns, setColumns, update }: EditProps) {
         </p>
       )}
       <ul className="flex flex-col gap-1">
-        {columns.map((column) => (
-          <li
-            key={column.id}
-            className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <span
-              className={cn('size-2 rounded-full', COLOR_CLASSES[columnColor(column)].dot)}
-              aria-hidden
-            />
-            <span className="w-32 truncate font-medium">{column.name}</span>
-            <span className="text-xs text-muted">Can move to</span>
-            {column.next === null
-              ? <Chip label="Any column" />
-              : column.next.length === 0
-              ? <span className="text-xs text-muted">nowhere</span>
-              : (
-                column.next.map((target) => (
-                  <Chip
-                    key={target}
-                    label={nameOf(target)}
-                    onRemove={() =>
-                      update(column.id, {
-                        next: column.next?.filter((id) => id !== target) ?? null,
-                      })}
-                  />
-                ))
-              )}
-            <TargetsMenu
-              column={column}
-              columns={columns}
-              onChange={(next) => update(column.id, { next })}
-            />
-          </li>
-        ))}
+        {columns.map((column) => {
+          return (
+            <li
+              key={column.id}
+              className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+            >
+              <span
+                className={cn('size-2 rounded-full', COLOR_CLASSES[columnColor(column)].dot)}
+                aria-hidden
+              />
+              <span className="w-32 truncate font-medium">{column.name}</span>
+              <span className="text-xs text-muted">Can move to</span>
+              {column.next === null
+                ? <Chip label="Any column" />
+                : column.next.length === 0
+                ? <span className="text-xs text-muted">nowhere</span>
+                : (
+                  column.next.map((target) => {
+                    return (
+                      <Chip
+                        key={target}
+                        label={nameOf(target)}
+                        onRemove={() => {
+                          return update(column.id, {
+                            next: column.next?.filter((id) => {
+                              return id !== target;
+                            }) ?? null,
+                          });
+                        }}
+                      />
+                    );
+                  })
+                )}
+              <TargetsMenu
+                column={column}
+                columns={columns}
+                onChange={(next) => {
+                  return update(column.id, { next });
+                }}
+              />
+            </li>
+          );
+        })}
       </ul>
       <Preview columns={columns} />
       {unreachable.length > 0 && (
         <Banner type="warning">
-          No column moves cards to{' '}
-          {unreachable.map((column) => column.name).join(', ')}, so cards only get there when
-          they're created there.
+          No column moves cards to {unreachable.map((column) => {
+            return column.name;
+          }).join(', ')}, so cards only get there when they're created there.
         </Banner>
       )}
       {deadEnds.length > 0 && (
         <Banner type="info">
-          Cards in {deadEnds.map((column) => column.name).join(', ')} can't move anywhere else.
+          Cards in {deadEnds.map((column) => {
+            return column.name;
+          }).join(', ')} can't move anywhere else.
         </Banner>
       )}
     </div>
@@ -446,10 +525,20 @@ function TargetsMenu(
     onChange: (next: string[] | null) => void;
   },
 ) {
-  const others = columns.filter((other) => other.id !== column.id);
+  const others = columns.filter((other) => {
+    return other.id !== column.id;
+  });
   const toggle = (id: string) => {
-    const current = column.next ?? others.map((other) => other.id);
-    onChange(current.includes(id) ? current.filter((target) => target !== id) : [...current, id]);
+    const current = column.next ?? others.map((other) => {
+      return other.id;
+    });
+    onChange(
+      current.includes(id)
+        ? current.filter((target) => {
+          return target !== id;
+        })
+        : [...current, id],
+    );
   };
   return (
     <DropdownMenu>
@@ -459,30 +548,36 @@ function TargetsMenu(
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuItem onSelect={() => onChange(null)}>
+        <DropdownMenuItem
+          onSelect={() => {
+            return onChange(null);
+          }}
+        >
           <Check aria-hidden className={cn('size-4', column.next !== null && 'invisible')} />
           Any column
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {others.map((other) => (
-          // stays open, so several columns can be picked
-          <DropdownMenuItem
-            key={other.id}
-            onSelect={(event) => {
-              event.preventDefault();
-              toggle(other.id);
-            }}
-          >
-            <Check
-              aria-hidden
-              className={cn(
-                'size-4',
-                !(column.next === null || column.next.includes(other.id)) && 'invisible',
-              )}
-            />
-            {other.name}
-          </DropdownMenuItem>
-        ))}
+        {others.map((other) => {
+          return (
+            // stays open, so several columns can be picked
+            <DropdownMenuItem
+              key={other.id}
+              onSelect={(event) => {
+                event.preventDefault();
+                toggle(other.id);
+              }}
+            >
+              <Check
+                aria-hidden
+                className={cn(
+                  'size-4',
+                  !(column.next === null || column.next.includes(other.id)) && 'invisible',
+                )}
+              />
+              {other.name}
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

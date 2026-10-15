@@ -114,33 +114,37 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'nu
 
 /** `?board=<id>`, else the first tracker board, else the Overwatch board. */
 function pickBoard(boards: BoardType[], requested: string | null) {
-  return boards.find((board) => board.id === requested)
-    ?? boards.find((board) => board.source !== NATIVE_SOURCE) ?? boards[0];
+  return boards.find((board) => {
+    return board.id === requested;
+  })
+    ?? boards.find((board) => {
+      return board.source !== NATIVE_SOURCE;
+    }) ?? boards[0];
 }
 
 /** A column drag only lands on columns, a card drag only on cards and column bodies. */
 const collisions: CollisionDetection = (args) => {
   const draggingColumn = columnFromSortId(String(args.active.id)) !== null;
-  const droppableContainers = args.droppableContainers.filter((container) =>
-    (columnFromSortId(String(container.id)) !== null) === draggingColumn
-  );
+  const droppableContainers = args.droppableContainers.filter((container) => {
+    return (columnFromSortId(String(container.id)) !== null) === draggingColumn;
+  });
   if (draggingColumn) {
     return closestCenter({ ...args, droppableContainers });
   }
   // a column split into status zones takes the drop in the zone under the pointer
   const zones = pointerWithin({
     ...args,
-    droppableContainers: droppableContainers.filter((container) =>
-      parseZoneId(String(container.id))
-    ),
+    droppableContainers: droppableContainers.filter((container) => {
+      return parseZoneId(String(container.id));
+    }),
   });
   return zones.length
     ? zones
     : closestCorners({
       ...args,
-      droppableContainers: droppableContainers.filter((container) =>
-        !parseZoneId(String(container.id))
-      ),
+      droppableContainers: droppableContainers.filter((container) => {
+        return !parseZoneId(String(container.id));
+      }),
     });
 };
 
@@ -156,12 +160,21 @@ export default function Board() {
   const itemKey = searchParams.get(ITEM_PARAM);
 
   // this person's view of the board: hidden columns and grouping, kept in the browser
-  const userId = useSession((state) => state.user?.id ?? '');
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
   const viewKey = `${userId}:${board?.id ?? ''}`;
-  const boardView = viewOf(useBoardViews((state) => state.views), viewKey);
+  const boardView = viewOf(
+    useBoardViews((state) => {
+      return state.views;
+    }),
+    viewKey,
+  );
   const { setHidden, setGroupBy } = useBoardViews.getState();
   const shownColumns = board
-    ? board.columns.filter((column) => !(boardView.hidden[column.id] ?? hiddenByDefault(column)))
+    ? board.columns.filter((column) => {
+      return !(boardView.hidden[column.id] ?? hiddenByDefault(column));
+    })
     : [];
   const groupBy: GroupBy = boardView.groupBy;
 
@@ -212,8 +225,9 @@ export default function Board() {
     [router, pathname],
   );
   const linkOf = useCallback(
-    (item: WorkItem) =>
-      itemLink(`${window.location.origin}${pathname}`, latest.current.boardId, item.key),
+    (item: WorkItem) => {
+      return itemLink(`${window.location.origin}${pathname}`, latest.current.boardId, item.key);
+    },
     [pathname],
   );
   // computed on the loaded cards, so the neighbours sent are ones the user actually dropped between
@@ -248,7 +262,9 @@ export default function Board() {
   const loadedItem = activeKey
     ? (opened?.key === activeKey
       ? opened
-      : (lanesBy ? swimlanes.items : items.items).find((candidate) => candidate.key === activeKey))
+      : (lanesBy ? swimlanes.items : items.items).find((candidate) => {
+        return candidate.key === activeKey;
+      }))
     : undefined;
   const linked = useWorkItemByKey(
     board?.id,
@@ -281,7 +297,9 @@ export default function Board() {
   ) {
     return (
       <main className="flex h-full gap-4 p-6">
-        {[0, 1, 2].map((index) => <Skeleton key={index} className="h-full w-72 shrink-0" />)}
+        {[0, 1, 2].map((index) => {
+          return <Skeleton key={index} className="h-full w-72 shrink-0" />;
+        })}
       </main>
     );
   }
@@ -315,21 +333,30 @@ export default function Board() {
   const visible = lanesBy ? swimlanes.items : items.items;
   const grouped = groupByColumn(visible, shownColumns);
   latest.current = { boardId: board.id, visible, columns: shownColumns, grouped };
-  const hasTrackerBoard = boards.data.some((candidate) => candidate.source !== NATIVE_SOURCE);
-  const boardLabel = (candidate: BoardType) =>
-    candidate.source === NATIVE_SOURCE
+  const hasTrackerBoard = boards.data.some((candidate) => {
+    return candidate.source !== NATIVE_SOURCE;
+  });
+  const boardLabel = (candidate: BoardType) => {
+    return candidate.source === NATIVE_SOURCE
       ? 'Overwatch'
       : `${trackerName(trackers.data, candidate.source)} · ${candidate.name}`;
+  };
 
   const openSprints = sprints.data ?? [];
   const shownSprint: Sprint | undefined = sprint === CURRENT_SPRINT
-    ? openSprints.find((candidate) => candidate.state === SPRINT_STATE.active)
-    : openSprints.find((candidate) => candidate.id === sprint);
+    ? openSprints.find((candidate) => {
+      return candidate.state === SPRINT_STATE.active;
+    })
+    : openSprints.find((candidate) => {
+      return candidate.id === sprint;
+    });
   const isAdmin = hasRole(currentRole, ROLE.admin);
   const name = board.source === NATIVE_SOURCE ? null : trackerName(trackers.data, board.source);
   const anyMore = lanesBy
     ? swimlanes.lanes.length > 0
-    : shownColumns.some((column) => items.columns[column.id]?.hasMore);
+    : shownColumns.some((column) => {
+      return items.columns[column.id]?.hasMore;
+    });
 
   const setParams = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams);
@@ -343,8 +370,9 @@ export default function Board() {
     router.replace(`${pathname}?${params}`, { scroll: false });
   };
   // a different board has different sprints and items
-  const selectBoard = (id: string) =>
-    setParams({ [BOARD_PARAM]: id, [SPRINT_PARAM]: null, [ITEM_PARAM]: null });
+  const selectBoard = (id: string) => {
+    return setParams({ [BOARD_PARAM]: id, [SPRINT_PARAM]: null, [ITEM_PARAM]: null });
+  };
   const closeItem = () => {
     closedKey.current = itemKey;
     setOpened(null);
@@ -359,8 +387,16 @@ export default function Board() {
     const columnId = columnFromSortId(String(active.id));
     setDragging(
       columnId
-        ? { column: shownColumns.find((column) => column.id === columnId) }
-        : { card: visible.find((item) => item.id === active.id) },
+        ? {
+          column: shownColumns.find((column) => {
+            return column.id === columnId;
+          }),
+        }
+        : {
+          card: visible.find((item) => {
+            return item.id === active.id;
+          }),
+        },
     );
   };
 
@@ -373,14 +409,18 @@ export default function Board() {
         return;
       }
       // the full order, hidden columns included, so hiding one never loses its place
-      const ids = board.columns.map((column) => column.id);
+      const ids = board.columns.map((column) => {
+        return column.id;
+      });
       columnSettings.mutate({
         boardId: board.id,
         column_order: arrayMove(ids, ids.indexOf(columnId), ids.indexOf(overId)),
       });
       return;
     }
-    const item = visible.find((candidate) => candidate.id === active.id);
+    const item = visible.find((candidate) => {
+      return candidate.id === active.id;
+    });
     if (!item || !over) {
       return;
     }
@@ -391,7 +431,9 @@ export default function Board() {
     if (!target) {
       return;
     }
-    const column = shownColumns.find((candidate) => candidate.id === target.columnId);
+    const column = shownColumns.find((candidate) => {
+      return candidate.id === target.columnId;
+    });
     const hint = column && hintFor(column);
     if (hint && !hint.allowed) {
       toast.error(BLOCKED_MESSAGE);
@@ -411,9 +453,9 @@ export default function Board() {
       return;
     }
     const cell = groupByColumn(
-      visible.filter((candidate) =>
-        candidate.id !== item.id && laneOf(candidate, groupBy) === lane
-      ),
+      visible.filter((candidate) => {
+        return candidate.id !== item.id && laneOf(candidate, groupBy) === lane;
+      }),
       shownColumns,
     )[columnId] ?? [];
     const { rank, ...neighbours } = placement(cell, index);
@@ -424,7 +466,9 @@ export default function Board() {
       : groupBy === GROUP_BY.assignee
       ? { assignee_id: value }
       : { priority: value };
-    const laneName = swimlanes.lanes.find((candidate) => candidate.key === lane)?.label ?? null;
+    const laneName = swimlanes.lanes.find((candidate) => {
+      return candidate.key === lane;
+    })?.label ?? null;
     const patch = !changed
       ? undefined
       : groupBy === GROUP_BY.assignee
@@ -450,8 +494,9 @@ export default function Board() {
               size="sm"
               aria-label="View"
               value={view}
-              onValueChange={(value) =>
-                setParams({ [VIEW_PARAM]: value === VIEW.board ? null : value })}
+              onValueChange={(value) => {
+                return setParams({ [VIEW_PARAM]: value === VIEW.board ? null : value });
+              }}
               options={[{ value: VIEW.board, label: 'Board' }, {
                 value: VIEW.backlog,
                 label: 'Backlog',
@@ -463,26 +508,31 @@ export default function Board() {
           <Select value={board.id} onValueChange={selectBoard}>
             <SelectTrigger aria-label="Board" className="w-56" />
             <SelectContent>
-              {boards.data.map((candidate) => (
-                <SelectItem key={candidate.id} value={candidate.id}>
-                  {boardLabel(candidate)}
-                </SelectItem>
-              ))}
+              {boards.data.map((candidate) => {
+                return (
+                  <SelectItem key={candidate.id} value={candidate.id}>
+                    {boardLabel(candidate)}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}
         {scrum && view === VIEW.board && openSprints.length > 0 && (
           <Select
             value={sprint}
-            onValueChange={(value) =>
-              setParams({ [SPRINT_PARAM]: value === CURRENT_SPRINT ? null : value })}
+            onValueChange={(value) => {
+              return setParams({ [SPRINT_PARAM]: value === CURRENT_SPRINT ? null : value });
+            }}
           >
             <SelectTrigger aria-label="Sprint" className="w-56" />
             <SelectContent>
               <SelectItem value={CURRENT_SPRINT}>Active sprint</SelectItem>
-              {openSprints.map((candidate) => (
-                <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
-              ))}
+              {openSprints.map((candidate) => {
+                return (
+                  <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}
@@ -516,7 +566,9 @@ export default function Board() {
         )}
         <Button
           variant="primary"
-          onClick={() => setCreating(Date.now())}
+          onClick={() => {
+            return setCreating(Date.now());
+          }}
           disabled={!board.editable}
         >
           <Plus /> New item
@@ -528,21 +580,29 @@ export default function Board() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+            <DropdownMenuItem
+              onSelect={() => {
+                return setSettingsOpen(true);
+              }}
+            >
               <SlidersHorizontal /> Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Group by</DropdownMenuLabel>
-            {GROUP_BY_OPTIONS.map((option) => (
-              <DropdownMenuItem
-                key={option.value}
-                onSelect={() => setGroupBy(viewKey, option.value)}
-              >
-                <span className={groupBy === option.value ? 'font-semibold' : undefined}>
-                  {option.label}
-                </span>
-              </DropdownMenuItem>
-            ))}
+            {GROUP_BY_OPTIONS.map((option) => {
+              return (
+                <DropdownMenuItem
+                  key={option.value}
+                  onSelect={() => {
+                    return setGroupBy(viewKey, option.value);
+                  }}
+                >
+                  <span className={groupBy === option.value ? 'font-semibold' : undefined}>
+                    {option.label}
+                  </span>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
@@ -588,7 +648,12 @@ export default function Board() {
             <p className="max-w-sm text-sm text-muted">
               No sprint is active. Plan one in the backlog, then start it.
             </p>
-            <Button size="sm" onClick={() => setParams({ [VIEW_PARAM]: VIEW.backlog })}>
+            <Button
+              size="sm"
+              onClick={() => {
+                return setParams({ [VIEW_PARAM]: VIEW.backlog });
+              }}
+            >
               Open the backlog
             </Button>
           </div>
@@ -597,7 +662,14 @@ export default function Board() {
         ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
             <p className="max-w-sm text-sm text-muted">Every column is hidden.</p>
-            <Button size="sm" onClick={() => setSettingsOpen(true)}>Show columns</Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                return setSettingsOpen(true);
+              }}
+            >
+              Show columns
+            </Button>
           </div>
         )
         : visible.length === 0 && !anyMore
@@ -630,30 +702,36 @@ export default function Board() {
             sensors={sensors}
             collisionDetection={collisions}
             onDragStart={onDragStart}
-            onDragCancel={() => setDragging(null)}
+            onDragCancel={() => {
+              return setDragging(null);
+            }}
             onDragEnd={onDragEnd}
           >
             <SortableContext
-              items={shownColumns.map((column) => columnSortId(column.id))}
+              items={shownColumns.map((column) => {
+                return columnSortId(column.id);
+              })}
               strategy={horizontalListSortingStrategy}
             >
               <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto">
-                {shownColumns.map((column) => (
-                  <BoardColumn
-                    key={column.id}
-                    column={column}
-                    items={grouped[column.id]}
-                    columns={shownColumns}
-                    total={items.columns[column.id]?.total ?? grouped[column.id].length}
-                    hasMore={items.columns[column.id]?.hasMore ?? false}
-                    loadingMore={items.columns[column.id]?.loadingMore ?? false}
-                    onLoadMore={items.loadMore}
-                    onOpen={openItem}
-                    onMoveTo={moveTo}
-                    linkOf={linkOf}
-                    hint={hintFor(column)}
-                  />
-                ))}
+                {shownColumns.map((column) => {
+                  return (
+                    <BoardColumn
+                      key={column.id}
+                      column={column}
+                      items={grouped[column.id]}
+                      columns={shownColumns}
+                      total={items.columns[column.id]?.total ?? grouped[column.id].length}
+                      hasMore={items.columns[column.id]?.hasMore ?? false}
+                      loadingMore={items.columns[column.id]?.loadingMore ?? false}
+                      onLoadMore={items.loadMore}
+                      onOpen={openItem}
+                      onMoveTo={moveTo}
+                      linkOf={linkOf}
+                      hint={hintFor(column)}
+                    />
+                  );
+                })}
               </div>
             </SortableContext>
             {/* the pointer is always over the dragged copy, so only a drag shows the grabbing hand */}
@@ -663,12 +741,16 @@ export default function Board() {
                   item={dragging.card}
                   columns={shownColumns}
                   color={columnColor(
-                    shownColumns.find((column) => column.id === dragging.card?.column_id)
+                    shownColumns.find((column) => {
+                      return column.id === dragging.card?.column_id;
+                    })
                       ?? shownColumns[0],
                   )}
                   onOpen={() => {}}
                   onMoveTo={() => {}}
-                  linkOf={() => ''}
+                  linkOf={() => {
+                    return '';
+                  }}
                 />
               )}
               {dragging?.column && (
@@ -691,8 +773,12 @@ export default function Board() {
         onOpenChange={setSettingsOpen}
         board={board}
         view={boardView}
-        onHiddenChange={(columnId, hidden) => setHidden(viewKey, columnId, hidden)}
-        onGroupByChange={(value) => setGroupBy(viewKey, value)}
+        onHiddenChange={(columnId, hidden) => {
+          return setHidden(viewKey, columnId, hidden);
+        }}
+        onGroupByChange={(value) => {
+          return setGroupBy(viewKey, value);
+        }}
         canEditColumns={isAdmin && board.source === NATIVE_SOURCE}
       />
       {shownItem
@@ -700,7 +786,9 @@ export default function Board() {
           <ItemDetailsDialog
             key={shownItem.id}
             open
-            onOpenChange={(open) => !open && closeItem()}
+            onOpenChange={(open) => {
+              return !open && closeItem();
+            }}
             item={shownItem}
             board={board}
             sprints={openSprints}
@@ -713,7 +801,9 @@ export default function Board() {
           <WorkItemDialog
             key={creating}
             open
-            onOpenChange={(open) => !open && setCreating(null)}
+            onOpenChange={(open) => {
+              return !open && setCreating(null);
+            }}
             board={board}
             trackerName={name}
             sprintId={scrum && view === VIEW.board ? (shownSprint?.id ?? null) : null}
@@ -725,7 +815,9 @@ export default function Board() {
 }
 
 function trackerName(trackers: { provider: string; name: string }[], source: string) {
-  return trackers.find((tracker) => tracker.provider === source)?.name ?? source;
+  return trackers.find((tracker) => {
+    return tracker.provider === source;
+  })?.name ?? source;
 }
 
 /** Asks an admin, once per set of tracker columns, whether this board should use them. */
@@ -744,7 +836,9 @@ function ColumnOffer({ board, trackerName }: { board: BoardType; trackerName: st
         <div className="flex gap-2">
           <Button
             size="sm"
-            onClick={() => choose.mutate({ boardId: board.id, tracker: false })}
+            onClick={() => {
+              return choose.mutate({ boardId: board.id, tracker: false });
+            }}
             disabled={choose.isPending}
           >
             Keep To do / In progress / Done
@@ -753,7 +847,9 @@ function ColumnOffer({ board, trackerName }: { board: BoardType; trackerName: st
             size="sm"
             variant="primary"
             loading={choose.isPending}
-            onClick={() => choose.mutate({ boardId: board.id, tracker: true })}
+            onClick={() => {
+              return choose.mutate({ boardId: board.id, tracker: true });
+            }}
           >
             Use {trackerName}’s columns
           </Button>

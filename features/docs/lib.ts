@@ -88,7 +88,9 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
       stopped = false;
       return flush();
     },
-    hasUnsaved: () => dirty || saving,
+    hasUnsaved: () => {
+      return dirty || saving;
+    },
     dispose: clear,
   };
 }
@@ -157,8 +159,9 @@ export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 // docs sources by their names as people know them; others show their id, capitalised
 const SOURCE_NAMES: Record<string, string> = { confluence: 'Confluence' };
 
-export const sourceName = (source: string) =>
-  SOURCE_NAMES[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
+export const sourceName = (source: string) => {
+  return SOURCE_NAMES[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
+};
 
 /** How a mirrored page stands with its source, for under its title; null for pages written here. */
 export function syncLabel(
@@ -181,5 +184,8 @@ export function syncLabel(
 }
 
 /** A colour from a mirrored page, when it's a plain one (`#deebff`, `red`); anything else is dropped. */
-export const plainColor = (value: unknown): string | undefined =>
-  typeof value === 'string' && /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(value) ? value : undefined;
+export const plainColor = (value: unknown): string | undefined => {
+  return typeof value === 'string' && /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(value)
+    ? value
+    : undefined;
+};

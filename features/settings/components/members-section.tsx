@@ -64,7 +64,9 @@ function MemberList({ workspace }: { workspace: Workspace }) {
         action={
           <Button
             size="sm"
-            onClick={() => members.refetch()}
+            onClick={() => {
+              return members.refetch();
+            }}
           >
             Retry
           </Button>
@@ -77,16 +79,18 @@ function MemberList({ workspace }: { workspace: Workspace }) {
   return (
     <Card className="p-0">
       <ul className="divide-y divide-border">
-        {members.data.map((member) => (
-          <MemberRow key={member.user_id} workspace={workspace} member={member} />
-        ))}
+        {members.data.map((member) => {
+          return <MemberRow key={member.user_id} workspace={workspace} member={member} />;
+        })}
       </ul>
     </Card>
   );
 }
 
 function MemberRow({ workspace, member }: { workspace: Workspace; member: Member }) {
-  const userId = useSession((state) => state.user?.id);
+  const userId = useSession((state) => {
+    return state.user?.id;
+  });
   const update = useUpdateMember();
   const remove = useRemoveMember();
   const name = displayName(member);
@@ -94,9 +98,9 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
   // nobody changes a role above their own; the backend also keeps one owner
   const canManage = !isSelf && hasRole(workspace.role, ROLE.admin)
     && hasRole(workspace.role, member.role);
-  const roles = (Object.keys(ROLE_LABELS) as Role[]).filter((role) =>
-    hasRole(workspace.role, role)
-  );
+  const roles = (Object.keys(ROLE_LABELS) as Role[]).filter((role) => {
+    return hasRole(workspace.role, role);
+  });
 
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
@@ -114,16 +118,23 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
         ? (
           <Select
             value={member.role}
-            onValueChange={(role) =>
-              update.mutate({ id: workspace.id, userId: member.user_id, role: role as Role })}
+            onValueChange={(role) => {
+              return update.mutate({
+                id: workspace.id,
+                userId: member.user_id,
+                role: role as Role,
+              });
+            }}
           >
             <SelectTrigger size="sm" className="w-28" aria-label={`Role for ${name}`} />
             <SelectContent>
-              {roles.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {ROLE_LABELS[role]}
-                </SelectItem>
-              ))}
+              {roles.map((role) => {
+                return (
+                  <SelectItem key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )
@@ -147,8 +158,11 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
           description="They lose access to this workspace until they're invited again."
           confirmLabel="Remove member"
           pending={remove.isPending}
-          onConfirm={(close) =>
-            remove.mutate({ id: workspace.id, userId: member.user_id }, { onSuccess: close })}
+          onConfirm={(close) => {
+            return remove.mutate({ id: workspace.id, userId: member.user_id }, {
+              onSuccess: close,
+            });
+          }}
         />
       )}
     </li>
@@ -180,7 +194,9 @@ function Invites({ workspace }: { workspace: Workspace }) {
   const [kind, setKind] = useState<InviteKind>(INVITE_KIND.email);
   const [target, setTarget] = useState('');
   const [url, setUrl] = useState<string | null>(null);
-  const restriction = RESTRICTIONS.find((option) => option.kind === kind) ?? RESTRICTIONS[0];
+  const restriction = RESTRICTIONS.find((option) => {
+    return option.kind === kind;
+  }) ?? RESTRICTIONS[0];
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -204,11 +220,16 @@ function Invites({ workspace }: { workspace: Workspace }) {
     );
   };
 
-  const copy = (link: string) =>
-    navigator.clipboard.writeText(link).then(
-      () => toast.success('Invite link copied.'),
-      () => toast.error('Could not copy; select the link and copy it instead.'),
+  const copy = (link: string) => {
+    return navigator.clipboard.writeText(link).then(
+      () => {
+        return toast.success('Invite link copied.');
+      },
+      () => {
+        return toast.error('Could not copy; select the link and copy it instead.');
+      },
     );
+  };
 
   return (
     <Card className="flex flex-col gap-4">
@@ -220,7 +241,12 @@ function Invites({ workspace }: { workspace: Workspace }) {
         </p>
       </div>
       <form onSubmit={submit} className="flex flex-wrap items-center gap-2">
-        <Select value={role} onValueChange={(value) => setRole(value as InviteRole)}>
+        <Select
+          value={role}
+          onValueChange={(value) => {
+            return setRole(value as InviteRole);
+          }}
+        >
           <SelectTrigger className="w-28" aria-label="Invite as" />
           <SelectContent>
             <SelectItem value="member">Member</SelectItem>
@@ -236,11 +262,13 @@ function Invites({ workspace }: { workspace: Workspace }) {
         >
           <SelectTrigger className="w-48" aria-label="Who can accept" />
           <SelectContent>
-            {RESTRICTIONS.map((option) => (
-              <SelectItem key={option.kind} value={option.kind}>
-                {option.label}
-              </SelectItem>
-            ))}
+            {RESTRICTIONS.map((option) => {
+              return (
+                <SelectItem key={option.kind} value={option.kind}>
+                  {option.label}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         {kind !== INVITE_KIND.link && (
@@ -252,7 +280,9 @@ function Invites({ workspace }: { workspace: Workspace }) {
             maxLength={kind === INVITE_KIND.email ? EMAIL_MAX_LENGTH : GITHUB_LOGIN_MAX_LENGTH}
             required
             value={target}
-            onChange={(event) => setTarget(event.target.value)}
+            onChange={(event) => {
+              return setTarget(event.target.value);
+            }}
           />
         )}
         <Button type="submit" variant="primary" className="ml-auto" loading={create.isPending}>
@@ -275,9 +305,15 @@ function Invites({ workspace }: { workspace: Workspace }) {
             readOnly
             aria-label="Invite link"
             value={url}
-            onFocus={(event) => event.currentTarget.select()}
+            onFocus={(event) => {
+              return event.currentTarget.select();
+            }}
           />
-          <Button onClick={() => void copy(url)}>
+          <Button
+            onClick={() => {
+              return void copy(url);
+            }}
+          >
             <Copy /> Copy
           </Button>
         </div>
@@ -303,7 +339,9 @@ function Invites({ workspace }: { workspace: Workspace }) {
                     variant="tertiary"
                     disabled={sentRecently}
                     loading={resend.isPending && resend.variables?.inviteId === invite.id}
-                    onClick={() => resend.mutate({ id: workspace.id, inviteId: invite.id })}
+                    onClick={() => {
+                      return resend.mutate({ id: workspace.id, inviteId: invite.id });
+                    }}
                   >
                     Resend
                   </Button>
@@ -315,7 +353,9 @@ function Invites({ workspace }: { workspace: Workspace }) {
                     iconOnly
                     aria-label="Revoke invite"
                     loading={revoke.isPending && revoke.variables?.inviteId === invite.id}
-                    onClick={() => revoke.mutate({ id: workspace.id, inviteId: invite.id })}
+                    onClick={() => {
+                      return revoke.mutate({ id: workspace.id, inviteId: invite.id });
+                    }}
                   >
                     <X />
                   </Button>

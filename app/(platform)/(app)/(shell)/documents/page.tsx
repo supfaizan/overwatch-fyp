@@ -1,5 +1,7 @@
 import { DocsHome } from '@/features/docs';
 
-const page = () => <DocsHome />;
+const page = () => {
+  return <DocsHome />;
+};
 
 export default page;

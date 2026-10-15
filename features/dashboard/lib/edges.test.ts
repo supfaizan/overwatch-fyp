@@ -9,13 +9,15 @@ const edge = (
   type: ViewEdge['type'],
   weight = 1,
   collapsed = false,
-): ViewEdge => ({
-  source,
-  target,
-  type,
-  weight,
-  collapsed,
-});
+): ViewEdge => {
+  return {
+    source,
+    target,
+    type,
+    weight,
+    collapsed,
+  };
+};
 
 describe('mergeByPair', () => {
   it('draws one line per direction of a pair, named by the most specific relationship', () => {
@@ -51,7 +53,9 @@ describe('focus', () => {
   const lines = [edge('a', 'b', 'CALLS'), edge('c', 'a', 'IMPORTS'), edge('c', 'd', 'IMPORTS')];
 
   it('tells what the focused node uses from what uses it', () => {
-    expect(lines.map((line) => relationTo(line, 'a'))).toEqual([
+    expect(lines.map((line) => {
+      return relationTo(line, 'a');
+    })).toEqual([
       'outgoing',
       'incoming',
       'unrelated',

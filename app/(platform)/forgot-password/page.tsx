@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Reset your password · Overwatch' };
 
-const page = () => <ForgotPassword />;
+const page = () => {
+  return <ForgotPassword />;
+};
 
 export default page;

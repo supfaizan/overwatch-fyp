@@ -66,14 +66,18 @@ export default function BoardColumn(
       return;
     }
     const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && onLoadMore(column.id),
+      ([entry]) => {
+        return entry.isIntersecting && onLoadMore(column.id);
+      },
       {
         root: list.current,
         rootMargin: '0px 0px 200px 0px',
       },
     );
     observer.observe(sentinel.current);
-    return () => observer.disconnect();
+    return () => {
+      return observer.disconnect();
+    };
   }, [hasMore, loadingMore, items.length, column.id, onLoadMore]);
 
   return (
@@ -100,7 +104,9 @@ export default function BoardColumn(
       </h2>
       <SortableContext
         id={column.id}
-        items={items.map((item) => item.id)}
+        items={items.map((item) => {
+          return item.id;
+        })}
         strategy={verticalListSortingStrategy}
       >
         <div className="relative flex min-h-0 flex-col">
@@ -118,17 +124,19 @@ export default function BoardColumn(
               hint?.allowed === false && 'opacity-40',
             )}
           >
-            {items.map((item) => (
-              <WorkItemCard
-                key={item.id}
-                item={item}
-                columns={columns}
-                color={color}
-                onOpen={onOpen}
-                onMoveTo={onMoveTo}
-                linkOf={linkOf}
-              />
-            ))}
+            {items.map((item) => {
+              return (
+                <WorkItemCard
+                  key={item.id}
+                  item={item}
+                  columns={columns}
+                  color={color}
+                  onOpen={onOpen}
+                  onMoveTo={onMoveTo}
+                  linkOf={linkOf}
+                />
+              );
+            })}
             {hasMore && (
               <li ref={sentinel} className="flex list-none justify-center py-2" aria-live="polite">
                 {loadingMore && <Spinner className="size-4 text-muted" />}
@@ -139,9 +147,11 @@ export default function BoardColumn(
           {hint?.allowed && hint.zones.length > 1 && (
             // a column it can enter in several statuses: one landing spot each, as Jira shows them
             <div className="absolute inset-0 flex flex-col gap-2 rounded-lg bg-background/90 p-2">
-              {hint.zones.map((zone) => (
-                <DropZone key={zone.statusId ?? zone.label} columnId={column.id} zone={zone} />
-              ))}
+              {hint.zones.map((zone) => {
+                return (
+                  <DropZone key={zone.statusId ?? zone.label} columnId={column.id} zone={zone} />
+                );
+              })}
             </div>
           )}
         </div>

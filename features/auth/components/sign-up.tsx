@@ -22,7 +22,9 @@ import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
 
 export default function SignUp({ from }: { from?: string }) {
-  const status = useSession((state) => state.status);
+  const status = useSession((state) => {
+    return state.status;
+  });
   const router = useRouter();
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),

@@ -30,7 +30,16 @@ export default function GithubSetup() {
       <Banner
         type="error"
         className="mx-auto mt-10 max-w-xl"
-        action={<Button size="sm" onClick={() => status.refetch()}>Retry</Button>}
+        action={
+          <Button
+            size="sm"
+            onClick={() => {
+              return status.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
       >
         {status.error.message}
       </Banner>

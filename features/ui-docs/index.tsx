@@ -14,15 +14,22 @@ export default async function UiDocs() {
         aria-label="Components"
         className="sticky top-6 hidden h-fit w-44 shrink-0 flex-col gap-0.5 text-sm md:flex"
       >
-        {['foundations', ...docs.map((doc) => doc.file)].map((id) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            className="rounded-md px-2 py-1 text-muted capitalize hover:bg-fill-hover hover:text-foreground"
-          >
-            {id.replace('-', ' ')}
-          </a>
-        ))}
+        {[
+          'foundations',
+          ...docs.map((doc) => {
+            return doc.file;
+          }),
+        ].map((id) => {
+          return (
+            <a
+              key={id}
+              href={`#${id}`}
+              className="rounded-md px-2 py-1 text-muted capitalize hover:bg-fill-hover hover:text-foreground"
+            >
+              {id.replace('-', ' ')}
+            </a>
+          );
+        })}
       </nav>
 
       <main className="flex min-w-0 flex-1 flex-col gap-16">
@@ -60,17 +67,21 @@ export default async function UiDocs() {
             </li>
           </ul>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            {colors.map((name) => (
-              <Card key={name} className="overflow-hidden p-0">
-                {/* inline var so we don't need a safelist for dynamic class names */}
-                <div className="h-12" style={{ background: `var(--color-${name})` }} />
-                <p className="px-2 py-1.5 font-mono text-xs">{name}</p>
-              </Card>
-            ))}
+            {colors.map((name) => {
+              return (
+                <Card key={name} className="overflow-hidden p-0">
+                  {/* inline var so we don't need a safelist for dynamic class names */}
+                  <div className="h-12" style={{ background: `var(--color-${name})` }} />
+                  <p className="px-2 py-1.5 font-mono text-xs">{name}</p>
+                </Card>
+              );
+            })}
           </div>
         </section>
 
-        {docs.map((doc) => <ComponentSection key={doc.file} doc={doc} />)}
+        {docs.map((doc) => {
+          return <ComponentSection key={doc.file} doc={doc} />;
+        })}
       </main>
     </div>
   );

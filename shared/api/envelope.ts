@@ -27,9 +27,9 @@ function toFields(value: unknown): Record<string, string> {
     return {};
   }
   return Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, string] =>
-      typeof entry[1] === 'string'
-    ),
+    Object.entries(value).filter((entry): entry is [string, string] => {
+      return typeof entry[1] === 'string';
+    }),
   );
 }
 

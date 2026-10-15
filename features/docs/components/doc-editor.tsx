@@ -22,36 +22,38 @@ import { CELL_MIN_WIDTH, dragInnerColumnEdge, pinColumnWidths } from '../table-w
 
 // pages are stored as editor JSON, so they keep what Markdown can't (underline, alignment);
 // the Markdown copy, for search and AI answers, simply drops it
-const extensions = (sourceName: string) => [
-  StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
-  // drag a column's edge to size it; the last column's edge sizes the whole table (see `pinColumnWidths`)
-  TableKit.configure({ table: false, tableCell: false, tableHeader: false }),
-  DocTable.configure({ resizable: true, cellMinWidth: CELL_MIN_WIDTH }),
-  DocTableCell,
-  DocTableHeader,
-  TaskList,
-  TaskItem.configure({ nested: true }),
-  TextAlign.configure({ types: ['heading', 'paragraph'] }),
-  DocImage,
-  Emoji,
-  Status,
-  DateNode,
-  LayoutSection,
-  LayoutColumn,
-  Panel,
-  Expand,
-  InlineCard,
-  BlockCard,
-  EmbedCard,
-  SourceBlock.configure({ sourceName }),
-  SourceInline.configure({ sourceName }),
-  SourceMark,
-  Markdown,
-  Placeholder.configure({
-    placeholder:
-      "Write, or use the toolbar above. Markdown works too: '# ' heading, '- ' list, '[] ' checklist…",
-  }),
-];
+const extensions = (sourceName: string) => {
+  return [
+    StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
+    // drag a column's edge to size it; the last column's edge sizes the whole table (see `pinColumnWidths`)
+    TableKit.configure({ table: false, tableCell: false, tableHeader: false }),
+    DocTable.configure({ resizable: true, cellMinWidth: CELL_MIN_WIDTH }),
+    DocTableCell,
+    DocTableHeader,
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    DocImage,
+    Emoji,
+    Status,
+    DateNode,
+    LayoutSection,
+    LayoutColumn,
+    Panel,
+    Expand,
+    InlineCard,
+    BlockCard,
+    EmbedCard,
+    SourceBlock.configure({ sourceName }),
+    SourceInline.configure({ sourceName }),
+    SourceMark,
+    Markdown,
+    Placeholder.configure({
+      placeholder:
+        "Write, or use the toolbar above. Markdown works too: '# ' heading, '- ' list, '[] ' checklist…",
+    }),
+  ];
+};
 
 const TASK_LIST_CLASS = cn(
   '[&_ul[data-type=taskList]]:list-none [&_ul[data-type=taskList]]:pl-1',
@@ -106,8 +108,11 @@ const IMAGE_CLASS = cn(
   '[&_img[data-uploading]]:animate-pulse [&_img[data-uploading]]:opacity-60',
 );
 
-const imageFiles = (list: FileList | undefined | null) =>
-  Array.from(list ?? []).filter((file) => file.type.startsWith('image/'));
+const imageFiles = (list: FileList | undefined | null) => {
+  return Array.from(list ?? []).filter((file) => {
+    return file.type.startsWith('image/');
+  });
+};
 
 type DocEditorProps = {
   /** Read once: the editor owns the content after that. */
@@ -202,12 +207,16 @@ export default function DocEditor(
         },
       },
     },
-    onUpdate: () => handlers.current.onChange(),
+    onUpdate: () => {
+      return handlers.current.onChange();
+    },
   });
 
   useEffect(() => {
     handlers.current.onEditor(editor);
-    return () => handlers.current.onEditor(null);
+    return () => {
+      return handlers.current.onEditor(null);
+    };
   }, [editor]);
 
   return <EditorContent editor={editor} />;

@@ -23,7 +23,11 @@ export default function TitleInput({ doc, onEnter }: { doc: Document; onEnter?: 
     rename.mutate({ id: doc.id, title: next });
   };
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    return () => {
+      return clearTimeout(timer.current);
+    };
+  }, []);
 
   return (
     <input
@@ -32,9 +36,13 @@ export default function TitleInput({ doc, onEnter }: { doc: Document; onEnter?: 
         const { value } = event.target;
         setTitle(value);
         clearTimeout(timer.current);
-        timer.current = setTimeout(() => commit(value), RENAME_DELAY);
+        timer.current = setTimeout(() => {
+          return commit(value);
+        }, RENAME_DELAY);
       }}
-      onBlur={() => commit(title)}
+      onBlur={() => {
+        return commit(title);
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Enter') {
           event.preventDefault();

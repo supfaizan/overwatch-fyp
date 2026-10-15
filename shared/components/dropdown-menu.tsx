@@ -14,11 +14,12 @@ export const MENU_LABEL_CLASS =
   'px-2 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase';
 
 /** A menu item's look, shared with the context menu. */
-export const menuItemClass = (danger?: boolean) =>
-  cn(
+export const menuItemClass = (danger?: boolean) => {
+  return cn(
     'flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-fill-hover [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted',
     danger && 'text-danger data-highlighted:bg-danger/10 [&_svg]:text-danger',
   );
+};
 
 // unstyled Radix parts, re-exported so callers only import from here
 export const DropdownMenu = Menu.Root;

@@ -27,9 +27,9 @@ const lastConversation = new Map<string, string>();
 
 /** Questions about one repository, answered from its graph; a reference in a message selects that node. */
 export default function ChatPanel({ repo, onClose }: { repo: string; onClose: () => void }) {
-  const [conversationId, setConversation] = useState<string | null>(() =>
-    lastConversation.get(repo) ?? null
-  );
+  const [conversationId, setConversation] = useState<string | null>(() => {
+    return lastConversation.get(repo) ?? null;
+  });
   const setConversationId = (id: string | null) => {
     if (id) {
       lastConversation.set(repo, id);
@@ -42,7 +42,9 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
   const conversation = useConversation(conversationId);
   const ask = useAsk();
   const remove = useDeleteConversation(repo);
-  const selected = useViewStore((state) => state.selected);
+  const selected = useViewStore((state) => {
+    return state.selected;
+  });
   const end = useRef<HTMLDivElement>(null);
 
   const messages = conversation.data?.messages ?? [];
@@ -97,14 +99,18 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
             <DropdownMenuLabel>Earlier conversations</DropdownMenuLabel>
             {conversations.data?.length
               ? (
-                conversations.data.map((item) => (
-                  <DropdownMenuItem
-                    key={item.id}
-                    onSelect={() => setConversationId(item.id)}
-                  >
-                    <span className="truncate">{item.title}</span>
-                  </DropdownMenuItem>
-                ))
+                conversations.data.map((item) => {
+                  return (
+                    <DropdownMenuItem
+                      key={item.id}
+                      onSelect={() => {
+                        return setConversationId(item.id);
+                      }}
+                    >
+                      <span className="truncate">{item.title}</span>
+                    </DropdownMenuItem>
+                  );
+                })
               )
               : (
                 <p className="px-2 py-1.5 text-xs text-muted">
@@ -124,13 +130,14 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
             description="This can't be undone."
             confirmLabel="Delete"
             pending={remove.isPending}
-            onConfirm={(done) =>
-              remove.mutate(conversationId, {
+            onConfirm={(done) => {
+              return remove.mutate(conversationId, {
                 onSuccess: () => {
                   done();
                   startNew();
                 },
-              })}
+              });
+            }}
           />
         )}
         <Button
@@ -171,9 +178,9 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
           )
           : (
             <ol className="flex flex-col gap-3">
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} repo={repo} />
-              ))}
+              {messages.map((message) => {
+                return <ChatMessage key={message.id} message={message} repo={repo} />;
+              })}
               {asking && (
                 <>
                   <li className="flex justify-end">

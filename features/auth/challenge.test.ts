@@ -8,9 +8,15 @@ describe('the challenge a tab waits on', () => {
   beforeEach(() => {
     const store = new Map<string, string>();
     vi.stubGlobal('sessionStorage', {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => void store.set(key, value),
-      removeItem: (key: string) => void store.delete(key),
+      getItem: (key: string) => {
+        return store.get(key) ?? null;
+      },
+      setItem: (key: string, value: string) => {
+        return void store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        return void store.delete(key);
+      },
     });
   });
 

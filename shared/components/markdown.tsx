@@ -7,21 +7,23 @@ import { Streamdown } from 'streamdown';
 type Components = NonNullable<ComponentProps<typeof Streamdown>['components']>;
 
 /** Links open in a new tab and tell the destination nothing about where they came from. */
-const SafeLink: Components['a'] = ({ href, children }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-primary underline-offset-2 hover:underline"
-  >
-    {children}
-  </a>
-);
+const SafeLink: Components['a'] = ({ href, children }) => {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary underline-offset-2 hover:underline"
+    >
+      {children}
+    </a>
+  );
+};
 
 /** Images never load by default: an image URL is a request to whoever wrote it. Pass `components.img` to allow some. */
-const ImagePlaceholder: Components['img'] = ({ alt }) => (
-  <span className="text-xs text-muted">[image{alt ? `: ${alt}` : ''}]</span>
-);
+const ImagePlaceholder: Components['img'] = ({ alt }) => {
+  return <span className="text-xs text-muted">[image{alt ? `: ${alt}` : ''}]</span>;
+};
 
 /** `code` in a sentence: a light primary tint, readable in both themes (Streamdown's default is a dark block). */
 /** The inline-code look; `rich-text-editor.tsx` spells out the same classes, so keep the two in step. */

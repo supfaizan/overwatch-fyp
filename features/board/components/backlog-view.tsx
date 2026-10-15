@@ -45,18 +45,24 @@ type BacklogViewProps = {
 };
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
-const span = (sprint: Sprint) =>
-  sprint.start_at && sprint.end_at
+const span = (sprint: Sprint) => {
+  return sprint.start_at && sprint.end_at
     ? `${dateFormat.format(new Date(sprint.start_at))} – ${
       dateFormat.format(new Date(sprint.end_at))
     }`
     : null;
+};
 
 /** Open sprints and the backlog, Jira-style: drag items between them to plan the next sprint. */
 export default function BacklogView(
   { board, sprints, isAdmin, trackerName, onOpen }: BacklogViewProps,
 ) {
-  const sectionIds = [...sprints.map((sprint) => sprint.id), null];
+  const sectionIds = [
+    ...sprints.map((sprint) => {
+      return sprint.id;
+    }),
+    null,
+  ];
   const results = usePlanned(board.id, sectionIds);
   const setSprint = useSetItemSprint();
   const start = useStartSprint();
@@ -68,10 +74,16 @@ export default function BacklogView(
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  if (results.some((result) => result.isPending)) {
+  if (
+    results.some((result) => {
+      return result.isPending;
+    })
+  ) {
     return <Skeleton className="h-64 w-full" />;
   }
-  const failed = results.find((result) => result.isError);
+  const failed = results.find((result) => {
+    return result.isError;
+  });
   if (failed) {
     return (
       <Banner
@@ -79,7 +91,11 @@ export default function BacklogView(
         action={
           <Button
             size="sm"
-            onClick={() => results.forEach((result) => void result.refetch())}
+            onClick={() => {
+              return results.forEach((result) => {
+                return void result.refetch();
+              });
+            }}
           >
             Retry
           </Button>
@@ -94,22 +110,32 @@ export default function BacklogView(
     sectionIds.map((
       id,
       index,
-    ) => [id ?? BACKLOG_SECTION, sortByRank(results[index].data?.items ?? [])]),
+    ) => {
+      return [id ?? BACKLOG_SECTION, sortByRank(results[index].data?.items ?? [])];
+    }),
   );
   const totals: Record<string, number> = Object.fromEntries(
-    sectionIds.map((id, index) => [id ?? BACKLOG_SECTION, results[index].data?.total ?? 0]),
+    sectionIds.map((id, index) => {
+      return [id ?? BACKLOG_SECTION, results[index].data?.total ?? 0];
+    }),
   );
   const all = Object.values(sections).flat();
-  const active = sprints.find((sprint) => sprint.state === SPRINT_STATE.active);
+  const active = sprints.find((sprint) => {
+    return sprint.state === SPRINT_STATE.active;
+  });
 
   const onDragEnd = ({ active: dragged, over }: DragEndEvent) => {
     setDragging(null);
-    const item = all.find((candidate) => candidate.id === dragged.id);
+    const item = all.find((candidate) => {
+      return candidate.id === dragged.id;
+    });
     const target = over && item && sectionDrop(sections, item.id, String(over.id));
     if (!item || !target) {
       return;
     }
-    const into = sections[target.section].filter((candidate) => candidate.id !== item.id);
+    const into = sections[target.section].filter((candidate) => {
+      return candidate.id !== item.id;
+    });
     const { rank, ...neighbours } = placement(into, target.index);
     setSprint.mutate({
       boardId: board.id,
@@ -125,16 +151,23 @@ export default function BacklogView(
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
-        onDragStart={({ active: dragged }) =>
-          setDragging(all.find((item) => item.id === dragged.id) ?? null)}
-        onDragCancel={() => setDragging(null)}
+        onDragStart={({ active: dragged }) => {
+          return setDragging(
+            all.find((item) => {
+              return item.id === dragged.id;
+            }) ?? null,
+          );
+        }}
+        onDragCancel={() => {
+          return setDragging(null);
+        }}
         onDragEnd={onDragEnd}
       >
         {sprints.map((sprint) => {
           const items = sections[sprint.id];
-          const unfinished = items.filter((item) =>
-            item.status_category !== STATUS_CATEGORY.done
-          ).length;
+          const unfinished = items.filter((item) => {
+            return item.status_category !== STATUS_CATEGORY.done;
+          }).length;
           return (
             <Section
               key={sprint.id}
@@ -150,7 +183,9 @@ export default function BacklogView(
                 ? (
                   <Button
                     size="sm"
-                    onClick={() => setCompleting(sprint)}
+                    onClick={() => {
+                      return setCompleting(sprint);
+                    }}
                   >
                     Complete sprint
                   </Button>
@@ -161,7 +196,9 @@ export default function BacklogView(
                     size="sm"
                     variant="primary"
                     loading={start.isPending}
-                    onClick={() => start.mutate(sprint.id)}
+                    onClick={() => {
+                      return start.mutate(sprint.id);
+                    }}
                     disabled={unfinished === 0}
                   >
                     Start sprint
@@ -180,7 +217,12 @@ export default function BacklogView(
           editable={board.editable}
           onOpen={onOpen}
           action={board.editable && (
-            <Button size="sm" onClick={() => setCreating(true)}>
+            <Button
+              size="sm"
+              onClick={() => {
+                return setCreating(true);
+              }}
+            >
               <Plus /> Create sprint
             </Button>
           )}
@@ -199,12 +241,16 @@ export default function BacklogView(
       {completing && (
         <CompleteSprintDialog
           open
-          onOpenChange={(open) => !open && setCompleting(null)}
+          onOpenChange={(open) => {
+            return !open && setCompleting(null);
+          }}
           sprint={completing}
-          others={sprints.filter((sprint) => sprint.id !== completing.id)}
-          unfinished={sections[completing.id].filter((item) =>
-            item.status_category !== STATUS_CATEGORY.done
-          ).length}
+          others={sprints.filter((sprint) => {
+            return sprint.id !== completing.id;
+          })}
+          unfinished={sections[completing.id].filter((item) => {
+            return item.status_category !== STATUS_CATEGORY.done;
+          }).length}
         />
       )}
     </div>
@@ -234,10 +280,14 @@ function Section(
   const { setNodeRef, isOver } = useDroppable({ id });
   const [open, setOpen] = useState(true);
   const [showDone, setShowDone] = useState(false);
-  const doneItems = items.filter((item) => item.status_category === STATUS_CATEGORY.done);
+  const doneItems = items.filter((item) => {
+    return item.status_category === STATUS_CATEGORY.done;
+  });
   const shown = showDone
     ? items
-    : items.filter((item) => item.status_category !== STATUS_CATEGORY.done);
+    : items.filter((item) => {
+      return item.status_category !== STATUS_CATEGORY.done;
+    });
 
   return (
     <section aria-label={title} className="flex flex-col gap-2">
@@ -246,7 +296,11 @@ function Section(
           type="button"
           aria-expanded={open}
           aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => {
+            return setOpen((value) => {
+              return !value;
+            });
+          }}
           className="flex size-5 cursor-pointer items-center justify-center rounded text-muted hover:text-foreground"
         >
           <CaretRight
@@ -264,7 +318,9 @@ function Section(
       {open && (
         <SortableContext
           id={id}
-          items={shown.map((item) => item.id)}
+          items={shown.map((item) => {
+            return item.id;
+          })}
           strategy={verticalListSortingStrategy}
         >
           <ul
@@ -279,15 +335,18 @@ function Section(
                 Drag items here to plan them.
               </li>
             )}
-            {shown.map((item) => (
-              <Row key={item.id} item={item} editable={editable} onOpen={onOpen} />
-            ))}
+            {shown.map((item) => {
+              return <Row key={item.id} item={item} editable={editable} onOpen={onOpen} />;
+            })}
             {doneItems.length > 0 && (
               <li className="list-none">
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowDone((value) => !value)}
+                  onClick={() => {
+                    return setShowDone((value) => {
+                      return !value;
+                    });
+                  }}
                   className="cursor-pointer px-2 py-1 text-xs text-muted hover:text-foreground"
                 >
                   {showDone
@@ -352,7 +411,9 @@ const RowBody = memo(function RowBody({ item, onOpen, attributes, listeners }: R
           'min-w-0 flex-1 truncate text-left hover:underline',
           item.status_category === STATUS_CATEGORY.done && 'text-muted line-through',
         )}
-        onClick={() => onOpen(item)}
+        onClick={() => {
+          return onOpen(item);
+        }}
       >
         {item.title}
       </button>

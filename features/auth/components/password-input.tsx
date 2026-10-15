@@ -28,7 +28,11 @@ export default function PasswordInput(
           iconOnly
           aria-label={visible ? 'Hide password' : 'Show password'}
           aria-pressed={visible}
-          onClick={() => setVisible((shown) => !shown)}
+          onClick={() => {
+            return setVisible((shown) => {
+              return !shown;
+            });
+          }}
         >
           {visible ? <EyeSlash /> : <Eye />}
         </Button>

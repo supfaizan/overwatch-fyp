@@ -59,8 +59,12 @@ export default function WorkItemCard(
     <li
       ref={setNodeRef}
       // where it can move, read before a drag starts so the hints are ready
-      onPointerEnter={() => prefetchMoves(item)}
-      onFocus={() => prefetchMoves(item)}
+      onPointerEnter={() => {
+        return prefetchMoves(item);
+      }}
+      onFocus={() => {
+        return prefetchMoves(item);
+      }}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('list-none', isDragging && 'opacity-40')}
     >
@@ -102,8 +106,12 @@ const CONTEXT: MenuParts = {
 
 function copy(text: string, what: string) {
   navigator.clipboard.writeText(text).then(
-    () => toast.success(`${what} copied.`),
-    () => toast.error(`Could not copy the ${what.toLowerCase()}.`),
+    () => {
+      return toast.success(`${what} copied.`);
+    },
+    () => {
+      return toast.error(`Could not copy the ${what.toLowerCase()}.`);
+    },
   );
 }
 
@@ -120,36 +128,52 @@ export const CardBody = memo(
     const [menuOpen, setMenuOpen] = useState(false);
     const moves = useItemMoves(item, menuOpen);
 
-    const actions = ({ Item, Label, Separator }: MenuParts) => (
-      <>
-        {item.editable && (
-          <>
-            <Label>Move to</Label>
-            {columns.filter((column) => column.id !== item.column_id).map((column) => {
-              // until the moves are read, every column is offered; the server checks the move either way
-              const blocked = moves.data && moves.data.basis !== 'open'
-                && !moves.data.targets.some((target) => target.column_id === column.id);
-              return (
-                <Item
-                  key={column.id}
-                  disabled={Boolean(blocked)}
-                  onSelect={() => onMoveTo(item, column.id)}
-                >
-                  <Tag className={COLOR_CLASSES[columnColor(column)].tag}>{column.name}</Tag>
-                </Item>
-              );
-            })}
-            <Separator />
-          </>
-        )}
-        <Item onSelect={() => copy(linkOf(item), 'Link')}>
-          <LinkSimple /> Copy link
-        </Item>
-        <Item onSelect={() => copy(item.key, 'Key')}>
-          <Copy /> Copy key
-        </Item>
-      </>
-    );
+    const actions = ({ Item, Label, Separator }: MenuParts) => {
+      return (
+        <>
+          {item.editable && (
+            <>
+              <Label>Move to</Label>
+              {columns.filter((column) => {
+                return column.id !== item.column_id;
+              }).map((column) => {
+                // until the moves are read, every column is offered; the server checks the move either way
+                const blocked = moves.data && moves.data.basis !== 'open'
+                  && !moves.data.targets.some((target) => {
+                    return target.column_id === column.id;
+                  });
+                return (
+                  <Item
+                    key={column.id}
+                    disabled={Boolean(blocked)}
+                    onSelect={() => {
+                      return onMoveTo(item, column.id);
+                    }}
+                  >
+                    <Tag className={COLOR_CLASSES[columnColor(column)].tag}>{column.name}</Tag>
+                  </Item>
+                );
+              })}
+              <Separator />
+            </>
+          )}
+          <Item
+            onSelect={() => {
+              return copy(linkOf(item), 'Link');
+            }}
+          >
+            <LinkSimple /> Copy link
+          </Item>
+          <Item
+            onSelect={() => {
+              return copy(item.key, 'Key');
+            }}
+          >
+            <Copy /> Copy key
+          </Item>
+        </>
+      );
+    };
 
     return (
       // the whole card opens it; a drag only starts after a few pixels of travel, so a click stays a click
@@ -158,7 +182,9 @@ export const CardBody = memo(
           <article
             {...attributes}
             {...listeners}
-            onClick={() => onOpen(item)}
+            onClick={() => {
+              return onOpen(item);
+            }}
             className={cn(
               'group flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-sm shadow-chrome',
               COLOR_CLASSES[color].edge,
@@ -180,14 +206,23 @@ export const CardBody = memo(
                     iconOnly
                     aria-label={`Actions for ${item.key}`}
                     className="size-6"
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => {
+                      return event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      return event.stopPropagation();
+                    }}
                   >
                     <DotsThree />
                   </Button>
                 </DropdownMenuTrigger>
                 {/* React events bubble through portals: a pick here mustn't also open the card */}
-                <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                <DropdownMenuContent
+                  align="end"
+                  onClick={(event) => {
+                    return event.stopPropagation();
+                  }}
+                >
                   {actions(DROPDOWN)}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -226,7 +261,11 @@ export const CardBody = memo(
             )}
           </article>
         </ContextMenuTrigger>
-        <ContextMenuContent onClick={(event) => event.stopPropagation()}>
+        <ContextMenuContent
+          onClick={(event) => {
+            return event.stopPropagation();
+          }}
+        >
           {actions(CONTEXT)}
         </ContextMenuContent>
       </ContextMenu>

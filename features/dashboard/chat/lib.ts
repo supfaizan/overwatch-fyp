@@ -5,7 +5,9 @@ export type Segment = { type: 'text'; text: string } | { type: 'node'; node: Nod
 
 /** A cited node in an answer's markdown becomes an inline code span holding this, which renders as a chip. */
 export const CHIP_RE = /^⟦(n\d+)⟧$/;
-const chip = (ref: string) => `\`⟦${ref}⟧\``;
+const chip = (ref: string) => {
+  return `\`⟦${ref}⟧\``;
+};
 // fenced code is left alone: a reference never belongs inside code
 const FENCE_RE = /(```[\s\S]*?(?:```|$))/;
 
@@ -15,11 +17,15 @@ const FENCE_RE = /(```[\s\S]*?(?:```|$))/;
  */
 export function answerMarkdown(message: ChatMessage): string {
   const names = new Map(
-    message.nodes.flatMap((node) => (node.ref ? [[node.ref, node.name] as const] : [])),
+    message.nodes.flatMap((node) => {
+      return (node.ref ? [[node.ref, node.name] as const] : []);
+    }),
   );
   return message.text
     .split(FENCE_RE)
-    .map((part, index) => (index % 2 === 1 ? part : chipRefs(part, names)))
+    .map((part, index) => {
+      return (index % 2 === 1 ? part : chipRefs(part, names));
+    })
     .join('');
 }
 
@@ -35,9 +41,9 @@ function chipRefs(text: string, names: Map<string, string>): string {
       out = before;
       continue;
     }
-    const shown = [`**${name}**`, `\`${name}\``, `*${name}*`, name].find((form) =>
-      before.endsWith(form)
-    );
+    const shown = [`**${name}**`, `\`${name}\``, `*${name}*`, name].find((form) => {
+      return before.endsWith(form);
+    });
     if (shown) {
       before = before.slice(0, -shown.length);
     } else if (before && !/\s$/.test(before)) {
@@ -50,18 +56,28 @@ function chipRefs(text: string, names: Map<string, string>): string {
 
 /** A question's text with its @-mentions as chips. */
 export function questionSegments(message: ChatMessage): Segment[] {
-  const mentions = message.nodes.filter((node) => !node.ref);
+  const mentions = message.nodes.filter((node) => {
+    return !node.ref;
+  });
   if (mentions.length === 0) {
     return [{ type: 'text', text: message.text }];
   }
 
   // longest first, so `@user_service` isn't read as `@user` + `_service`
-  const names = [...new Set(mentions.map((node) => node.name))].sort((a, b) => b.length - a.length);
+  const names = [
+    ...new Set(mentions.map((node) => {
+      return node.name;
+    })),
+  ].sort((a, b) => {
+    return b.length - a.length;
+  });
   const pattern = new RegExp(`@(${names.map(escapeRegExp).join('|')})`, 'g');
   const segments: Segment[] = [];
   let last = 0;
   for (const match of message.text.matchAll(pattern)) {
-    const node = mentions.find((mention) => mention.name === match[1]);
+    const node = mentions.find((mention) => {
+      return mention.name === match[1];
+    });
     if (!node) {
       continue;
     }

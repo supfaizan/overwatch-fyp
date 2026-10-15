@@ -11,7 +11,9 @@ import AuthCard from './auth-card';
 
 /** Landing page after GitHub: the session provider exchanges the new refresh cookie, then we move on. */
 export default function AuthComplete() {
-  const status = useSession((state) => state.status);
+  const status = useSession((state) => {
+    return state.status;
+  });
   const router = useRouter();
 
   useEffect(() => {

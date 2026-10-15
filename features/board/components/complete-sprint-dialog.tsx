@@ -41,14 +41,19 @@ export default function CompleteSprintDialog(
             <Button
               variant="primary"
               loading={complete.isPending}
-              onClick={() =>
-                complete.mutate(
+              onClick={() => {
+                return complete.mutate(
                   {
                     id: sprint.id,
                     moveOpenTo: destination === BACKLOG_SECTION ? null : destination,
                   },
-                  { onSuccess: () => onOpenChange(false) },
-                )}
+                  {
+                    onSuccess: () => {
+                      return onOpenChange(false);
+                    },
+                  },
+                );
+              }}
             >
               Complete sprint
             </Button>
@@ -59,9 +64,9 @@ export default function CompleteSprintDialog(
           <Select value={destination} onValueChange={setDestination}>
             <SelectTrigger aria-label="Move unfinished items to" />
             <SelectContent>
-              {others.map((other) => (
-                <SelectItem key={other.id} value={other.id}>{other.name}</SelectItem>
-              ))}
+              {others.map((other) => {
+                return <SelectItem key={other.id} value={other.id}>{other.name}</SelectItem>;
+              })}
               <SelectItem value={BACKLOG_SECTION}>Backlog</SelectItem>
             </SelectContent>
           </Select>

@@ -77,30 +77,39 @@ export default function EditorToolbar(
   const picker = useRef<HTMLInputElement>(null);
   const state = useEditorState({
     editor,
-    selector: ({ editor: current }) => ({
-      level: ([1, 2, 3] as const).find((level) => current.isActive('heading', { level })) ?? 0,
-      bold: current.isActive('bold'),
-      italic: current.isActive('italic'),
-      underline: current.isActive('underline'),
-      strike: current.isActive('strike'),
-      code: current.isActive('code'),
-      bulletList: current.isActive('bulletList'),
-      orderedList: current.isActive('orderedList'),
-      taskList: current.isActive('taskList'),
-      align: ALIGNS.find(({ value }) => current.isActive({ textAlign: value }))?.value ?? 'left',
-      blockquote: current.isActive('blockquote'),
-      codeBlock: current.isActive('codeBlock'),
-      link: current.isActive('link'),
-      table: current.isActive('table'),
-      columns: current.isActive(LayoutSection.name),
-      canUndo: current.can().undo(),
-      canRedo: current.can().redo(),
-    }),
+    selector: ({ editor: current }) => {
+      return {
+        level: ([1, 2, 3] as const).find((level) => {
+          return current.isActive('heading', { level });
+        }) ?? 0,
+        bold: current.isActive('bold'),
+        italic: current.isActive('italic'),
+        underline: current.isActive('underline'),
+        strike: current.isActive('strike'),
+        code: current.isActive('code'),
+        bulletList: current.isActive('bulletList'),
+        orderedList: current.isActive('orderedList'),
+        taskList: current.isActive('taskList'),
+        align: ALIGNS.find(({ value }) => {
+          return current.isActive({ textAlign: value });
+        })?.value ?? 'left',
+        blockquote: current.isActive('blockquote'),
+        codeBlock: current.isActive('codeBlock'),
+        link: current.isActive('link'),
+        table: current.isActive('table'),
+        columns: current.isActive(LayoutSection.name),
+        canUndo: current.can().undo(),
+        canRedo: current.can().redo(),
+      };
+    },
   });
-  const run = (command: (chain: ReturnType<Editor['chain']>) => ReturnType<Editor['chain']>) =>
-    command(editor.chain().focus()).run();
+  const run = (command: (chain: ReturnType<Editor['chain']>) => ReturnType<Editor['chain']>) => {
+    return command(editor.chain().focus()).run();
+  };
   const insertTable = () => {
-    run((chain) => chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }));
+    run((chain) => {
+      return chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true });
+    });
     // once it's drawn, its columns get real widths, so its edges size it straight away
     requestAnimationFrame(() => {
       const table = tableAtSelection(editor.view);
@@ -109,8 +118,12 @@ export default function EditorToolbar(
       }
     });
   };
-  const style = STYLES.find(({ level }) => level === state.level) ?? STYLES[0];
-  const align = ALIGNS.find(({ value }) => value === state.align) ?? ALIGNS[0];
+  const style = STYLES.find(({ level }) => {
+    return level === state.level;
+  }) ?? STYLES[0];
+  const align = ALIGNS.find(({ value }) => {
+    return value === state.align;
+  }) ?? ALIGNS[0];
 
   return (
     <div role="toolbar" aria-label="Formatting" className="flex flex-wrap items-center gap-0.5">
@@ -124,21 +137,26 @@ export default function EditorToolbar(
           </DropdownMenuTrigger>
         </Tooltip>
         <DropdownMenuContent align="start">
-          {STYLES.map(({ label, level }) => (
-            <DropdownMenuItem
-              key={level}
-              onSelect={() =>
-                run((chain) => (level ? chain.setHeading({ level }) : chain.setParagraph()))}
-              className={cn(
-                level === 1 && 'text-lg font-semibold',
-                level === 2 && 'text-base font-semibold',
-                level === 3 && 'font-semibold',
-                level === state.level && 'bg-fill-active',
-              )}
-            >
-              {label}
-            </DropdownMenuItem>
-          ))}
+          {STYLES.map(({ label, level }) => {
+            return (
+              <DropdownMenuItem
+                key={level}
+                onSelect={() => {
+                  return run((chain) => {
+                    return (level ? chain.setHeading({ level }) : chain.setParagraph());
+                  });
+                }}
+                className={cn(
+                  level === 1 && 'text-lg font-semibold',
+                  level === 2 && 'text-base font-semibold',
+                  level === 3 && 'font-semibold',
+                  level === state.level && 'bg-fill-active',
+                )}
+              >
+                {label}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
       <Divider />
@@ -147,38 +165,55 @@ export default function EditorToolbar(
         label="Bold"
         shortcut={`${MOD}B`}
         active={state.bold}
-        onClick={() =>
-          run((chain) =>
-            chain.toggleBold()
-          )}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleBold();
+          });
+        }}
       />
       <Tool
         icon={TextItalic}
         label="Italic"
         shortcut={`${MOD}I`}
         active={state.italic}
-        onClick={() => run((chain) => chain.toggleItalic())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleItalic();
+          });
+        }}
       />
       <Tool
         icon={TextUnderline}
         label="Underline"
         shortcut={`${MOD}U`}
         active={state.underline}
-        onClick={() => run((chain) => chain.toggleUnderline())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleUnderline();
+          });
+        }}
       />
       <Tool
         icon={TextStrikethrough}
         label="Strikethrough"
         shortcut={`${MOD}⇧S`}
         active={state.strike}
-        onClick={() => run((chain) => chain.toggleStrike())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleStrike();
+          });
+        }}
       />
       <Tool
         icon={Code}
         label="Inline code"
         shortcut={`${MOD}E`}
         active={state.code}
-        onClick={() => run((chain) => chain.toggleCode())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleCode();
+          });
+        }}
       />
       <Divider />
       <Tool
@@ -186,21 +221,33 @@ export default function EditorToolbar(
         label="Bullet list"
         shortcut={`${MOD}⇧8`}
         active={state.bulletList}
-        onClick={() => run((chain) => chain.toggleBulletList())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleBulletList();
+          });
+        }}
       />
       <Tool
         icon={ListNumbers}
         label="Numbered list"
         shortcut={`${MOD}⇧7`}
         active={state.orderedList}
-        onClick={() => run((chain) => chain.toggleOrderedList())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleOrderedList();
+          });
+        }}
       />
       <Tool
         icon={ListChecks}
         label="Checklist"
         shortcut={`${MOD}⇧9`}
         active={state.taskList}
-        onClick={() => run((chain) => chain.toggleTaskList())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleTaskList();
+          });
+        }}
       />
       <DropdownMenu modal={false}>
         <Tooltip content="Alignment">
@@ -212,16 +259,22 @@ export default function EditorToolbar(
           </DropdownMenuTrigger>
         </Tooltip>
         <DropdownMenuContent align="start">
-          {ALIGNS.map(({ value, label, icon: AlignIcon }) => (
-            <DropdownMenuItem
-              key={value}
-              onSelect={() => run((chain) => chain.setTextAlign(value))}
-              className={cn(value === state.align && 'bg-fill-active')}
-            >
-              <AlignIcon aria-hidden />
-              {label}
-            </DropdownMenuItem>
-          ))}
+          {ALIGNS.map(({ value, label, icon: AlignIcon }) => {
+            return (
+              <DropdownMenuItem
+                key={value}
+                onSelect={() => {
+                  return run((chain) => {
+                    return chain.setTextAlign(value);
+                  });
+                }}
+                className={cn(value === state.align && 'bg-fill-active')}
+              >
+                <AlignIcon aria-hidden />
+                {label}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
       <Divider />
@@ -230,27 +283,41 @@ export default function EditorToolbar(
         label="Quote"
         shortcut={`${MOD}⇧B`}
         active={state.blockquote}
-        onClick={() => run((chain) => chain.toggleBlockquote())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleBlockquote();
+          });
+        }}
       />
       <Tool
         icon={CodeBlock}
         label="Code block"
         shortcut={`${MOD}⌥C`}
         active={state.codeBlock}
-        onClick={() => run((chain) => chain.toggleCodeBlock())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.toggleCodeBlock();
+          });
+        }}
       />
       <Tool
         icon={Minus}
         label="Divider"
         shortcut="---"
-        onClick={() => run((chain) => chain.setHorizontalRule())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.setHorizontalRule();
+          });
+        }}
       />
       {onImages && (
         <>
           <Tool
             icon={ImageIcon}
             label="Image (or paste / drop one in)"
-            onClick={() => picker.current?.click()}
+            onClick={() => {
+              return picker.current?.click();
+            }}
           />
           <input
             ref={picker}
@@ -269,12 +336,16 @@ export default function EditorToolbar(
         icon={LinkSimple}
         label={state.link ? 'Edit link' : 'Link'}
         active={state.link}
-        onClick={() => setLinking(true)}
+        onClick={() => {
+          return setLinking(true);
+        }}
       />
       <Tool
         icon={FrameCorners}
         label="Embed or link card"
-        onClick={() => setEmbedding(true)}
+        onClick={() => {
+          return setEmbedding(true);
+        }}
       />
       {state.table
         ? <TableMenu run={run} />
@@ -286,17 +357,39 @@ export default function EditorToolbar(
         label="Undo"
         shortcut={`${MOD}Z`}
         disabled={!state.canUndo}
-        onClick={() => run((chain) => chain.undo())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.undo();
+          });
+        }}
       />
       <Tool
         icon={ArrowUUpRight}
         label="Redo"
         shortcut={`${MOD}⇧Z`}
         disabled={!state.canRedo}
-        onClick={() => run((chain) => chain.redo())}
+        onClick={() => {
+          return run((chain) => {
+            return chain.redo();
+          });
+        }}
       />
-      {linking && <LinkDialog editor={editor} onClose={() => setLinking(false)} />}
-      {embedding && <EmbedDialog editor={editor} onClose={() => setEmbedding(false)} />}
+      {linking && (
+        <LinkDialog
+          editor={editor}
+          onClose={() => {
+            return setLinking(false);
+          }}
+        />
+      )}
+      {embedding && (
+        <EmbedDialog
+          editor={editor}
+          onClose={() => {
+            return setEmbedding(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -323,7 +416,9 @@ function Tool(
         aria-pressed={active}
         disabled={disabled}
         // keep the selection in the editor
-        onMouseDown={(event) => event.preventDefault()}
+        onMouseDown={(event) => {
+          return event.preventDefault();
+        }}
         onClick={onClick}
         className={cn(active && 'bg-primary/10 text-primary hover:bg-primary/15')}
       >
@@ -333,7 +428,9 @@ function Tool(
   );
 }
 
-const Divider = () => <span aria-hidden className="mx-1 h-5 w-px bg-border" />;
+const Divider = () => {
+  return <span aria-hidden className="mx-1 h-5 w-px bg-border" />;
+};
 
 type Run = (
   command: (chain: ReturnType<Editor['chain']>) => ReturnType<Editor['chain']>,
@@ -341,14 +438,57 @@ type Run = (
 
 function TableMenu({ run }: { run: Run }) {
   const items: { label: string; command: Parameters<Run>[0]; danger?: boolean }[] = [
-    { label: 'Add row above', command: (chain) => chain.addRowBefore() },
-    { label: 'Add row below', command: (chain) => chain.addRowAfter() },
-    { label: 'Add column left', command: (chain) => chain.addColumnBefore() },
-    { label: 'Add column right', command: (chain) => chain.addColumnAfter() },
-    { label: 'Header row on/off', command: (chain) => chain.toggleHeaderRow() },
-    { label: 'Delete row', command: (chain) => chain.deleteRow(), danger: true },
-    { label: 'Delete column', command: (chain) => chain.deleteColumn(), danger: true },
-    { label: 'Delete table', command: (chain) => chain.deleteTable(), danger: true },
+    {
+      label: 'Add row above',
+      command: (chain) => {
+        return chain.addRowBefore();
+      },
+    },
+    {
+      label: 'Add row below',
+      command: (chain) => {
+        return chain.addRowAfter();
+      },
+    },
+    {
+      label: 'Add column left',
+      command: (chain) => {
+        return chain.addColumnBefore();
+      },
+    },
+    {
+      label: 'Add column right',
+      command: (chain) => {
+        return chain.addColumnAfter();
+      },
+    },
+    {
+      label: 'Header row on/off',
+      command: (chain) => {
+        return chain.toggleHeaderRow();
+      },
+    },
+    {
+      label: 'Delete row',
+      command: (chain) => {
+        return chain.deleteRow();
+      },
+      danger: true,
+    },
+    {
+      label: 'Delete column',
+      command: (chain) => {
+        return chain.deleteColumn();
+      },
+      danger: true,
+    },
+    {
+      label: 'Delete table',
+      command: (chain) => {
+        return chain.deleteTable();
+      },
+      danger: true,
+    },
   ];
   return (
     <DropdownMenu modal={false}>
@@ -366,20 +506,29 @@ function TableMenu({ run }: { run: Run }) {
         </DropdownMenuTrigger>
       </Tooltip>
       <DropdownMenuContent align="start">
-        {items.map(({ label, command, danger }, index) => (
-          <div key={label}>
-            {danger && !items[index - 1]?.danger && <DropdownMenuSeparator />}
-            <DropdownMenuItem danger={danger} onSelect={() => run(command)}>
-              {label}
-            </DropdownMenuItem>
-          </div>
-        ))}
+        {items.map(({ label, command, danger }, index) => {
+          return (
+            <div key={label}>
+              {danger && !items[index - 1]?.danger && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                danger={danger}
+                onSelect={() => {
+                  return run(command);
+                }}
+              >
+                {label}
+              </DropdownMenuItem>
+            </div>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-const COLUMN_COUNTS = Array.from({ length: MAX_COLUMNS - 1 }, (_, index) => index + 2);
+const COLUMN_COUNTS = Array.from({ length: MAX_COLUMNS - 1 }, (_, index) => {
+  return index + 2;
+});
 
 /** Lays content out in columns, or back out of them; columns don't nest. */
 function ColumnsMenu({ editor, active }: { editor: Editor; active: boolean }) {
@@ -401,19 +550,27 @@ function ColumnsMenu({ editor, active }: { editor: Editor; active: boolean }) {
       <DropdownMenuContent align="start">
         {active
           ? (
-            <DropdownMenuItem onSelect={() => removeColumns(editor)}>
+            <DropdownMenuItem
+              onSelect={() => {
+                return removeColumns(editor);
+              }}
+            >
               Remove columns
             </DropdownMenuItem>
           )
           : (
-            COLUMN_COUNTS.map((count) => (
-              <DropdownMenuItem
-                key={count}
-                onSelect={() => insertColumns(editor, count)}
-              >
-                {count} columns
-              </DropdownMenuItem>
-            ))
+            COLUMN_COUNTS.map((count) => {
+              return (
+                <DropdownMenuItem
+                  key={count}
+                  onSelect={() => {
+                    return insertColumns(editor, count);
+                  }}
+                >
+                  {count} columns
+                </DropdownMenuItem>
+              );
+            })
           )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -434,7 +591,12 @@ function EmbedDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
     onClose();
   };
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent
         title="Embed or link card"
         description={`Links from ${
@@ -458,7 +620,9 @@ function EmbedDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
           <Input
             autoFocus
             value={href}
-            onChange={(event) => setHref(event.target.value)}
+            onChange={(event) => {
+              return setHref(event.target.value);
+            }}
             placeholder="https://www.loom.com/share/…"
             aria-label="Address"
             aria-invalid={Boolean(error)}
@@ -489,7 +653,12 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
     onClose();
   };
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent
         title="Link"
         description="Paste an address. Leave it empty to remove the link."
@@ -511,7 +680,9 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
           <Input
             autoFocus
             value={href}
-            onChange={(event) => setHref(event.target.value)}
+            onChange={(event) => {
+              return setHref(event.target.value);
+            }}
             placeholder="https://example.com"
             aria-label="Address"
             aria-invalid={Boolean(error)}

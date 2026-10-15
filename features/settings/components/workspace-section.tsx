@@ -62,7 +62,9 @@ function NameCard({ workspace }: { workspace: Workspace }) {
             maxLength={60}
             value={name}
             disabled={!canEdit}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              return setName(event.target.value);
+            }}
           />
           {canEdit && (
             <Button
@@ -82,8 +84,12 @@ function NameCard({ workspace }: { workspace: Workspace }) {
 }
 
 function DangerCard({ workspace }: { workspace: Workspace }) {
-  const userId = useSession((state) => state.user?.id ?? '');
-  const personal = useWorkspaces().data?.find((candidate) => candidate.personal);
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const personal = useWorkspaces().data?.find((candidate) => {
+    return candidate.personal;
+  });
   const switchTo = useSwitchWorkspace();
   const leave = useRemoveMember();
   const remove = useDeleteWorkspace();
@@ -115,8 +121,13 @@ function DangerCard({ workspace }: { workspace: Workspace }) {
           description="You lose access until someone invites you again."
           confirmLabel="Leave workspace"
           pending={leave.isPending}
-          onConfirm={(close) =>
-            leave.mutate({ id: workspace.id, userId }, { onSuccess: () => leaveFor(close) })}
+          onConfirm={(close) => {
+            return leave.mutate({ id: workspace.id, userId }, {
+              onSuccess: () => {
+                return leaveFor(close);
+              },
+            });
+          }}
         />
         {hasRole(workspace.role, ROLE.owner) && (
           <ConfirmDialog
@@ -129,7 +140,13 @@ function DangerCard({ workspace }: { workspace: Workspace }) {
             description="Every member loses access to it. Its data is kept, so it can be restored on request."
             confirmLabel="Delete workspace"
             pending={remove.isPending}
-            onConfirm={(close) => remove.mutate(workspace.id, { onSuccess: () => leaveFor(close) })}
+            onConfirm={(close) => {
+              return remove.mutate(workspace.id, {
+                onSuccess: () => {
+                  return leaveFor(close);
+                },
+              });
+            }}
           />
         )}
       </div>

@@ -63,7 +63,9 @@ export default function LinkCardView({ node, editor, getPos, selected }: NodeVie
             disabled={unavailable}
             aria-pressed={option.kind === kind}
             title={unavailable ? `${hostOf(url)} can't be embedded` : undefined}
-            onMouseDown={(event) => event.preventDefault()}
+            onMouseDown={(event) => {
+              return event.preventDefault();
+            }}
             onClick={() => {
               const pos = getPos();
               if (typeof pos === 'number') {

@@ -64,19 +64,21 @@ export default function SegmentedButton<T extends string>({
       }}
       className="inline-flex gap-0.5 rounded-lg bg-fill-hover p-0.5"
     >
-      {options.map((option) => (
-        <ToggleGroup.Item
-          key={option.value}
-          value={option.value}
-          className={cn(
-            'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-transparent font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm',
-            sizes[size],
-          )}
-        >
-          {option.icon}
-          {option.label}
-        </ToggleGroup.Item>
-      ))}
+      {options.map((option) => {
+        return (
+          <ToggleGroup.Item
+            key={option.value}
+            value={option.value}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-transparent font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm',
+              sizes[size],
+            )}
+          >
+            {option.icon}
+            {option.label}
+          </ToggleGroup.Item>
+        );
+      })}
     </ToggleGroup.Root>
   );
 }

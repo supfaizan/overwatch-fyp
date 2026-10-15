@@ -19,7 +19,9 @@ export function Picker() {
         pending={pending}
         onSelect={(name) => {
           setPending(name);
-          setTimeout(() => setPending(null), 1000);
+          setTimeout(() => {
+            return setPending(null);
+          }, 1000);
         }}
       />
     </div>

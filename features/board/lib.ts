@@ -14,12 +14,16 @@ import {
   type WorkItem,
 } from './types';
 
-const byRank = (a: WorkItem, b: WorkItem) => a.rank - b.rank || a.id.localeCompare(b.id);
+const byRank = (a: WorkItem, b: WorkItem) => {
+  return a.rank - b.rank || a.id.localeCompare(b.id);
+};
 
 /** Items per column of the board, in board order; an item in no column isn't shown. */
 export function groupByColumn(items: WorkItem[], columns: Column[]): Record<string, WorkItem[]> {
   const grouped: Record<string, WorkItem[]> = Object.fromEntries(
-    columns.map((column) => [column.id, []]),
+    columns.map((column) => {
+      return [column.id, []];
+    }),
   );
   for (const item of items) {
     if (item.column_id && grouped[item.column_id]) {
@@ -60,13 +64,20 @@ export function moveItem(
   columnId: string,
   index: number,
 ) {
-  const column = groupByColumn(items.filter((item) => item.id !== id), columns)[columnId] ?? [];
+  const column = groupByColumn(
+    items.filter((item) => {
+      return item.id !== id;
+    }),
+    columns,
+  )[columnId] ?? [];
   const { rank, ...neighbours } = placement(column, index);
   const move: MoveWorkItem = { column_id: columnId, ...neighbours };
   return {
     move,
     rank,
-    items: items.map((item) => (item.id === id ? { ...item, column_id: columnId, rank } : item)),
+    items: items.map((item) => {
+      return (item.id === id ? { ...item, column_id: columnId, rank } : item);
+    }),
   };
 }
 
@@ -80,13 +91,22 @@ export function dropTarget(
   activeId: string,
   overId: string,
 ): { columnId: string; index: number } | null {
-  const others = groupByColumn(items.filter((item) => item.id !== activeId), columns);
+  const others = groupByColumn(
+    items.filter((item) => {
+      return item.id !== activeId;
+    }),
+    columns,
+  );
   if (others[overId]) {
     return { columnId: overId, index: others[overId].length };
   }
 
-  const active = items.find((item) => item.id === activeId);
-  const over = items.find((item) => item.id === overId);
+  const active = items.find((item) => {
+    return item.id === activeId;
+  });
+  const over = items.find((item) => {
+    return item.id === overId;
+  });
   if (!active || !over || active === over || !over.column_id || !others[over.column_id]) {
     return null;
   }
@@ -102,9 +122,13 @@ export function dropTarget(
 /** The backlog view's section for items in no sprint; sprint sections use the sprint's id. */
 export const BACKLOG_SECTION = 'backlog';
 
-export const sectionOf = (item: WorkItem) => item.sprint_id ?? BACKLOG_SECTION;
+export const sectionOf = (item: WorkItem) => {
+  return item.sprint_id ?? BACKLOG_SECTION;
+};
 
-export const sortByRank = (items: WorkItem[]) => [...items].sort(byRank);
+export const sortByRank = (items: WorkItem[]) => {
+  return [...items].sort(byRank);
+};
 
 /**
  * Where a backlog-view drag ends: on a section (its end) or on a row (that row's place). A row
@@ -115,14 +139,22 @@ export function sectionDrop(
   activeId: string,
   overId: string,
 ): { section: string; index: number } | null {
-  const without = (items: WorkItem[]) => items.filter((item) => item.id !== activeId);
+  const without = (items: WorkItem[]) => {
+    return items.filter((item) => {
+      return item.id !== activeId;
+    });
+  };
   if (sections[overId]) {
     return { section: overId, index: without(sections[overId]).length };
   }
 
   const all = Object.values(sections).flat();
-  const active = all.find((item) => item.id === activeId);
-  const over = all.find((item) => item.id === overId);
+  const active = all.find((item) => {
+    return item.id === activeId;
+  });
+  const over = all.find((item) => {
+    return item.id === overId;
+  });
   if (!active || !over || active === over) {
     return null;
   }
@@ -225,7 +257,9 @@ const PRIORITY_NAMES: [PriorityLevel, string[]][] = [
 /** Where a tracker's priority name sits on the usual five-step scale; null for a name we don't know. */
 export function priorityLevel(name: string | null): PriorityLevel | null {
   const lower = name?.trim().toLowerCase();
-  return PRIORITY_NAMES.find(([, names]) => lower && names.includes(lower))?.[0] ?? null;
+  return PRIORITY_NAMES.find(([, names]) => {
+    return lower && names.includes(lower);
+  })?.[0] ?? null;
 }
 
 /**
@@ -245,10 +279,14 @@ export function mergePages(pages: WorkItem[][]): WorkItem[] {
 
 /** Columns are sortable alongside cards; their sortable ids are prefixed so the two never collide. */
 const COLUMN_SORT_PREFIX = 'column:';
-export const columnSortId = (columnId: string) => COLUMN_SORT_PREFIX + columnId;
+export const columnSortId = (columnId: string) => {
+  return COLUMN_SORT_PREFIX + columnId;
+};
 export const columnFromSortId = (
   id: string,
-) => (id.startsWith(COLUMN_SORT_PREFIX) ? id.slice(COLUMN_SORT_PREFIX.length) : null);
+) => {
+  return (id.startsWith(COLUMN_SORT_PREFIX) ? id.slice(COLUMN_SORT_PREFIX.length) : null);
+};
 
 /** A board with a new column order and colors, as the server will return it (for an optimistic update). */
 export function arrange(
@@ -257,20 +295,30 @@ export function arrange(
   colors?: Record<string, ColumnColor | null>,
 ): Board {
   const position = new Map(
-    (order ?? board.columns.map((column) => column.id)).map((id, index) => [id, index]),
+    (order ?? board.columns.map((column) => {
+      return column.id;
+    })).map((id, index) => {
+      return [id, index];
+    }),
   );
   const columns = [...board.columns]
-    .sort((a, b) => (position.get(a.id) ?? position.size) - (position.get(b.id) ?? position.size))
+    .sort((a, b) => {
+      return (position.get(a.id) ?? position.size) - (position.get(b.id) ?? position.size);
+    })
     .map((
       column,
-    ) => (colors && column.id in colors ? { ...column, color: colors[column.id] } : column));
+    ) => {
+      return (colors && column.id in colors ? { ...column, color: colors[column.id] } : column);
+    });
   return { ...board, columns };
 }
 
 const ARCHIVED_RE = /archiv/i;
 
 /** Archived columns start hidden: they fill up and are rarely what anyone's looking for. */
-export const hiddenByDefault = (column: Column) => ARCHIVED_RE.test(column.name);
+export const hiddenByDefault = (column: Column) => {
+  return ARCHIVED_RE.test(column.name);
+};
 
 export type Lane = { key: string; label: string; total: number };
 
@@ -279,15 +327,18 @@ export const NO_LANE = 'none';
 const CELL_SEPARATOR = '::';
 
 /** A swimlane cell's id (droppable, and paging): one lane, one column. */
-export const cellId = (lane: string, columnId: string) => `${lane}${CELL_SEPARATOR}${columnId}`;
+export const cellId = (lane: string, columnId: string) => {
+  return `${lane}${CELL_SEPARATOR}${columnId}`;
+};
 
 export function parseCellId(id: string): { lane: string; columnId: string } | null {
   const at = id.lastIndexOf(CELL_SEPARATOR);
   return at < 0 ? null : { lane: id.slice(0, at), columnId: id.slice(at + CELL_SEPARATOR.length) };
 }
 
-export const laneOf = (item: WorkItem, by: 'assignee' | 'priority') =>
-  (by === 'assignee' ? item.assignee?.id : item.priority) ?? NO_LANE;
+export const laneOf = (item: WorkItem, by: 'assignee' | 'priority') => {
+  return (by === 'assignee' ? item.assignee?.id : item.priority) ?? NO_LANE;
+};
 
 /**
  * Swimlanes in board order: by assignee alphabetically, by priority in the board's order (most urgent
@@ -301,19 +352,23 @@ export function orderLanes(
   const none = by === 'assignee' ? 'Unassigned' : 'No priority';
   const rank = (
     lane: Lane,
-  ) => (by === 'priority' && priorities.includes(lane.key)
-    ? priorities.indexOf(lane.key)
-    : priorities.length);
+  ) => {
+    return (by === 'priority' && priorities.includes(lane.key)
+      ? priorities.indexOf(lane.key)
+      : priorities.length);
+  };
   return lanes
-    .map((lane) => ({
-      key: lane.key,
-      total: lane.total,
-      label: lane.key === NO_LANE ? none : (lane.label ?? lane.key),
-    }))
-    .sort((a, b) =>
-      Number(a.key === NO_LANE) - Number(b.key === NO_LANE) || rank(a) - rank(b)
-      || a.label.localeCompare(b.label)
-    );
+    .map((lane) => {
+      return {
+        key: lane.key,
+        total: lane.total,
+        label: lane.key === NO_LANE ? none : (lane.label ?? lane.key),
+      };
+    })
+    .sort((a, b) => {
+      return Number(a.key === NO_LANE) - Number(b.key === NO_LANE) || rank(a) - rank(b)
+        || a.label.localeCompare(b.label);
+    });
 }
 
 /**
@@ -327,24 +382,37 @@ export function laneDropTarget(
   activeId: string,
   overId: string,
 ): { lane: string; columnId: string; index: number } | null {
-  const active = items.find((item) => item.id === activeId);
+  const active = items.find((item) => {
+    return item.id === activeId;
+  });
   if (!active) {
     return null;
   }
   const cellItems = (
     lane: string,
     columnId: string,
-  ) => (groupByColumn(items.filter((item) => laneOf(item, by) === lane), columns)[columnId] ?? []);
+  ) => {
+    return (groupByColumn(
+      items.filter((item) => {
+        return laneOf(item, by) === lane;
+      }),
+      columns,
+    )[columnId] ?? []);
+  };
 
   const cell = parseCellId(overId);
   if (cell) {
     return {
       ...cell,
-      index: cellItems(cell.lane, cell.columnId).filter((item) => item.id !== activeId).length,
+      index: cellItems(cell.lane, cell.columnId).filter((item) => {
+        return item.id !== activeId;
+      }).length,
     };
   }
 
-  const over = items.find((item) => item.id === overId);
+  const over = items.find((item) => {
+    return item.id === overId;
+  });
   if (!over || over === active || !over.column_id) {
     return null;
   }
@@ -355,7 +423,9 @@ export function laneDropTarget(
   return {
     lane,
     columnId: over.column_id,
-    index: full.filter((item) => item.id !== activeId).indexOf(over) + (movingDown ? 1 : 0),
+    index: full.filter((item) => {
+      return item.id !== activeId;
+    }).indexOf(over) + (movingDown ? 1 : 0),
   };
 }
 
@@ -380,22 +450,30 @@ export function movesFrom(
     return live.basis === 'open' ? null : byColumn(live.targets);
   }
   if (board.source === NATIVE_SOURCE) {
-    const current = board.columns.find((column) => column.id === item.column_id);
-    if (!board.columns.some((column) => column.next != null) || !current) {
+    const current = board.columns.find((column) => {
+      return column.id === item.column_id;
+    });
+    if (
+      !board.columns.some((column) => {
+        return column.next != null;
+      }) || !current
+    ) {
       return null;
     }
     const allowed = current.next;
     return byColumn(
       board.columns
-        .filter((column) =>
-          column.id !== current.id && (allowed == null || allowed.includes(column.id))
-        )
-        .map((column) => ({
-          column_id: column.id,
-          status_id: null,
-          status: null,
-          transition_name: null,
-        })),
+        .filter((column) => {
+          return column.id !== current.id && (allowed == null || allowed.includes(column.id));
+        })
+        .map((column) => {
+          return {
+            column_id: column.id,
+            status_id: null,
+            status: null,
+            transition_name: null,
+          };
+        }),
     );
   }
   const workflow = board.workflow;
@@ -415,13 +493,17 @@ export function movesFrom(
     }
     const status = workflow.statuses[transition.to];
     const column = board.column_mode === COLUMN_MODE.tracker
-      ? board.columns.find((candidate) => candidate.status_ids?.includes(transition.to))
-      : board.columns.find((candidate) => candidate.status_category === status?.category);
+      ? board.columns.find((candidate) => {
+        return candidate.status_ids?.includes(transition.to);
+      })
+      : board.columns.find((candidate) => {
+        return candidate.status_category === status?.category;
+      });
     if (
       column
-      && !targets.some((target) =>
-        target.column_id === column.id && target.status_id === transition.to
-      )
+      && !targets.some((target) => {
+        return target.column_id === column.id && target.status_id === transition.to;
+      })
     ) {
       targets.push({
         column_id: column.id,
@@ -453,7 +535,9 @@ export function dropHint(
   if (!targets?.length) {
     return { allowed: false };
   }
-  const from = item.status ?? columns.find((candidate) => candidate.id === item.column_id)?.name
+  const from = item.status ?? columns.find((candidate) => {
+    return candidate.id === item.column_id;
+  })?.name
     ?? '';
   return {
     allowed: true,
@@ -472,8 +556,9 @@ export function dropHint(
 }
 
 /** A drop zone's droppable id: one per status in a column that can take a card into several. */
-export const zoneId = (columnId: string, statusId: string | null) =>
-  `zone|${columnId}|${statusId ?? ''}`;
+export const zoneId = (columnId: string, statusId: string | null) => {
+  return `zone|${columnId}|${statusId ?? ''}`;
+};
 
 export function parseZoneId(id: string): { columnId: string; statusId: string | null } | null {
   const [kind, columnId, statusId] = id.split('|');
@@ -501,41 +586,55 @@ export function presetNext(
   preset: Exclude<WorkflowPreset, 'custom'>,
 ): DraftColumn[] {
   if (preset === WORKFLOW_PRESET.open) {
-    return columns.map((column) => ({ ...column, next: null }));
+    return columns.map((column) => {
+      return { ...column, next: null };
+    });
   }
-  return columns.map((column, index) => ({
-    ...column,
-    next: [columns[index - 1]?.id, columns[index + 1]?.id].filter((id): id is string =>
-      Boolean(id)
-    ),
-  }));
+  return columns.map((column, index) => {
+    return {
+      ...column,
+      next: [columns[index - 1]?.id, columns[index + 1]?.id].filter((id): id is string => {
+        return Boolean(id);
+      }),
+    };
+  });
 }
 
 /** Which preset the columns' moves match, or custom. */
 export function presetOf(columns: DraftColumn[]): WorkflowPreset {
-  if (columns.every((column) => column.next === null)) {
+  if (
+    columns.every((column) => {
+      return column.next === null;
+    })
+  ) {
     return WORKFLOW_PRESET.open;
   }
   const step = presetNext(columns, WORKFLOW_PRESET.step);
-  const same = (a: string[] | null, b: string[] | null) =>
-    a !== null && b !== null && a.length === b.length && a.every((id) => b.includes(id));
-  return columns.every((column, index) => same(column.next, step[index].next))
+  const same = (a: string[] | null, b: string[] | null) => {
+    return a !== null && b !== null && a.length === b.length && a.every((id) => {
+      return b.includes(id);
+    });
+  };
+  return columns.every((column, index) => {
+      return same(column.next, step[index].next);
+    })
     ? WORKFLOW_PRESET.step
     : WORKFLOW_PRESET.custom;
 }
 
 /** Columns no other column can move to, so cards never get there (except by being created there). */
 export function unreachableColumns(columns: DraftColumn[]): DraftColumn[] {
-  return columns.filter((column) =>
-    !columns.some((other) =>
-      other.id !== column.id && (other.next === null || other.next.includes(column.id))
-    )
-  );
+  return columns.filter((column) => {
+    return !columns.some((other) => {
+      return other.id !== column.id && (other.next === null || other.next.includes(column.id));
+    });
+  });
 }
 
 /** Columns a card can't leave; fine for a Done column, worth a second look elsewhere. */
-export const deadEndColumns = (columns: DraftColumn[]) =>
-  columns.filter((column) =>
-    column.next !== null && column.next.length === 0
-    && column.status_category !== STATUS_CATEGORY.done
-  );
+export const deadEndColumns = (columns: DraftColumn[]) => {
+  return columns.filter((column) => {
+    return column.next !== null && column.next.length === 0
+      && column.status_category !== STATUS_CATEGORY.done;
+  });
+};

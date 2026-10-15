@@ -26,7 +26,9 @@ export default function OnboardingProgress() {
 
   return (
     <Steps
-      steps={STEPS.map((step) => step.label)}
+      steps={STEPS.map((step) => {
+        return step.label;
+      })}
       current={stepIndex(segment ?? undefined)}
       className="justify-center"
     />

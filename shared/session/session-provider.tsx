@@ -11,7 +11,9 @@ const REFRESH_EARLY_MS = 60_000;
 
 /** The session lifecycle: restore on load, refresh ahead of expiry, follow other tabs. */
 export default function SessionProvider({ children }: { children: ReactNode }) {
-  const token = useSession((state) => state.token);
+  const token = useSession((state) => {
+    return state.token;
+  });
 
   useEffect(() => {
     restore();
@@ -25,7 +27,9 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
     const timer = setTimeout(() => {
       refreshSession().catch(signOutIfRejected);
     }, Math.max(0, expiresIn(token) - REFRESH_EARLY_MS));
-    return () => clearTimeout(timer);
+    return () => {
+      return clearTimeout(timer);
+    };
   }, [token]);
 
   return children;

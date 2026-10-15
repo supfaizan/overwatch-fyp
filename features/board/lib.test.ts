@@ -32,35 +32,37 @@ const item = (
   column_id: string | null,
   rank: number,
   sprint_id: string | null = null,
-): WorkItem => ({
-  id,
-  source: 'native',
-  key: id,
-  title: id,
-  description: null,
-  description_md: null,
-  status: null,
-  status_category: 'todo',
-  column_id,
-  sprint_id,
-  rank,
-  assignee: null,
-  priority: null,
-  type_id: null,
-  issue_type: null,
-  reporter: null,
-  labels: [],
-  parent: null,
-  due_date: null,
-  story_points: null,
-  subtasks: [],
-  links: [],
-  target_key: null,
-  external_url: null,
-  editable: true,
-  created_at: '',
-  updated_at: '',
-});
+): WorkItem => {
+  return {
+    id,
+    source: 'native',
+    key: id,
+    title: id,
+    description: null,
+    description_md: null,
+    status: null,
+    status_category: 'todo',
+    column_id,
+    sprint_id,
+    rank,
+    assignee: null,
+    priority: null,
+    type_id: null,
+    issue_type: null,
+    reporter: null,
+    labels: [],
+    parent: null,
+    due_date: null,
+    story_points: null,
+    subtasks: [],
+    links: [],
+    target_key: null,
+    external_url: null,
+    editable: true,
+    created_at: '',
+    updated_at: '',
+  };
+};
 
 const columns: Column[] = [
   { id: 'todo', name: 'To do', status_category: 'todo' },
@@ -73,7 +75,11 @@ const items = [
   item('b', 'todo', 2),
   item('x', 'done', 1),
 ];
-const ids = (column: WorkItem[]) => column.map((i) => i.id);
+const ids = (column: WorkItem[]) => {
+  return column.map((i) => {
+    return i.id;
+  });
+};
 
 describe('groupByColumn', () => {
   it('sorts each of the board’s columns by rank', () => {
@@ -90,7 +96,11 @@ describe('groupByColumn', () => {
       [...items, item('hidden', null, 1), item('stale', 'col_gone', 1)],
       columns,
     );
-    expect(Object.values(grouped).flat().map((i) => i.id).sort()).toEqual(['a', 'b', 'c', 'x']);
+    expect(
+      Object.values(grouped).flat().map((i) => {
+        return i.id;
+      }).sort(),
+    ).toEqual(['a', 'b', 'c', 'x']);
   });
 });
 
@@ -177,7 +187,9 @@ describe('columnColor', () => {
     name: string,
     status_category: Column['status_category'],
     color: Column['color'] = null,
-  ): Column => ({ id: name, name, status_category, color });
+  ): Column => {
+    return { id: name, name, status_category, color };
+  };
 
   it('follows the category', () => {
     expect([
@@ -221,7 +233,11 @@ describe('mergePages', () => {
   it('keeps each card once, the copy updated last', () => {
     const stale = { ...item('a', 'todo', 1), updated_at: '2026-10-01' };
     const fresh = { ...item('a', 'done', 5), updated_at: '2026-10-02' };
-    expect(mergePages([[stale, item('b', 'todo', 2)], [fresh]]).map((i) => [i.id, i.column_id]))
+    expect(
+      mergePages([[stale, item('b', 'todo', 2)], [fresh]]).map((i) => {
+        return [i.id, i.column_id];
+      }),
+    )
       .toEqual([['a', 'done'], ['b', 'todo']]);
   });
 });
@@ -231,7 +247,9 @@ describe('arrange', () => {
 
   it('orders columns as given, the rest after, and applies colors', () => {
     const arranged = arrange(board, ['done', 'todo'], { done: 'red' });
-    expect(arranged.columns.map((c) => [c.id, c.color ?? null])).toEqual([['done', 'red'], [
+    expect(arranged.columns.map((c) => {
+      return [c.id, c.color ?? null];
+    })).toEqual([['done', 'red'], [
       'todo',
       null,
     ], ['col_review', null]]);
@@ -252,11 +270,13 @@ describe('swimlanes', () => {
     rank: number,
     assignee: string | null,
     priority: string | null = null,
-  ): WorkItem => ({
-    ...item(id, column, rank),
-    assignee: assignee ? { id: assignee, name: assignee.toUpperCase() } : null,
-    priority,
-  });
+  ): WorkItem => {
+    return {
+      ...item(id, column, rank),
+      assignee: assignee ? { id: assignee, name: assignee.toUpperCase() } : null,
+      priority,
+    };
+  };
   const laned = [
     owned('a', 'todo', 1, 'zoe'),
     owned('b', 'todo', 2, 'amy'),
@@ -270,7 +290,11 @@ describe('swimlanes', () => {
       label: 'AMY',
       total: 3,
     }];
-    expect(orderLanes(lanes, 'assignee').map((lane) => lane.label)).toEqual([
+    expect(
+      orderLanes(lanes, 'assignee').map((lane) => {
+        return lane.label;
+      }),
+    ).toEqual([
       'AMY',
       'ZOE',
       'Unassigned',
@@ -283,7 +307,11 @@ describe('swimlanes', () => {
       label: 'High',
       total: 1,
     }];
-    expect(orderLanes(lanes, 'priority', ['High', 'Low']).map((lane) => lane.label)).toEqual([
+    expect(
+      orderLanes(lanes, 'priority', ['High', 'Low']).map((lane) => {
+        return lane.label;
+      }),
+    ).toEqual([
       'High',
       'Low',
       'No priority',
@@ -410,7 +438,12 @@ describe('movesFrom and dropHint', () => {
     });
     expect(dropHint(moves, task, columns[2], columns)).toEqual({ allowed: false });
     expect(
-      movesFrom({ ...native, columns: columns.map((column) => ({ ...column, next: null })) }, task),
+      movesFrom({
+        ...native,
+        columns: columns.map((column) => {
+          return { ...column, next: null };
+        }),
+      }, task),
     ).toBeNull();
   });
 
@@ -424,11 +457,17 @@ describe('workflow presets', () => {
   const column = (
     id: string,
     status_category: DraftColumn['status_category'] = 'in_progress',
-  ): DraftColumn => ({ id, name: id, status_category, color: null, next: null });
+  ): DraftColumn => {
+    return { id, name: id, status_category, color: null, next: null };
+  };
   const columns = [column('todo', 'todo'), column('doing'), column('done', 'done')];
 
   it('opens every move, or allows only the next and previous column', () => {
-    expect(presetNext(columns, 'step').map((c) => c.next)).toEqual([['doing'], ['todo', 'done'], [
+    expect(
+      presetNext(columns, 'step').map((c) => {
+        return c.next;
+      }),
+    ).toEqual([['doing'], ['todo', 'done'], [
       'doing',
     ]]);
     expect(presetOf(presetNext(columns, 'step'))).toBe('step');
@@ -441,8 +480,16 @@ describe('workflow presets', () => {
       ...columns[2],
       next: [],
     }];
-    expect(unreachableColumns(custom).map((c) => c.id)).toEqual(['todo', 'done']);
-    expect(deadEndColumns(custom).map((c) => c.id)).toEqual(['doing']);
+    expect(
+      unreachableColumns(custom).map((c) => {
+        return c.id;
+      }),
+    ).toEqual(['todo', 'done']);
+    expect(
+      deadEndColumns(custom).map((c) => {
+        return c.id;
+      }),
+    ).toEqual(['doing']);
   });
 });
 

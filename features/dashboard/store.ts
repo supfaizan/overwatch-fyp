@@ -30,8 +30,11 @@ type ViewState = {
   reset: () => void;
 };
 
-const sameIds = (left: string[], right: string[]) =>
-  left.length === right.length && left.every((id, index) => id === right[index]);
+const sameIds = (left: string[], right: string[]) => {
+  return left.length === right.length && left.every((id, index) => {
+    return id === right[index];
+  });
+};
 
 /** Ids are path-derived, so containment is a prefix test at a separator (`repo:apiary` isn't inside `repo:api`). */
 export function isInside(nodeId: string, containerId: string): boolean {
@@ -42,48 +45,87 @@ export function isInside(nodeId: string, containerId: string): boolean {
   return nodeId.startsWith(containerId) && (next === '/' || next === '#');
 }
 
-export const useViewStore = create<ViewState>((set) => ({
-  expanded: [],
-  revealed: [],
-  hovered: null,
-  selected: null,
-  highlighted: [],
-  focusRequest: null,
-  open: (nodeId) =>
-    set((
-      state,
-    ) => (state.expanded.includes(nodeId) ? state : { expanded: [...state.expanded, nodeId] })),
-  close: (nodeId) =>
-    set((state) => ({
-      expanded: state.expanded.filter((id) => !isInside(id, nodeId)),
-      revealed: state.revealed.filter((id) => !isInside(id, nodeId)),
-    })),
-  reveal: (containerId) =>
-    set((
-      state,
-    ) => (state.revealed.includes(containerId)
-      ? state
-      : { revealed: [...state.revealed, containerId] })
-    ),
-  adopt: (nodeIds) =>
-    set((state) => (sameIds(state.expanded, nodeIds) ? state : { expanded: nodeIds })),
-  hover: (hovered) => set((state) => (state.hovered === hovered ? state : { hovered })),
-  select: (selected) => set({ selected }),
-  highlight: (highlighted) =>
-    set((state) => (sameIds(state.highlighted, highlighted) ? state : { highlighted })),
-  focus: (nodeId, ancestors) =>
-    set((state) => ({
-      expanded: [...state.expanded, ...ancestors.filter((id) => !state.expanded.includes(id))],
-      focusRequest: { nodeId, ancestors },
-    })),
-  settleFocus: (selected) => set({ selected, focusRequest: null }),
-  reset: () =>
-    set({
-      expanded: [],
-      revealed: [],
-      hovered: null,
-      selected: null,
-      highlighted: [],
-      focusRequest: null,
-    }),
-}));
+export const useViewStore = create<ViewState>((set) => {
+  return {
+    expanded: [],
+    revealed: [],
+    hovered: null,
+    selected: null,
+    highlighted: [],
+    focusRequest: null,
+    open: (nodeId) => {
+      return set((
+        state,
+      ) => {
+        return (state.expanded.includes(nodeId)
+          ? state
+          : { expanded: [...state.expanded, nodeId] });
+      });
+    },
+    close: (nodeId) => {
+      return set((state) => {
+        return {
+          expanded: state.expanded.filter((id) => {
+            return !isInside(id, nodeId);
+          }),
+          revealed: state.revealed.filter((id) => {
+            return !isInside(id, nodeId);
+          }),
+        };
+      });
+    },
+    reveal: (containerId) => {
+      return set((
+        state,
+      ) => {
+        return (state.revealed.includes(containerId)
+          ? state
+          : { revealed: [...state.revealed, containerId] });
+      });
+    },
+    adopt: (nodeIds) => {
+      return set((state) => {
+        return (sameIds(state.expanded, nodeIds) ? state : { expanded: nodeIds });
+      });
+    },
+    hover: (hovered) => {
+      return set((state) => {
+        return (state.hovered === hovered ? state : { hovered });
+      });
+    },
+    select: (selected) => {
+      return set({ selected });
+    },
+    highlight: (highlighted) => {
+      return set((state) => {
+        return (sameIds(state.highlighted, highlighted) ? state : { highlighted });
+      });
+    },
+    focus: (nodeId, ancestors) => {
+      return set((state) => {
+        return {
+          expanded: [
+            ...state.expanded,
+            ...ancestors.filter((id) => {
+              return !state.expanded.includes(id);
+            }),
+          ],
+          focusRequest: { nodeId, ancestors },
+        };
+      });
+    },
+    settleFocus: (selected) => {
+      return set({ selected, focusRequest: null });
+    },
+    reset: () => {
+      return set({
+        expanded: [],
+        revealed: [],
+        hovered: null,
+        selected: null,
+        highlighted: [],
+        focusRequest: null,
+      });
+    },
+  };
+});

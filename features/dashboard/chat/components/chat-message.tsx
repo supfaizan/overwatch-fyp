@@ -20,9 +20,14 @@ export default function ChatMessage({ message, repo }: ChatMessageProps) {
     <li
       className={cn('flex flex-col gap-1', fromUser ? 'items-end' : 'items-start')}
       // pointing at an answer lights up what it talks about
-      onMouseEnter={() =>
-        message.nodes.length > 0 && highlight(message.nodes.map((node) => node.node_id))}
-      onMouseLeave={() => highlight([])}
+      onMouseEnter={() => {
+        return message.nodes.length > 0 && highlight(message.nodes.map((node) => {
+          return node.node_id;
+        }));
+      }}
+      onMouseLeave={() => {
+        return highlight([]);
+      }}
     >
       {fromUser
         ? <Question message={message} repo={repo} />
@@ -38,14 +43,16 @@ export default function ChatMessage({ message, repo }: ChatMessageProps) {
 
 /** What was asked, as typed: plain text with its @-mentions as chips. */
 function Question({ message, repo }: ChatMessageProps) {
-  const segments = useMemo(() => questionSegments(message), [message]);
+  const segments = useMemo(() => {
+    return questionSegments(message);
+  }, [message]);
   return (
     <p className="max-w-5/6 rounded-lg bg-fill-active px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap">
-      {segments.map((segment, index) =>
-        segment.type === 'node'
+      {segments.map((segment, index) => {
+        return segment.type === 'node'
           ? <NodeChip key={index} node={segment.node} repo={repo} mention />
-          : segment.text
-      )}
+          : segment.text;
+      })}
     </p>
   );
 }
@@ -55,20 +62,32 @@ function Question({ message, repo }: ChatMessageProps) {
  * our attachments: an answer can quote a repository's own text, so it must not reach other servers.
  */
 function Answer({ message, repo }: ChatMessageProps) {
-  const markdown = useMemo(() => answerMarkdown(message), [message]);
-  const byRef = useMemo(() => new Map(message.nodes.map((node) => [node.ref, node])), [message]);
+  const markdown = useMemo(() => {
+    return answerMarkdown(message);
+  }, [message]);
+  const byRef = useMemo(() => {
+    return new Map(message.nodes.map((node) => {
+      return [node.ref, node];
+    }));
+  }, [message]);
   const components = useMemo(
-    () => ({
-      a: ({ children }: { children?: ReactNode }) => <span>{children}</span>,
-      img: ({ src, alt }: ComponentProps<'img'>) => <SafeImage src={src} alt={alt} />,
-      inlineCode: ({ children, ...props }: ComponentProps<'code'>) => {
-        const node = byRef.get(CHIP_RE.exec(String(children))?.[1] ?? null);
-        if (node) {
-          return <NodeChip node={node} repo={repo} />;
-        }
-        return <InlineCode {...props}>{children}</InlineCode>;
-      },
-    }),
+    () => {
+      return {
+        a: ({ children }: { children?: ReactNode }) => {
+          return <span>{children}</span>;
+        },
+        img: ({ src, alt }: ComponentProps<'img'>) => {
+          return <SafeImage src={src} alt={alt} />;
+        },
+        inlineCode: ({ children, ...props }: ComponentProps<'code'>) => {
+          const node = byRef.get(CHIP_RE.exec(String(children))?.[1] ?? null);
+          if (node) {
+            return <NodeChip node={node} repo={repo} />;
+          }
+          return <InlineCode {...props}>{children}</InlineCode>;
+        },
+      };
+    },
     [byRef, repo],
   );
 
@@ -109,8 +128,12 @@ function NodeChip(
       <button
         type="button"
         className="inline rounded px-1 font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-primary"
-        onClick={() => useViewStore.getState().focus(node.node_id, ancestorsOf(node.node_id, repo))}
-        onMouseEnter={() => useViewStore.getState().highlight([node.node_id])}
+        onClick={() => {
+          return useViewStore.getState().focus(node.node_id, ancestorsOf(node.node_id, repo));
+        }}
+        onMouseEnter={() => {
+          return useViewStore.getState().highlight([node.node_id]);
+        }}
       >
         {/* a question's mention keeps the `@` it was typed with; package names may already start with one */}
         {mention && !node.name.startsWith('@') ? `@${node.name}` : node.name}

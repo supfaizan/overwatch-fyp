@@ -120,7 +120,9 @@ export function DocView({ id }: { id: string }) {
           action={
             <Button
               size="sm"
-              onClick={() => void doc.refetch()}
+              onClick={() => {
+                return void doc.refetch();
+              }}
             >
               Retry
             </Button>

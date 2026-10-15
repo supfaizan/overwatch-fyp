@@ -4,12 +4,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { git } = require('./source.cjs');
 
-const norm = (line) => line.trim().replace(/\s+/g, ' ');
+const norm = (line) => {return line.trim().replace(/\s+/g, ' ')};
 
 const trivial = (line) =>
-  line === ''
+  {return line === ''
   || /^[\])}{([;,>:</\s]*$/.test(line)
-  || /^\)?\}?\)?;?,?$/.test(line);
+  || /^\)?\}?\)?;?,?$/.test(line)};
 
 const readAt = (root, rev, file) => {
   if (!rev) {

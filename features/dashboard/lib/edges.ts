@@ -50,7 +50,9 @@ export function mergeByPair(edges: ViewEdge[]): MergedEdge[] {
   }
   const merged = [...byPair.values()];
   for (const edge of merged) {
-    edge.types.sort((a, b) => rank(a) - rank(b));
+    edge.types.sort((a, b) => {
+      return rank(a) - rank(b);
+    });
   }
   return merged;
 }
@@ -93,6 +95,8 @@ export function neighbourhood(edges: Linked[], focusId: string | null): Set<stri
 /** "imports, calls · 14" */
 export function describeEdge(edge: { types: EdgeType[]; weight: number }): string {
   return `${
-    edge.types.map((type) => type.toLowerCase().replaceAll('_', ' ')).join(', ')
+    edge.types.map((type) => {
+      return type.toLowerCase().replaceAll('_', ' ');
+    }).join(', ')
   } · ${edge.weight}`;
 }

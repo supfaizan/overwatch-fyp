@@ -11,10 +11,16 @@ import { useWorkspace } from './store';
 
 /** Renders its children once a workspace is picked, so every request below it is scoped to one. */
 export default function WorkspaceGate({ children }: { children: ReactNode }) {
-  const userId = useSession((state) => state.user?.id ?? '');
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
   const workspaces = useWorkspaces();
-  const id = useWorkspace((state) => state.id);
-  const current = workspaces.data?.find((workspace) => workspace.id === id);
+  const id = useWorkspace((state) => {
+    return state.id;
+  });
+  const current = workspaces.data?.find((workspace) => {
+    return workspace.id === id;
+  });
 
   useEffect(() => {
     // picked once, or again when the current one is gone (left, or deleted by someone else)
@@ -37,7 +43,9 @@ export default function WorkspaceGate({ children }: { children: ReactNode }) {
           action={
             <Button
               size="sm"
-              onClick={() => workspaces.refetch()}
+              onClick={() => {
+                return workspaces.refetch();
+              }}
             >
               Retry
             </Button>

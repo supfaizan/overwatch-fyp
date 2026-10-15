@@ -29,7 +29,9 @@ export default function ResetPassword() {
   });
   const { errors, isSubmitting } = form.formState;
 
-  useEffect(() => setChallenge(readChallenge(CHALLENGE_PURPOSE.resetPassword)), []);
+  useEffect(() => {
+    return setChallenge(readChallenge(CHALLENGE_PURPOSE.resetPassword));
+  }, []);
 
   if (challenge === undefined) {
     return null;
@@ -87,7 +89,9 @@ export default function ResetPassword() {
               setCode(value);
               setCodeError(undefined);
             }}
-            onComplete={() => form.setFocus('password')}
+            onComplete={() => {
+              return form.setFocus('password');
+            }}
             invalid={Boolean(codeError)}
             disabled={isSubmitting}
           />
@@ -113,7 +117,12 @@ export default function ResetPassword() {
           Reset password
         </Button>
       </form>
-      <ResendCode challenge={challenge} onExpired={() => setChallenge(null)} />
+      <ResendCode
+        challenge={challenge}
+        onExpired={() => {
+          return setChallenge(null);
+        }}
+      />
     </AuthCard>
   );
 }

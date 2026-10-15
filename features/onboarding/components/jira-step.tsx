@@ -20,9 +20,15 @@ import StepCard from './step-card';
 
 // what the backend's Jira callback reports in ?jira=
 const OUTCOMES: Record<string, () => void> = {
-  connected: () => toast.success('Jira authorized. Pick a project to finish.'),
-  denied: () => toast.error('Jira authorization was cancelled.'),
-  error: () => toast.error("Couldn't connect Jira. Please try again."),
+  connected: () => {
+    return toast.success('Jira authorized. Pick a project to finish.');
+  },
+  denied: () => {
+    return toast.error('Jira authorization was cancelled.');
+  },
+  error: () => {
+    return toast.error("Couldn't connect Jira. Please try again.");
+  },
 };
 
 export default function JiraStep({ outcome }: { outcome?: string }) {
@@ -31,10 +37,14 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
   const jira = status.data?.jira;
   const projects = useJiraProjects(Boolean(jira?.connected && !jira.project));
   const authorize = useStartJiraAuthorization();
-  const next = () => router.push('/onboarding/indexing');
+  const next = () => {
+    return router.push('/onboarding/indexing');
+  };
   const connect = useConnectJiraProject(next);
   const [selected, setSelected] = useState('');
-  const selectedProject = projects.data?.find((project) => project.key === selected);
+  const selectedProject = projects.data?.find((project) => {
+    return project.key === selected;
+  });
 
   useEffect(() => {
     if (!outcome) {
@@ -92,7 +102,9 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
             <Button
               variant="primary"
               loading={authorize.isPending}
-              onClick={() => authorize.mutate()}
+              onClick={() => {
+                return authorize.mutate();
+              }}
             >
               {jira.needs_reauth ? 'Reconnect Jira' : 'Connect Jira'}
             </Button>
@@ -115,7 +127,9 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
             variant="primary"
             disabled={!selectedProject}
             loading={connect.isPending}
-            onClick={() => selectedProject && connect.mutate(selectedProject)}
+            onClick={() => {
+              return selectedProject && connect.mutate(selectedProject);
+            }}
           >
             Connect project
           </Button>
@@ -132,12 +146,14 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
             placeholder={projects.isPending ? 'Loading projects…' : 'Select a project'}
           />
           <SelectContent>
-            {projects.data?.map((project) => (
-              <SelectItem key={project.key} value={project.key}>
-                {project.key}
-                {project.name ? ` · ${project.name}` : ''}
-              </SelectItem>
-            ))}
+            {projects.data?.map((project) => {
+              return (
+                <SelectItem key={project.key} value={project.key}>
+                  {project.key}
+                  {project.name ? ` · ${project.name}` : ''}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         {projects.isError && <p className="text-sm text-danger">{projects.error.message}</p>}
@@ -158,7 +174,9 @@ function DisconnectJira() {
       description="Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off."
       confirmLabel="Disconnect Jira"
       pending={disconnect.isPending}
-      onConfirm={(close) => disconnect.mutate(undefined, { onSuccess: close })}
+      onConfirm={(close) => {
+        return disconnect.mutate(undefined, { onSuccess: close });
+      }}
     />
   );
 }

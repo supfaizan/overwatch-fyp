@@ -41,7 +41,11 @@ export default function ConfirmDialog(
             <Button
               variant="danger"
               loading={pending}
-              onClick={() => onConfirm(() => setOpen(false))}
+              onClick={() => {
+                return onConfirm(() => {
+                  return setOpen(false);
+                });
+              }}
             >
               {confirmLabel}
             </Button>

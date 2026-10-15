@@ -30,12 +30,14 @@ export const RICH_TEXT_CLASS = cn(
   '[&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]',
 );
 
-const richTextExtensions = (placeholder?: string) => [
-  StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
-  TableKit,
-  Markdown,
-  Placeholder.configure({ placeholder }),
-];
+const richTextExtensions = (placeholder?: string) => {
+  return [
+    StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
+    TableKit,
+    Markdown,
+    Placeholder.configure({ placeholder }),
+  ];
+};
 
 type RichTextEditorProps = {
   /** The starting Markdown. Read once: the editor owns the text after that. */
@@ -102,7 +104,9 @@ export default function RichTextEditor(
         return false;
       },
     },
-    onUpdate: ({ editor: current }) => handlers.current.onChange(current.getMarkdown()),
+    onUpdate: ({ editor: current }) => {
+      return handlers.current.onChange(current.getMarkdown());
+    },
   });
 
   return <EditorContent editor={editor} className={cn(field, 'overflow-y-auto', className)} />;

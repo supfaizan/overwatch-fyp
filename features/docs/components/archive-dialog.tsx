@@ -62,7 +62,13 @@ export default function ArchiveDialog(
           : `It moves to Archive, where you can restore it.`}
         footer={
           <>
-            <Button onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                return onOpenChange(false);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               variant="danger"
               disabled={archive.isPending || (choice === CHOICE.folder && !target)}
@@ -81,19 +87,25 @@ export default function ArchiveDialog(
           >
             <Option
               checked={choice === CHOICE.archive}
-              onSelect={() => setChoice(CHOICE.archive)}
+              onSelect={() => {
+                return setChoice(CHOICE.archive);
+              }}
               title="Archive everything inside too"
               detail="They go to Archive with it and come back together on restore."
             />
             <Option
               checked={choice === CHOICE.top}
-              onSelect={() => setChoice(CHOICE.top)}
+              onSelect={() => {
+                return setChoice(CHOICE.top);
+              }}
               title="Move what's inside to the top level"
               detail="They stay in Docs, at the top of the sidebar."
             />
             <Option
               checked={choice === CHOICE.folder}
-              onSelect={() => setChoice(CHOICE.folder)}
+              onSelect={() => {
+                return setChoice(CHOICE.folder);
+              }}
               title="Move what's inside to another folder"
               detail={target ? `Into “${target.title || 'Untitled'}”` : 'Pick the folder below.'}
             />
@@ -166,9 +178,9 @@ function FolderLevel(
   { parentId, depth, ...props }: PickerProps & { parentId: string | null; depth: number },
 ) {
   const { nodes, isPending, hasNextPage, fetchNextPage } = useChildren(parentId);
-  const folders = nodes.filter((node) =>
-    node.kind === DOCUMENT_KIND.folder && node.id !== props.exclude && node.editable
-  );
+  const folders = nodes.filter((node) => {
+    return node.kind === DOCUMENT_KIND.folder && node.id !== props.exclude && node.editable;
+  });
   if (isPending) {
     return (
       <li>
@@ -181,14 +193,16 @@ function FolderLevel(
   }
   return (
     <>
-      {folders.map((folder) => (
-        <FolderRow key={folder.id} folder={folder} depth={depth} {...props} />
-      ))}
+      {folders.map((folder) => {
+        return <FolderRow key={folder.id} folder={folder} depth={depth} {...props} />;
+      })}
       {hasNextPage && (
         <li style={{ paddingLeft: 8 + depth * 14 }}>
           <button
             type="button"
-            onClick={() => void fetchNextPage()}
+            onClick={() => {
+              return void fetchNextPage();
+            }}
             className="cursor-pointer py-1 text-xs text-primary"
           >
             Show more
@@ -220,7 +234,9 @@ function FolderRow(
         <button
           type="button"
           aria-label={open ? 'Collapse' : 'Expand'}
-          onClick={() => setOpen(!open)}
+          onClick={() => {
+            return setOpen(!open);
+          }}
           className={cn(
             'flex size-5 cursor-pointer items-center justify-center text-muted',
             !folder.has_children && 'invisible',
@@ -233,7 +249,9 @@ function FolderRow(
         </button>
         <button
           type="button"
-          onClick={() => props.onSelect(folder)}
+          onClick={() => {
+            return props.onSelect(folder);
+          }}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
         >
           <Icon weight="fill" aria-hidden className="size-4 shrink-0 text-accent-amber" />

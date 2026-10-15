@@ -56,7 +56,9 @@ export default function ArchiveList() {
             action={
               <Button
                 size="sm"
-                onClick={() => void refetch()}
+                onClick={() => {
+                  return void refetch();
+                }}
               >
                 Retry
               </Button>
@@ -68,65 +70,73 @@ export default function ArchiveList() {
         : items.length
         ? (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
-            {items.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                {item.kind === DOCUMENT_KIND.folder
-                  ? <Folder weight="fill" aria-hidden className="size-4 text-accent-amber" />
-                  : <FileText aria-hidden className="size-4 text-muted" />}
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-medium">{item.title || 'Untitled'}</span>
-                  <span className="text-xs text-muted">
-                    Archived {archivedOn.format(new Date(item.archived_at))}
-                    {item.archived_with > 0
-                      && ` · with ${item.archived_with} ${
-                        item.archived_with === 1 ? 'item' : 'items'
-                      } inside`}
-                  </span>
-                </div>
-                {item.source === NATIVE_SOURCE
-                  ? (
-                    <Button
-                      size="sm"
-                      disabled={restore.isPending && restore.variables === item.id}
-                      onClick={() =>
-                        restore.mutate(item.id, {
-                          onSuccess: (doc) => router.push(`/documents/${doc.id}`),
-                        })}
-                    >
-                      <ArrowCounterClockwise aria-hidden />
-                      Restore
-                    </Button>
-                  )
-                  : (
+            {items.map((item) => {
+              return (
+                <li key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                  {item.kind === DOCUMENT_KIND.folder
+                    ? <Folder weight="fill" aria-hidden className="size-4 text-accent-amber" />
+                    : <FileText aria-hidden className="size-4 text-muted" />}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-medium">{item.title || 'Untitled'}</span>
                     <span className="text-xs text-muted">
-                      Restore it in {sourceName(item.source)}
+                      Archived {archivedOn.format(new Date(item.archived_at))}
+                      {item.archived_with > 0
+                        && ` · with ${item.archived_with} ${
+                          item.archived_with === 1 ? 'item' : 'items'
+                        } inside`}
                     </span>
-                  )}
-                <ConfirmDialog
-                  trigger={
-                    <Button size="sm" iconOnly variant="tertiary" aria-label="Delete for good">
-                      <Trash aria-hidden />
-                    </Button>
-                  }
-                  title={`Delete “${item.title || 'Untitled'}” for good?`}
-                  description={item.source === NATIVE_SOURCE
-                    ? "It and everything archived with it are deleted, with their images. This can't be undone."
-                    : `It and everything archived with it are deleted, here and, for pages archived from Overwatch, in ${
-                      sourceName(item.source)
-                    }. This can't be undone.`}
-                  confirmLabel="Delete for good"
-                  pending={remove.isPending && remove.variables === item.id}
-                  onConfirm={(close) =>
-                    remove.mutate(item.id, { onSuccess: close })}
-                />
-              </li>
-            ))}
+                  </div>
+                  {item.source === NATIVE_SOURCE
+                    ? (
+                      <Button
+                        size="sm"
+                        disabled={restore.isPending && restore.variables === item.id}
+                        onClick={() => {
+                          return restore.mutate(item.id, {
+                            onSuccess: (doc) => {
+                              return router.push(`/documents/${doc.id}`);
+                            },
+                          });
+                        }}
+                      >
+                        <ArrowCounterClockwise aria-hidden />
+                        Restore
+                      </Button>
+                    )
+                    : (
+                      <span className="text-xs text-muted">
+                        Restore it in {sourceName(item.source)}
+                      </span>
+                    )}
+                  <ConfirmDialog
+                    trigger={
+                      <Button size="sm" iconOnly variant="tertiary" aria-label="Delete for good">
+                        <Trash aria-hidden />
+                      </Button>
+                    }
+                    title={`Delete “${item.title || 'Untitled'}” for good?`}
+                    description={item.source === NATIVE_SOURCE
+                      ? "It and everything archived with it are deleted, with their images. This can't be undone."
+                      : `It and everything archived with it are deleted, here and, for pages archived from Overwatch, in ${
+                        sourceName(item.source)
+                      }. This can't be undone.`}
+                    confirmLabel="Delete for good"
+                    pending={remove.isPending && remove.variables === item.id}
+                    onConfirm={(close) => {
+                      return remove.mutate(item.id, { onSuccess: close });
+                    }}
+                  />
+                </li>
+              );
+            })}
             {hasNextPage && (
               <li className="px-4 py-2">
                 <button
                   type="button"
                   disabled={isFetchingNextPage}
-                  onClick={() => void fetchNextPage()}
+                  onClick={() => {
+                    return void fetchNextPage();
+                  }}
                   className="cursor-pointer text-xs text-primary"
                 >
                   Show more

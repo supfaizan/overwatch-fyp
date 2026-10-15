@@ -65,7 +65,11 @@ export function ExpandView({ node, updateAttributes, editor }: NodeViewProps) {
           type="button"
           aria-expanded={open}
           aria-label={open ? 'Collapse section' : 'Expand section'}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => {
+            return setOpen((value) => {
+              return !value;
+            });
+          }}
           className="cursor-pointer rounded p-1 text-muted hover:bg-fill-hover hover:text-foreground"
         >
           <CaretRight className={cn('size-3.5 transition-transform', open && 'rotate-90')} />
@@ -73,7 +77,9 @@ export function ExpandView({ node, updateAttributes, editor }: NodeViewProps) {
         <input
           value={node.attrs.title ?? ''}
           readOnly={!editor.isEditable}
-          onChange={(event) => updateAttributes({ title: event.target.value })}
+          onChange={(event) => {
+            return updateAttributes({ title: event.target.value });
+          }}
           placeholder="Title"
           aria-label="Section title"
           className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-muted"

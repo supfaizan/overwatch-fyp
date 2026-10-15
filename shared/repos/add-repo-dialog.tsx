@@ -28,7 +28,9 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
   const installations = useInstallations(open);
   const hasInstallation = (installations.data?.installations.length ?? 0) > 0;
   const available = useAvailableRepos(open && hasInstallation);
-  const connect = useConnectRepo((repo) => done(repo.repo_full_name));
+  const connect = useConnectRepo((repo) => {
+    return done(repo.repo_full_name);
+  });
 
   function done(repoFullName: string) {
     onOpenChange(false);
@@ -68,8 +70,11 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
               action={
                 <Button
                   size="sm"
-                  onClick={() =>
-                    void (installations.isError ? installations.refetch() : available.refetch())}
+                  onClick={() => {
+                    return void (installations.isError
+                      ? installations.refetch()
+                      : available.refetch());
+                  }}
                 >
                   Retry
                 </Button>
@@ -101,9 +106,13 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
               pending={connect.isPending ? (connect.variables ?? null) : null}
               onSelect={(
                 name,
-              ) => (available.data?.find((repo) => repo.full_name === name)?.connected
-                ? done(name)
-                : connect.mutate(name))}
+              ) => {
+                return (available.data?.find((repo) => {
+                    return repo.full_name === name;
+                  })?.connected
+                  ? done(name)
+                  : connect.mutate(name));
+              }}
             />
           )}
       </DialogContent>

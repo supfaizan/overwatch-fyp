@@ -23,7 +23,9 @@ export function currentStep(status: OnboardingStatus, jiraSkipped: boolean): Ste
 }
 
 export function stepIndex(slug: string | undefined): number {
-  const index = STEPS.findIndex((step) => step.slug === slug);
+  const index = STEPS.findIndex((step) => {
+    return step.slug === slug;
+  });
   return index === -1 ? 0 : index;
 }
 

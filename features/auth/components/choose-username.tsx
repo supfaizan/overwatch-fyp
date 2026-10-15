@@ -17,7 +17,9 @@ import UsernameField, { useUsernameAvailability } from './username-input';
 /** Asked once of accounts without a username (from before usernames, or whose GitHub login was taken). */
 export default function ChooseUsername({ from }: { from?: string }) {
   const router = useRouter();
-  const setUser = useSession((state) => state.setUser);
+  const setUser = useSession((state) => {
+    return state.setUser;
+  });
   const form = useForm<UsernameValues>({
     resolver: zodResolver(usernameSchema),
     defaultValues: { username: '' },

@@ -3,20 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { answerMarkdown, keptMentions, mentionQuery, questionSegments, safeImageSrc } from './lib';
 import type { ChatMessage, NodeRef } from './types';
 
-const node = (name: string, ref: string | null = null): NodeRef => ({
-  ref,
-  node_id: `r:${name}`,
-  module_id: 'r:m',
-  name,
-});
-const message = (role: ChatMessage['role'], text: string, nodes: NodeRef[]): ChatMessage => ({
-  id: '1',
-  role,
-  text,
-  nodes,
-  grounded: true,
-  created_at: '',
-});
+const node = (name: string, ref: string | null = null): NodeRef => {
+  return {
+    ref,
+    node_id: `r:${name}`,
+    module_id: 'r:m',
+    name,
+  };
+};
+const message = (role: ChatMessage['role'], text: string, nodes: NodeRef[]): ChatMessage => {
+  return {
+    id: '1',
+    role,
+    text,
+    nodes,
+    grounded: true,
+    created_at: '',
+  };
+};
 
 describe('answerMarkdown', () => {
   it('turns references into chips, taking the name written before them', () => {

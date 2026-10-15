@@ -7,8 +7,12 @@ import Invite from '@/features/invite';
 export default function InvitePage() {
   return (
     <Invite
-      renderSignIn={(props) => <SignIn {...props} from="/invite" />}
-      renderSignUp={(props) => <InviteSignUp {...props} />}
+      renderSignIn={(props) => {
+        return <SignIn {...props} from="/invite" />;
+      }}
+      renderSignUp={(props) => {
+        return <InviteSignUp {...props} />;
+      }}
     />
   );
 }

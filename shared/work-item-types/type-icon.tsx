@@ -69,10 +69,14 @@ export function typeOf(
   if (!types?.length) {
     return undefined;
   }
-  return types.find((type) => type.id === typeId)
+  return types.find((type) => {
+    return type.id === typeId;
+  })
     ?? (typeId
       ? undefined
-      : (types.find((type) => type.name.toLowerCase() === 'task') ?? types[0]));
+      : (types.find((type) => {
+        return type.name.toLowerCase() === 'task';
+      }) ?? types[0]));
 }
 
 type TypeIconProps = {

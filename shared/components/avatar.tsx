@@ -25,7 +25,9 @@ type AvatarProps = {
 export default function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   const initials = name
     .split(/\s+/)
-    .map((part) => part[0])
+    .map((part) => {
+      return part[0];
+    })
     .join('')
     .slice(0, 2)
     .toUpperCase();

@@ -17,8 +17,12 @@ function setup(save: () => Promise<void>) {
     delay: 1000,
     retryDelay: 5000,
     save,
-    isConflict: (e) => e === CONFLICT,
-    onStatus: (s) => statuses.push(s),
+    isConflict: (e) => {
+      return e === CONFLICT;
+    },
+    onStatus: (s) => {
+      return statuses.push(s);
+    },
   });
   return { autosave, statuses };
 }
@@ -26,16 +30,31 @@ function setup(save: () => Promise<void>) {
 /** A save that waits until `finish` is called. */
 function pendingSave() {
   const finishes: (() => void)[] = [];
-  const save = vi.fn(() => new Promise<void>((resolve) => finishes.push(resolve)));
-  return { save, finish: () => finishes.shift()?.() };
+  const save = vi.fn(() => {
+    return new Promise<void>((resolve) => {
+      return finishes.push(resolve);
+    });
+  });
+  return {
+    save,
+    finish: () => {
+      return finishes.shift()?.();
+    },
+  };
 }
 
 describe('createAutosave', () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => {
+    return vi.useFakeTimers();
+  });
+  afterEach(() => {
+    return vi.useRealTimers();
+  });
 
   it('saves once after typing pauses', async () => {
-    const save = vi.fn(() => Promise.resolve());
+    const save = vi.fn(() => {
+      return Promise.resolve();
+    });
     const { autosave, statuses } = setup(save);
 
     autosave.change();
@@ -100,7 +119,9 @@ describe('createAutosave', () => {
   });
 
   it('flushes at once and does nothing when there is nothing to save', async () => {
-    const save = vi.fn(() => Promise.resolve());
+    const save = vi.fn(() => {
+      return Promise.resolve();
+    });
     const { autosave } = setup(save);
 
     await autosave.flush();
@@ -137,7 +158,11 @@ describe('withImageLinks', () => {
 
     const out = withImageLinks(doc, { a1: 'https://fresh' });
 
-    expect(out.content?.map((n) => n.attrs?.src ?? n.type)).toEqual([
+    expect(
+      out.content?.map((n) => {
+        return n.attrs?.src ?? n.type;
+      }),
+    ).toEqual([
       'https://fresh',
       'https://pasted.example/a.png',
       'blockquote',

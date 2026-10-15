@@ -3,11 +3,13 @@ import Tag from '@/shared/components/tag';
 import { examples } from '../examples';
 import type { FileDoc } from '../extract';
 
-const Code = ({ children }: { children: string }) => (
-  <pre className="overflow-x-auto rounded-md bg-fill-hover p-3 font-mono text-xs leading-relaxed">
+const Code = ({ children }: { children: string }) => {
+  return (
+    <pre className="overflow-x-auto rounded-md bg-fill-hover p-3 font-mono text-xs leading-relaxed">
     <code>{children}</code>
-  </pre>
-);
+    </pre>
+  );
+};
 
 export default function ComponentSection({ doc }: { doc: FileDoc }) {
   const live = examples[doc.file] ?? {};
@@ -45,53 +47,59 @@ export default function ComponentSection({ doc }: { doc: FileDoc }) {
         );
       })}
 
-      {doc.components.map((component) => (
-        <div key={component.name} className="flex flex-col gap-3">
-          {doc.components.length > 1 && (
-            <h3 className="font-mono text-sm font-semibold">{component.name}</h3>
-          )}
-          {component.description
-            ? <p className="text-sm">{component.description}</p>
-            : (
-              <p className="text-sm text-warning-strong">
-                Undocumented: add a JSDoc comment to {component.name}.
-              </p>
+      {doc.components.map((component) => {
+        return (
+          <div key={component.name} className="flex flex-col gap-3">
+            {doc.components.length > 1 && (
+              <h3 className="font-mono text-sm font-semibold">{component.name}</h3>
             )}
-          {component.practices.length > 0 && (
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-              {component.practices.map((practice) => <li key={practice}>{practice}</li>)}
-            </ul>
-          )}
-          {component.props.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-fill-hover text-xs text-muted">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">Prop</th>
-                    <th className="px-3 py-2 font-medium">Type</th>
-                    <th className="px-3 py-2 font-medium">Default</th>
-                    <th className="px-3 py-2 font-medium">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border bg-surface">
-                  {component.props.map((prop) => (
-                    <tr key={prop.name} className="align-top">
-                      <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">
-                        {prop.name} {prop.required && <Tag variant="primary">required</Tag>}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-xs text-muted">{prop.type}</td>
-                      <td className="px-3 py-2 font-mono text-xs text-muted">
-                        {prop.defaultValue ?? '-'}
-                      </td>
-                      <td className="px-3 py-2 text-muted">{prop.description}</td>
+            {component.description
+              ? <p className="text-sm">{component.description}</p>
+              : (
+                <p className="text-sm text-warning-strong">
+                  Undocumented: add a JSDoc comment to {component.name}.
+                </p>
+              )}
+            {component.practices.length > 0 && (
+              <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+                {component.practices.map((practice) => {
+                  return <li key={practice}>{practice}</li>;
+                })}
+              </ul>
+            )}
+            {component.props.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-fill-hover text-xs text-muted">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">Prop</th>
+                      <th className="px-3 py-2 font-medium">Type</th>
+                      <th className="px-3 py-2 font-medium">Default</th>
+                      <th className="px-3 py-2 font-medium">Description</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ))}
+                  </thead>
+                  <tbody className="divide-y divide-border bg-surface">
+                    {component.props.map((prop) => {
+                      return (
+                        <tr key={prop.name} className="align-top">
+                          <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">
+                            {prop.name} {prop.required && <Tag variant="primary">required</Tag>}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-xs text-muted">{prop.type}</td>
+                          <td className="px-3 py-2 font-mono text-xs text-muted">
+                            {prop.defaultValue ?? '-'}
+                          </td>
+                          <td className="px-3 py-2 text-muted">{prop.description}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }

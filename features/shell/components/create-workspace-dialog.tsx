@@ -51,7 +51,9 @@ export default function CreateWorkspaceDialog(
             placeholder="Acme Inc"
             maxLength={60}
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              return setName(event.target.value);
+            }}
             autoFocus
           />
         </form>

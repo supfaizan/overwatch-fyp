@@ -36,8 +36,12 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
   const term = open ? query.term : null;
   const [searchTerm, setSearchTerm] = useState<string | null>(null);
   useEffect(() => {
-    const timer = setTimeout(() => setSearchTerm(term), MENTION_SEARCH_DELAY_MS);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      return setSearchTerm(term);
+    }, MENTION_SEARCH_DELAY_MS);
+    return () => {
+      return clearTimeout(timer);
+    };
   }, [term]);
   const candidates = useMentionCandidates(repo, term === null ? null : searchTerm);
   const options = open ? (candidates.data ?? []) : [];
@@ -52,16 +56,25 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
     const at = query.start + name.length + 2;
     setText(next);
     setCaret(at);
-    setMentions((current) => [...current, { nodeId: candidate.id, name }]);
+    setMentions((current) => {
+      return [...current, { nodeId: candidate.id, name }];
+    });
     setActive(0);
-    requestAnimationFrame(() => input.current?.setSelectionRange(at, at));
+    requestAnimationFrame(() => {
+      return input.current?.setSelectionRange(at, at);
+    });
   };
 
   const send = () => {
     if (!question || pending) {
       return;
     }
-    onSend(question, keptMentions(question, mentions).map((mention) => mention.nodeId)).then(
+    onSend(
+      question,
+      keptMentions(question, mentions).map((mention) => {
+        return mention.nodeId;
+      }),
+    ).then(
       () => {
         setText('');
         setMentions([]);
@@ -76,7 +89,9 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         const step = event.key === 'ArrowDown' ? 1 : -1;
-        setActive((index) => (index + step + options.length) % options.length);
+        setActive((index) => {
+          return (index + step + options.length) % options.length;
+        });
         return;
       }
       if (event.key === 'Enter' || event.key === 'Tab') {
@@ -111,27 +126,35 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
           aria-label="Nodes to mention"
           className="absolute right-0 bottom-full left-0 mb-1 max-h-56 overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-chrome"
         >
-          {options.map((option, index) => (
-            <li
-              key={option.id}
-              id={`${listId}-${index}`}
-              role="option"
-              aria-selected={index === active}
-              className={cn(
-                'flex cursor-pointer flex-col rounded px-2 py-1 text-sm',
-                index === active && 'bg-fill-hover',
-              )}
-              // keep focus in the box, so typing carries on after the pick
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => pick(option)}
-              onMouseEnter={() => setActive(index)}
-            >
-              <span className="font-mono text-xs font-medium">{option.name ?? option.path}</span>
-              <span className="truncate text-xs text-muted">
-                {[option.kind, option.file_path ?? option.path].filter(Boolean).join(' · ')}
-              </span>
-            </li>
-          ))}
+          {options.map((option, index) => {
+            return (
+              <li
+                key={option.id}
+                id={`${listId}-${index}`}
+                role="option"
+                aria-selected={index === active}
+                className={cn(
+                  'flex cursor-pointer flex-col rounded px-2 py-1 text-sm',
+                  index === active && 'bg-fill-hover',
+                )}
+                // keep focus in the box, so typing carries on after the pick
+                onMouseDown={(event) => {
+                  return event.preventDefault();
+                }}
+                onClick={() => {
+                  return pick(option);
+                }}
+                onMouseEnter={() => {
+                  return setActive(index);
+                }}
+              >
+                <span className="font-mono text-xs font-medium">{option.name ?? option.path}</span>
+                <span className="truncate text-xs text-muted">
+                  {[option.kind, option.file_path ?? option.path].filter(Boolean).join(' · ')}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
       <TextArea
@@ -153,7 +176,9 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
           setCaret(event.target.selectionStart);
           setActive(0);
         }}
-        onSelect={(event) => setCaret(event.currentTarget.selectionStart)}
+        onSelect={(event) => {
+          return setCaret(event.currentTarget.selectionStart);
+        }}
         onKeyDown={onKeyDown}
       />
       {/* as tall as the box, so the two line up whatever its height */}

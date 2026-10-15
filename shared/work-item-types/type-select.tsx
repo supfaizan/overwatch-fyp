@@ -27,18 +27,20 @@ export default function TypeSelect(
         placeholder={types.isPending ? 'Loading types…' : 'Type'}
       />
       <SelectContent>
-        {types.data?.map((type) => (
-          <SelectItem
-            key={type.id}
-            value={type.id}
-            disabled={Boolean(allowed) && !allowed?.includes(type.id) && type.id !== value}
-          >
-            <span className="flex items-center gap-2">
-              <TypeIcon type={type} />
-              {type.name}
-            </span>
-          </SelectItem>
-        ))}
+        {types.data?.map((type) => {
+          return (
+            <SelectItem
+              key={type.id}
+              value={type.id}
+              disabled={Boolean(allowed) && !allowed?.includes(type.id) && type.id !== value}
+            >
+              <span className="flex items-center gap-2">
+                <TypeIcon type={type} />
+                {type.name}
+              </span>
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );

@@ -18,14 +18,20 @@ export const DocImage = Node.create({
       alt: { default: null },
       attachmentId: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-attachment-id'),
+        parseHTML: (element) => {
+          return element.getAttribute('data-attachment-id');
+        },
         renderHTML: (
           attrs,
-        ) => (attrs.attachmentId ? { 'data-attachment-id': attrs.attachmentId } : {}),
+        ) => {
+          return (attrs.attachmentId ? { 'data-attachment-id': attrs.attachmentId } : {});
+        },
       },
       uploadId: {
         default: null,
-        renderHTML: (attrs) => (attrs.uploadId ? { 'data-uploading': '' } : {}),
+        renderHTML: (attrs) => {
+          return (attrs.uploadId ? { 'data-uploading': '' } : {});
+        },
       },
       raw: { default: null, rendered: false },
     };
@@ -37,7 +43,9 @@ export const DocImage = Node.create({
       tag: 'img[src]',
       getAttrs: (
         element,
-      ) => (/^https?:\/\//i.test(element.getAttribute('src') ?? '') ? null : false),
+      ) => {
+        return (/^https?:\/\//i.test(element.getAttribute('src') ?? '') ? null : false);
+      },
     }];
   },
 

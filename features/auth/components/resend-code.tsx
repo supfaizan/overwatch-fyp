@@ -22,12 +22,18 @@ export default function ResendCode(
   },
 ) {
   const [resendAt, setAt] = useState(challenge.resendAt);
-  const [left, setLeft] = useState(() => secondsUntil(challenge.resendAt));
+  const [left, setLeft] = useState(() => {
+    return secondsUntil(challenge.resendAt);
+  });
 
   useEffect(() => {
     setLeft(secondsUntil(resendAt));
-    const timer = setInterval(() => setLeft(secondsUntil(resendAt)), 1000);
-    return () => clearInterval(timer);
+    const timer = setInterval(() => {
+      return setLeft(secondsUntil(resendAt));
+    }, 1000);
+    return () => {
+      return clearInterval(timer);
+    };
   }, [resendAt]);
 
   const restart = (seconds: number) => {
@@ -36,7 +42,9 @@ export default function ResendCode(
   };
 
   const resend = useMutation<{ resend_available_in: number }, ApiError>({
-    mutationFn: () => resendCode(challenge.id),
+    mutationFn: () => {
+      return resendCode(challenge.id);
+    },
     onSuccess: ({ resend_available_in }) => {
       restart(resend_available_in);
       onResent?.();
@@ -63,7 +71,9 @@ export default function ResendCode(
             size="sm"
             className="h-auto px-1 text-primary"
             loading={resend.isPending}
-            onClick={() => resend.mutate()}
+            onClick={() => {
+              return resend.mutate();
+            }}
           >
             resend the code
           </Button>

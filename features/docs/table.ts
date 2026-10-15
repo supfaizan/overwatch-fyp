@@ -22,7 +22,9 @@ export const DocTable = Table.extend({
 
 const background = {
   default: null,
-  parseHTML: (element: HTMLElement) => element.getAttribute('data-background'),
+  parseHTML: (element: HTMLElement) => {
+    return element.getAttribute('data-background');
+  },
   renderHTML: (attrs: Record<string, unknown>) => {
     const color = plainColor(attrs.background);
     return color

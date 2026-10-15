@@ -61,7 +61,9 @@ export default function BoardSettingsSheet(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const ids = board.columns.map((column) => column.id);
+  const ids = board.columns.map((column) => {
+    return column.id;
+  });
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) {
@@ -108,7 +110,12 @@ export default function BoardSettingsSheet(
             <div className="flex items-center gap-2">
               <h3 className="flex-1 text-sm font-medium">Columns</h3>
               {canEditColumns && (
-                <Button size="sm" onClick={() => setEditing(true)}>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    return setEditing(true);
+                  }}
+                >
                   Columns &amp; workflow
                 </Button>
               )}
@@ -117,26 +124,38 @@ export default function BoardSettingsSheet(
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={ids} strategy={verticalListSortingStrategy}>
                 <ul className="flex flex-col gap-1">
-                  {board.columns.map((column) => (
-                    <ColumnRow
-                      key={column.id}
-                      column={column}
-                      visible={!(view.hidden[column.id] ?? hiddenByDefault(column))}
-                      onVisibleChange={(visible) => onHiddenChange(column.id, !visible)}
-                      onColorChange={(color) =>
-                        settings.mutate({
-                          boardId: board.id,
-                          column_colors: { [column.id]: color },
-                        })}
-                    />
-                  ))}
+                  {board.columns.map((column) => {
+                    return (
+                      <ColumnRow
+                        key={column.id}
+                        column={column}
+                        visible={!(view.hidden[column.id] ?? hiddenByDefault(column))}
+                        onVisibleChange={(visible) => {
+                          return onHiddenChange(column.id, !visible);
+                        }}
+                        onColorChange={(color) => {
+                          return settings.mutate({
+                            boardId: board.id,
+                            column_colors: { [column.id]: color },
+                          });
+                        }}
+                      />
+                    );
+                  })}
                 </ul>
               </SortableContext>
             </DndContext>
           </section>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
-      {editing && <ColumnsWorkflowDialog board={board} onClose={() => setEditing(false)} />}
+      {editing && (
+        <ColumnsWorkflowDialog
+          board={board}
+          onClose={() => {
+            return setEditing(false);
+          }}
+        />
+      )}
     </DialogPrimitive.Root>
   );
 }
@@ -183,16 +202,26 @@ function ColumnRow({ column, visible, onVisibleChange, onColorChange }: ColumnRo
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onSelect={() => onColorChange(null)}>Default</DropdownMenuItem>
-          {Object.values(COLUMN_COLOR).map((option) => (
-            <DropdownMenuItem
-              key={option}
-              onSelect={() => onColorChange(option)}
-            >
-              <span className={cn('size-3 rounded-full', COLOR_CLASSES[option].dot)} />
-              <span className="capitalize">{option}</span>
-            </DropdownMenuItem>
-          ))}
+          <DropdownMenuItem
+            onSelect={() => {
+              return onColorChange(null);
+            }}
+          >
+            Default
+          </DropdownMenuItem>
+          {Object.values(COLUMN_COLOR).map((option) => {
+            return (
+              <DropdownMenuItem
+                key={option}
+                onSelect={() => {
+                  return onColorChange(option);
+                }}
+              >
+                <span className={cn('size-3 rounded-full', COLOR_CLASSES[option].dot)} />
+                <span className="capitalize">{option}</span>
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
       <span className={cn('min-w-0 flex-1 truncate text-sm', !visible && 'text-muted')}>

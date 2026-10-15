@@ -7,4 +7,6 @@ const twMerge = extendTailwindMerge({
 });
 
 // merge class lists; later Tailwind classes win over conflicting earlier ones
-export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+export const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs));
+};

@@ -4,8 +4,11 @@ import { mergeAttributes, Node } from '@tiptap/react';
  * Small things inside a line that came from a mirrored page: an emoji, a status lozenge, a date. Their
  * attributes are kept exactly as the source sent them, so they go back unchanged.
  */
-const attrs = (names: string[]) =>
-  Object.fromEntries(names.map((name) => [name, { default: null, rendered: false }]));
+const attrs = (names: string[]) => {
+  return Object.fromEntries(names.map((name) => {
+    return [name, { default: null, rendered: false }];
+  }));
+};
 
 const ESCAPED = /\\u([0-9a-fA-F]{4})/g;
 
@@ -17,15 +20,27 @@ export function emojiGlyph(
   { id, text, shortName }: { id?: string | null; text?: string | null; shortName?: string | null },
 ): string {
   const points = (id ?? '').split('-');
-  if (points.every((point) => /^[0-9a-f]{2,6}$/i.test(point))) {
-    const values = points.map((point) => parseInt(point, 16));
-    if (values.every((value) => value <= 0x10ffff && (value < 0xd800 || value > 0xdfff))) {
+  if (
+    points.every((point) => {
+      return /^[0-9a-f]{2,6}$/i.test(point);
+    })
+  ) {
+    const values = points.map((point) => {
+      return parseInt(point, 16);
+    });
+    if (
+      values.every((value) => {
+        return value <= 0x10ffff && (value < 0xd800 || value > 0xdfff);
+      })
+    ) {
       return String.fromCodePoint(...values);
     }
   }
   const decoded = (text ?? '').replace(
     ESCAPED,
-    (_, unit: string) => String.fromCharCode(parseInt(unit, 16)),
+    (_, unit: string) => {
+      return String.fromCharCode(parseInt(unit, 16));
+    },
   );
   return decoded || shortName || '';
 }
@@ -37,15 +52,19 @@ export const Emoji = Node.create({
   atom: true,
   selectable: true,
 
-  addAttributes: () => attrs(['shortName', 'id', 'text']),
+  addAttributes: () => {
+    return attrs(['shortName', 'id', 'text']);
+  },
 
   parseHTML() {
     return [{
       tag: 'span[data-emoji]',
-      getAttrs: (element) => ({
-        shortName: element.getAttribute('data-emoji'),
-        text: element.textContent,
-      }),
+      getAttrs: (element) => {
+        return {
+          shortName: element.getAttribute('data-emoji'),
+          text: element.textContent,
+        };
+      },
     }];
   },
 
@@ -64,7 +83,9 @@ export const Emoji = Node.create({
     ];
   },
 
-  renderMarkdown: (node) => emojiGlyph(node.attrs ?? {}),
+  renderMarkdown: (node) => {
+    return emojiGlyph(node.attrs ?? {});
+  },
 });
 
 export const Status = Node.create({
@@ -74,15 +95,19 @@ export const Status = Node.create({
   atom: true,
   selectable: true,
 
-  addAttributes: () => attrs(['text', 'color', 'localId', 'style']),
+  addAttributes: () => {
+    return attrs(['text', 'color', 'localId', 'style']);
+  },
 
   parseHTML() {
     return [{
       tag: 'span[data-status]',
-      getAttrs: (element) => ({
-        color: element.getAttribute('data-status'),
-        text: element.textContent,
-      }),
+      getAttrs: (element) => {
+        return {
+          color: element.getAttribute('data-status'),
+          text: element.textContent,
+        };
+      },
     }];
   },
 
@@ -94,7 +119,9 @@ export const Status = Node.create({
     ];
   },
 
-  renderMarkdown: (node) => `\`${node.attrs?.text ?? ''}\``,
+  renderMarkdown: (node) => {
+    return `\`${node.attrs?.text ?? ''}\``;
+  },
 });
 
 const DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -110,12 +137,16 @@ export const DateNode = Node.create({
   atom: true,
   selectable: true,
 
-  addAttributes: () => attrs(['timestamp']),
+  addAttributes: () => {
+    return attrs(['timestamp']);
+  },
 
   parseHTML() {
     return [{
       tag: 'time[data-timestamp]',
-      getAttrs: (element) => ({ timestamp: element.getAttribute('data-timestamp') }),
+      getAttrs: (element) => {
+        return { timestamp: element.getAttribute('data-timestamp') };
+      },
     }];
   },
 
@@ -127,5 +158,7 @@ export const DateNode = Node.create({
     ];
   },
 
-  renderMarkdown: (node) => dayOf(node.attrs?.timestamp),
+  renderMarkdown: (node) => {
+    return dayOf(node.attrs?.timestamp);
+  },
 });

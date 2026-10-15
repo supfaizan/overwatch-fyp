@@ -33,7 +33,11 @@ export default function SprintDialog(
         ...(start && { start_at: new Date(start).toISOString() }),
         ...(end && { end_at: new Date(end).toISOString() }),
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => {
+          return onOpenChange(false);
+        },
+      },
     );
   };
 
@@ -65,7 +69,9 @@ export default function SprintDialog(
             placeholder="Name (optional: numbered after the board)"
             maxLength={120}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              return setName(e.target.value);
+            }}
             autoFocus
           />
           <TextArea
@@ -74,12 +80,20 @@ export default function SprintDialog(
             rows={3}
             maxLength={2000}
             value={goal}
-            onChange={(e) => setGoal(e.target.value)}
+            onChange={(e) => {
+              return setGoal(e.target.value);
+            }}
           />
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-xs text-muted">
               Starts
-              <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+              <Input
+                type="date"
+                value={start}
+                onChange={(e) => {
+                  return setStart(e.target.value);
+                }}
+              />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted">
               Ends
@@ -87,7 +101,9 @@ export default function SprintDialog(
                 type="date"
                 value={end}
                 min={start || undefined}
-                onChange={(e) => setEnd(e.target.value)}
+                onChange={(e) => {
+                  return setEnd(e.target.value);
+                }}
               />
             </label>
           </div>

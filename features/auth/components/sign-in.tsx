@@ -42,7 +42,9 @@ export default function SignIn(
     description = 'Welcome back. Sign in with your email or GitHub.',
   }: SignInProps,
 ) {
-  const status = useSession((state) => state.status);
+  const status = useSession((state) => {
+    return state.status;
+  });
   const router = useRouter();
   const message = signInErrorMessage(error);
   const form = useForm<SignInValues>({

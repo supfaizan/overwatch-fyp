@@ -30,8 +30,12 @@ export default function RepoSwitcher(
 ) {
   const router = useRouter();
   const requested = useSearchParams().get('repo');
-  const userId = useSession((state) => state.user?.id ?? '');
-  const workspaceId = useWorkspace((state) => state.id ?? '');
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const workspaceId = useWorkspace((state) => {
+    return state.id ?? '';
+  });
   const repos = useConnectedRepos();
   const current = repos.data
     ? pickRepo(repos.data, requested, readLastRepo(userId, workspaceId))?.repo_full_name
@@ -69,30 +73,37 @@ export default function RepoSwitcher(
         : trigger}
       <DropdownMenuContent side={collapsed ? 'right' : 'bottom'} align="start" className="w-64">
         <DropdownMenuLabel>Repositories</DropdownMenuLabel>
-        {repos.data?.map((repo) => (
-          <DropdownMenuItem
-            key={repo.repo_full_name}
-            onSelect={() =>
-              router.push(`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`)}
-          >
-            <Check className={cn(repo.repo_full_name !== current && 'invisible')} />
-            <span className="min-w-0 flex-1 truncate">{repo.repo_full_name}</span>
-            {repo.access_status !== ACCESS_STATUS.active
-              ? <Tag variant="warning">No access</Tag>
-              : (
-                (isRunning(repo) || repo.parse_status === JOB_STATUS.failed) && (
-                  <StatusTag status={repo.parse_status} />
-                )
-              )}
-          </DropdownMenuItem>
-        ))}
+        {repos.data?.map((repo) => {
+          return (
+            <DropdownMenuItem
+              key={repo.repo_full_name}
+              onSelect={() => {
+                return router.push(`/dashboard?repo=${encodeURIComponent(repo.repo_full_name)}`);
+              }}
+            >
+              <Check className={cn(repo.repo_full_name !== current && 'invisible')} />
+              <span className="min-w-0 flex-1 truncate">{repo.repo_full_name}</span>
+              {repo.access_status !== ACCESS_STATUS.active
+                ? <Tag variant="warning">No access</Tag>
+                : (
+                  (isRunning(repo) || repo.parse_status === JOB_STATUS.failed) && (
+                    <StatusTag status={repo.parse_status} />
+                  )
+                )}
+            </DropdownMenuItem>
+          );
+        })}
         <DropdownMenuSeparator />
         {isAdmin && (
           <DropdownMenuItem onSelect={onAddRepo}>
             <Plus /> Add repository…
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => router.push('/settings/repositories')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            return router.push('/settings/repositories');
+          }}
+        >
           <GearSix /> Manage repositories
         </DropdownMenuItem>
       </DropdownMenuContent>

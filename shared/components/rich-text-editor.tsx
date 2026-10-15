@@ -10,8 +10,9 @@ import { cn } from '@/shared/lib/cn';
 import { field } from './input';
 
 // ProseMirror renders plain elements, so the typography is set on them from the editor's root
-const CONTENT_CLASS = cn(
-  'min-h-32 px-3 py-2 text-sm leading-relaxed break-words outline-none',
+/** The editor's typography, for another editor of the same content (e.g. the docs page editor). */
+export const RICH_TEXT_CLASS = cn(
+  'text-sm leading-relaxed break-words outline-none',
   '[&>*+*]:mt-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold',
   '[&_h4]:font-semibold [&_h5]:font-semibold [&_h6]:font-semibold',
   '[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li>p]:my-0.5',
@@ -28,6 +29,13 @@ const CONTENT_CLASS = cn(
   '[&_p.is-editor-empty:first-child]:before:h-0 [&_p.is-editor-empty:first-child]:before:text-muted',
   '[&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]',
 );
+
+const richTextExtensions = (placeholder?: string) => [
+  StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
+  TableKit,
+  Markdown,
+  Placeholder.configure({ placeholder }),
+];
 
 type RichTextEditorProps = {
   /** The starting Markdown. Read once: the editor owns the text after that. */
@@ -64,12 +72,7 @@ export default function RichTextEditor({ value, onChange, placeholder, autoFocus
     handlers.current = { onChange, onSubmit, onCancel };
   });
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
-      TableKit,
-      Markdown,
-      Placeholder.configure({ placeholder }),
-    ],
+    extensions: richTextExtensions(placeholder),
     content: value,
     contentType: 'markdown',
     autofocus: autoFocus ? 'end' : false,
@@ -77,7 +80,7 @@ export default function RichTextEditor({ value, onChange, placeholder, autoFocus
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     editorProps: {
-      attributes: { class: CONTENT_CLASS, 'aria-label': props['aria-label'], 'aria-multiline': 'true', role: 'textbox' },
+      attributes: { class: cn('min-h-32 px-3 py-2', RICH_TEXT_CLASS), 'aria-label': props['aria-label'], 'aria-multiline': 'true', role: 'textbox' },
       handleKeyDown: (_view, event) => {
         const { onSubmit: submit, onCancel: cancel } = handlers.current;
         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && submit) {

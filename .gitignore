@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+.vitest
 
 # next.js
 /.next/
@@ -23,6 +24,9 @@
 # misc
 .DS_Store
 *.pem
+trailer.mp4
+trailer-poster.jpg
+trailer-silent.mp4
 
 # debug
 npm-debug.log*

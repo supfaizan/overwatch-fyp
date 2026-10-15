@@ -1,0 +1,148 @@
+export const SAVE_STATUS = {
+  saved: 'saved',
+  /** edited, waiting for the pause that triggers a save */
+  dirty: 'dirty',
+  saving: 'saving',
+  /** someone else saved first: autosave stops until the user picks a version */
+  conflict: 'conflict',
+  /** the save failed (offline, server error) and is retried */
+  error: 'error',
+} as const;
+export type SaveStatus = (typeof SAVE_STATUS)[keyof typeof SAVE_STATUS];
+
+type AutosaveOptions = {
+  /** How long typing must pause before a save. */
+  delay: number;
+  /** How long to wait before retrying a failed save. */
+  retryDelay: number;
+  /** Saves the latest content; reads it itself, so a save always sends what's newest. */
+  save: () => Promise<void>;
+  isConflict: (error: unknown) => boolean;
+  onStatus: (status: SaveStatus) => void;
+};
+
+/**
+ * Saves after a pause in typing, one save at a time: edits made while a save is in flight are sent
+ * by the next one, so nothing is lost and requests never overlap or arrive out of order.
+ */
+export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }: AutosaveOptions) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let dirty = false;
+  let saving = false;
+  let stopped = false;
+
+  const clear = () => {
+    clearTimeout(timer);
+    timer = undefined;
+  };
+  const schedule = (after: number) => {
+    clear();
+    timer = setTimeout(flush, after);
+  };
+
+  async function flush(): Promise<void> {
+    clear();
+    // a save in flight sends this change when it finishes
+    if (stopped || saving || !dirty) return;
+    saving = true;
+    dirty = false;
+    onStatus(SAVE_STATUS.saving);
+    try {
+      await save();
+      onStatus(dirty ? SAVE_STATUS.dirty : SAVE_STATUS.saved);
+    } catch (error) {
+      dirty = true;
+      if (isConflict(error)) {
+        stopped = true;
+        onStatus(SAVE_STATUS.conflict);
+      } else {
+        onStatus(SAVE_STATUS.error);
+        schedule(retryDelay);
+      }
+    } finally {
+      saving = false;
+    }
+    if (dirty && !stopped && !timer) schedule(delay);
+  }
+
+  return {
+    change() {
+      if (stopped) return;
+      dirty = true;
+      onStatus(SAVE_STATUS.dirty);
+      schedule(delay);
+    },
+    /** Save now, e.g. when the page is left or hidden. */
+    flush,
+    /** After a conflict, once the caller has rebased on the latest version: save what's here. */
+    resume() {
+      stopped = false;
+      return flush();
+    },
+    hasUnsaved: () => dirty || saving,
+    dispose: clear,
+  };
+}
+
+const TREE_COLLAPSED_KEY = 'ow_docs_tree_collapsed';
+
+/** Whether the docs tree was left hidden; storage can be unavailable (private mode), which means shown. */
+export function readTreeCollapsed(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem(TREE_COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function saveTreeCollapsed(collapsed: boolean) {
+  try {
+    window.localStorage.setItem(TREE_COLLAPSED_KEY, collapsed ? '1' : '0');
+  } catch {
+    // remembered for this visit only
+  }
+}
+
+const WORDS_PER_MINUTE = 200;
+
+/** Minutes to read Markdown at an average pace; at least one. */
+export function readingMinutes(markdown: string | null): number {
+  const words = markdown?.match(/[\p{L}\p{N}]+/gu)?.length ?? 0;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
+}
+
+/** "just now", "5 minutes ago", "3 days ago"; past a month, the date itself. */
+export function timeAgo(iso: string, now = Date.now()): string {
+  const seconds = Math.round((now - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return relative.format(-minutes, 'minute');
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return relative.format(-hours, 'hour');
+  const days = Math.floor(hours / 24);
+  if (days < 7) return relative.format(-days, 'day');
+  if (days < 30) return relative.format(-Math.floor(days / 7), 'week');
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(iso));
+}
+
+type ContentNode = { type?: string; attrs?: Record<string, unknown>; content?: ContentNode[]; [key: string]: unknown };
+
+/**
+ * A page's content as it's opened: uploaded images get their fresh signed links, and an image whose
+ * upload never finished (saved with only its local preview) is left out.
+ */
+export function withImageLinks<T extends ContentNode>(node: T, urls: Record<string, string>): T {
+  if (!node.content) return node;
+  const content = node.content.flatMap((child) => {
+    if (child.type !== 'image') return [withImageLinks(child, urls)];
+    const id = child.attrs?.attachmentId;
+    if (typeof id === 'string') return urls[id] ? [{ ...child, attrs: { ...child.attrs, src: urls[id], uploadId: null } }] : [];
+    return String(child.attrs?.src ?? '').startsWith('blob:') ? [] : [child];
+  });
+  return { ...node, content };
+}
+
+/** Images a page can take: what the backend accepts, at most 10 MB. */
+export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;

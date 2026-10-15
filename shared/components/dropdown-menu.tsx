@@ -3,6 +3,16 @@ import type { ComponentProps } from 'react';
 import { popIn } from '@/shared/lib/animations';
 import { cn } from '@/shared/lib/cn';
 
+/** A menu panel's look, shared with the context menu so both menus match. */
+export const MENU_CONTENT_CLASS = cn('z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-chrome shadow-border', popIn);
+
+/** A menu item's look, shared with the context menu. */
+export const menuItemClass = (danger?: boolean) =>
+  cn(
+    'flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-fill-hover [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted',
+    danger && 'text-danger data-highlighted:bg-danger/10 [&_svg]:text-danger',
+  );
+
 // unstyled Radix parts, re-exported so callers only import from here
 export const DropdownMenu = Menu.Root;
 export const DropdownMenuTrigger = Menu.Trigger;
@@ -19,7 +29,7 @@ export function DropdownMenuContent({ className, sideOffset = 6, ...props }: Com
     <Menu.Portal>
       <Menu.Content
         sideOffset={sideOffset}
-        className={cn('z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-chrome shadow-border', popIn, className)}
+        className={cn(MENU_CONTENT_CLASS, className)}
         {...props}
       />
     </Menu.Portal>
@@ -35,11 +45,7 @@ type ItemProps = ComponentProps<typeof Menu.Item> & {
 export function DropdownMenuItem({ className, danger, ...props }: ItemProps) {
   return (
     <Menu.Item
-      className={cn(
-        'flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-fill-hover [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted',
-        danger && 'text-danger data-highlighted:bg-danger/10 [&_svg]:text-danger',
-        className,
-      )}
+      className={cn(menuItemClass(danger), className)}
       {...props}
     />
   );

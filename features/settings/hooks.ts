@@ -76,3 +76,4 @@ export const useUpdateMember = () => useWorkspaceMutation(settingsApi.updateMemb
 export const useRemoveMember = () => useWorkspaceMutation(settingsApi.removeMember);
 export const useCreateInvite = () => useWorkspaceMutation(settingsApi.createInvite);
 export const useRevokeInvite = () => useWorkspaceMutation(settingsApi.revokeInvite, () => 'Invite revoked.');
+export const useResendInvite = () => useWorkspaceMutation(settingsApi.resendInvite, (invite) => `Invite sent again to ${invite.email}.`);

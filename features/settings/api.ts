@@ -28,6 +28,7 @@ export const updateMember = ({ id, userId, role }: { id: string; userId: string;
 export const removeMember = ({ id, userId }: { id: string; userId: string }) => api.delete<null>(`${workspace(id)}/members/${userId}`);
 
 export const getInvites = (id: string) => api.get<Invite[]>(`${workspace(id)}/invites`);
-export const createInvite = ({ id, role, githubLogin }: { id: string; role: InviteRole; githubLogin: string | null }) =>
-  api.post<InviteCreated>(`${workspace(id)}/invites`, { role, github_login: githubLogin });
+export const createInvite = ({ id, role, githubLogin, email }: { id: string; role: InviteRole; githubLogin?: string; email?: string }) =>
+  api.post<InviteCreated>(`${workspace(id)}/invites`, { role, github_login: githubLogin ?? null, email: email ?? null });
+export const resendInvite = ({ id, inviteId }: { id: string; inviteId: string }) => api.post<Invite>(`${workspace(id)}/invites/${inviteId}/resend`);
 export const revokeInvite = ({ id, inviteId }: { id: string; inviteId: string }) => api.delete<null>(`${workspace(id)}/invites/${inviteId}`);

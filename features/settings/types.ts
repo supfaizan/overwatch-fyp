@@ -35,7 +35,9 @@ export type Connection = {
 
 export type Member = {
   user_id: string;
-  github_login: string;
+  username: string | null;
+  github_login: string | null;
+  email: string | null;
   name: string | null;
   avatar_url: string | null;
   role: Role;
@@ -44,12 +46,20 @@ export type Member = {
 
 export type InviteRole = Exclude<Role, typeof ROLE.owner>;
 
+/** Who may accept: anyone with the link, one GitHub account, or one email address (mailed the link). */
+export const INVITE_KIND = { link: 'link', github: 'github', email: 'email' } as const;
+export type InviteKind = (typeof INVITE_KIND)[keyof typeof INVITE_KIND];
+
 export type Invite = {
   id: string;
+  kind: InviteKind;
   role: InviteRole;
   github_login: string | null;
+  email: string | null;
   created_at: string;
   expires_at: string;
+  last_sent_at: string | null;
 };
 
-export type InviteCreated = Invite & { url: string };
+/** `url` carries the token and is shown once; email invites have none, the link only goes to that inbox. */
+export type InviteCreated = Invite & { url: string | null };

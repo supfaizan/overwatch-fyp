@@ -36,6 +36,8 @@ type SwimlaneBoardProps = {
   onLoadMore: (cell: string) => void;
   onOpen: (item: WorkItem) => void;
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** The address that opens the item, for "Copy link". */
+  linkOf: (item: WorkItem) => string;
   /** a card dropped at `index` of a lane's column; a different lane means a different assignee (or priority) */
   onDrop: (item: WorkItem, lane: string, columnId: string, index: number) => void;
   /** the board, for where a dragged card may go */
@@ -43,7 +45,7 @@ type SwimlaneBoardProps = {
 };
 
 /** The board in rows, Jira-style: one lane per assignee or priority, the columns across. */
-export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, onDrop, board }: SwimlaneBoardProps) {
+export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoadMore, onOpen, onMoveTo, linkOf, onDrop, board }: SwimlaneBoardProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [dragging, setDragging] = useState<WorkItem | null>(null);
   const hintFor = useDropHints(board, dragging, columns);
@@ -53,7 +55,7 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
   );
   const colors = Object.fromEntries(columns.map((column) => [column.id, columnColor(column)]));
   // one grid for header and lanes, so every lane's cells line up under their column
-  const grid = { gridTemplateColumns: `repeat(${columns.length}, minmax(18rem, 1fr))` };
+  const grid = { gridTemplateColumns: `repeat(${columns.length}, 18rem)` };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setDragging(null);
@@ -121,6 +123,7 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
                           color={colors[column.id]}
                           onOpen={onOpen}
                           onMoveTo={onMoveTo}
+                          linkOf={linkOf}
                           blocked={hintFor(column)?.allowed === false}
                         />
                       );
@@ -134,7 +137,7 @@ export default function SwimlaneBoard({ columns, lanes, items, by, cells, onLoad
       </div>
       <DragOverlay className="cursor-grabbing">
         {dragging && dragging.column_id && (
-          <CardBody item={dragging} columns={columns} color={colors[dragging.column_id]} onOpen={() => {}} onMoveTo={() => {}} />
+          <CardBody item={dragging} columns={columns} color={colors[dragging.column_id]} onOpen={() => {}} onMoveTo={() => {}} linkOf={() => ''} />
         )}
       </DragOverlay>
     </DndContext>
@@ -151,6 +154,8 @@ type CellProps = {
   color: ColumnColor;
   onOpen: (item: WorkItem) => void;
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** The address that opens the item, for "Copy link". */
+  linkOf: (item: WorkItem) => string;
   /** a card being dragged can't go to this column */
   blocked: boolean;
 };
@@ -163,7 +168,7 @@ function HintLabel({ hint }: { hint: DropHint | undefined }) {
 }
 
 /** One lane's cards in one column: its own first batch, about four cards tall, loading more as it's scrolled. */
-function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onOpen, onMoveTo, blocked }: CellProps) {
+function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onOpen, onMoveTo, linkOf, blocked }: CellProps) {
   const { setNodeRef } = useDroppable({ id });
   const isOver = useCardOver(id) && !blocked;
   const list = useRef<HTMLUListElement | null>(null);
@@ -186,7 +191,7 @@ function Cell({ id, hasMore, loadingMore, onLoadMore, items, columns, color, onO
         className={cn('flex max-h-176 min-h-16 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active ring-2 ring-primary', blocked && 'opacity-40')}
       >
         {items.map((item) => (
-          <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} />
+          <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} linkOf={linkOf} />
         ))}
         {hasMore && (
           <li ref={sentinel} className="flex list-none justify-center py-2" aria-live="polite">

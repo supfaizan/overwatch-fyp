@@ -6,6 +6,9 @@ import { cn } from '@/shared/lib/cn';
 /** A menu panel's look, shared with the context menu so both menus match. */
 export const MENU_CONTENT_CLASS = cn('z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-chrome shadow-border', popIn);
 
+/** A group heading's look, shared with the context menu. */
+export const MENU_LABEL_CLASS = 'px-2 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase';
+
 /** A menu item's look, shared with the context menu. */
 export const menuItemClass = (danger?: boolean) =>
   cn(
@@ -53,7 +56,7 @@ export function DropdownMenuItem({ className, danger, ...props }: ItemProps) {
 
 /** Small uppercase heading for a group of items. Not selectable. */
 export function DropdownMenuLabel({ className, ...props }: ComponentProps<typeof Menu.Label>) {
-  return <Menu.Label className={cn('px-2 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase', className)} {...props} />;
+  return <Menu.Label className={cn(MENU_LABEL_CLASS, className)} {...props} />;
 }
 
 /** Thin line between groups of items. */

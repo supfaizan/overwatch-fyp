@@ -1,5 +1,11 @@
+import { Suspense } from 'react';
 import Board from '@/features/board';
 
-const page = () => <Board />;
+// Board reads the search params, which needs a Suspense boundary
+const page = () => (
+  <Suspense>
+    <Board />
+  </Suspense>
+);
 
 export default page;

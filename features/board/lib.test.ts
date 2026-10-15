@@ -3,6 +3,7 @@ import {
   BACKLOG_SECTION,
   arrange,
   cellId,
+  itemLink,
   columnColor,
   dropTarget,
   groupByColumn,
@@ -283,5 +284,15 @@ describe('workflow presets', () => {
     const custom = [{ ...columns[0], next: ['doing'] }, { ...columns[1], next: [] }, { ...columns[2], next: [] }];
     expect(unreachableColumns(custom).map((c) => c.id)).toEqual(['todo', 'done']);
     expect(deadEndColumns(custom).map((c) => c.id)).toEqual(['doing']);
+  });
+});
+
+describe('itemLink', () => {
+  it('opens the item on its board', () => {
+    expect(itemLink('https://app.test/board', 'b1', 'KAN-43')).toBe('https://app.test/board?board=b1&item=KAN-43');
+  });
+
+  it('encodes the key', () => {
+    expect(new URL(itemLink('https://app.test/board', 'b 1', 'A&B')).searchParams.get('item')).toBe('A&B');
   });
 });

@@ -24,12 +24,14 @@ type BoardColumnProps = {
   onLoadMore: (columnId: string) => void;
   onOpen: (item: WorkItem) => void;
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** The address that opens the item, for "Copy link". */
+  linkOf: (item: WorkItem) => string;
   /** While a card is dragged: where it may land in this column, or that it can't. */
   hint?: DropHint;
 };
 
 /** A board column, about four cards tall: drag its header to reorder columns; its cards load more as it's scrolled. */
-export default function BoardColumn({ column, items, columns, total, hasMore, loadingMore, onLoadMore, onOpen, onMoveTo, hint }: BoardColumnProps) {
+export default function BoardColumn({ column, items, columns, total, hasMore, loadingMore, onLoadMore, onOpen, onMoveTo, linkOf, hint }: BoardColumnProps) {
   const { setNodeRef: setDropRef } = useDroppable({ id: column.id });
   const isOver = useCardOver(column.id) && hint?.allowed !== false;
   const sortable = useSortable({ id: columnSortId(column.id), data: { type: 'column' } });
@@ -53,7 +55,7 @@ export default function BoardColumn({ column, items, columns, total, hasMore, lo
       ref={sortable.setNodeRef}
       style={{ transform: CSS.Translate.toString(sortable.transform), transition: sortable.transition }}
       aria-label={column.name}
-      className={cn('flex min-h-0 min-w-72 flex-1 basis-0 flex-col gap-2', sortable.isDragging && 'opacity-40')}
+      className={cn('flex min-h-0 w-72 shrink-0 flex-col gap-2', sortable.isDragging && 'opacity-40')}
     >
       <h2 {...sortable.attributes} {...sortable.listeners} className="flex items-center gap-2 rounded px-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-primary">
         <span aria-hidden className={cn('size-2 rounded-full', COLOR_CLASSES[color].dot)} />
@@ -71,7 +73,7 @@ export default function BoardColumn({ column, items, columns, total, hasMore, lo
           className={cn('flex max-h-176 min-h-24 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors', isOver && 'bg-fill-active ring-2 ring-primary', hint?.allowed === false && 'opacity-40')}
         >
           {items.map((item) => (
-            <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} />
+            <WorkItemCard key={item.id} item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} linkOf={linkOf} />
           ))}
           {hasMore && (
             <li ref={sentinel} className="flex list-none justify-center py-2" aria-live="polite">

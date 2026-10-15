@@ -18,7 +18,7 @@ import { SortableContext, arrayMove, horizontalListSortingStrategy, sortableKeyb
 import { ArrowsClockwise, DotsThree, Kanban, Plus, SlidersHorizontal } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
@@ -40,10 +40,12 @@ import ItemDetailsDialog from './components/item-details-dialog';
 import SwimlaneBoard from './components/swimlane-board';
 import { CardBody } from './components/work-item-card';
 import WorkItemDialog from './components/work-item-dialog';
-import { syncTargetOf, useBoardItems, useBoardSync, useDropHints, useBoards, useColumnChoice, useColumnSettings, useMoveWorkItem, usePriorities, useSprints, useSwimlaneItems, useTrackers } from './hooks';
+import { syncTargetOf, useBoardItems, useBoardSync, useDropHints, useBoards, useColumnChoice, useColumnSettings, useMoveWorkItem, usePriorities, useSprints, useSwimlaneItems, useTrackers, useWorkItemByKey } from './hooks';
 import {
   BLOCKED_MESSAGE,
+  BOARD_PARAM,
   COLOR_CLASSES,
+  ITEM_PARAM,
   NO_LANE,
   columnColor,
   columnFromSortId,
@@ -51,6 +53,7 @@ import {
   dropTarget,
   groupByColumn,
   hiddenByDefault,
+  itemLink,
   laneOf,
   moveItem,
   orderLanes,
@@ -60,7 +63,6 @@ import {
 import { GROUP_BY, GROUP_BY_OPTIONS, useBoardViews, viewOf, type GroupBy } from './store';
 import { BOARD_KIND, COLUMN_PROMPT, CURRENT_SPRINT, NATIVE_SOURCE, SPRINT_STATE, type Board as BoardType, type Column, type Sprint, type WorkItem } from './types';
 
-const BOARD_PARAM = 'board';
 const VIEW_PARAM = 'view';
 const SPRINT_PARAM = 'sprint';
 const VIEW = { board: 'board', backlog: 'backlog' } as const;
@@ -92,6 +94,7 @@ export default function Board() {
   const scrum = board?.kind === BOARD_KIND.scrum;
   const view: View = searchParams.get(VIEW_PARAM) === VIEW.backlog ? VIEW.backlog : VIEW.board;
   const sprint = searchParams.get(SPRINT_PARAM) ?? CURRENT_SPRINT;
+  const itemKey = searchParams.get(ITEM_PARAM);
 
   // this person's view of the board: hidden columns and grouping, kept in the browser
   const userId = useSession((state) => state.user?.id ?? '');
@@ -116,14 +119,33 @@ export default function Board() {
   const [dragging, setDragging] = useState<{ card?: WorkItem; column?: Column } | null>(null);
   const hintFor = useDropHints(board, dragging?.card, shownColumns);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // a fresh key per open, so the dialog's form starts from the item every time
-  const [dialog, setDialog] = useState<{ key: number; item?: WorkItem } | null>(null);
+  // a fresh key per open, so the new-item form starts empty every time
+  const [creating, setCreating] = useState<number | null>(null);
+  // the item last opened from a card, kept so its dialog stays put if the card leaves the loaded pages
+  const [opened, setOpened] = useState<WorkItem | null>(null);
+  // whether the open item's address was pushed here, so closing it goes back instead of adding history
+  const pushed = useRef(false);
+  // closed, but still in the address until going back lands
+  const closedKey = useRef<string | null>(null);
 
   // the cards are memoised, so their handlers must stay the same between renders; they read the latest board here
   const latest = useRef<{ boardId: string; visible: WorkItem[]; columns: Column[]; grouped: Record<string, WorkItem[]> }>({
     boardId: '', visible: [], columns: [], grouped: {},
   });
-  const openDialog = useCallback((item?: WorkItem) => setDialog({ key: Date.now(), item }), []);
+  // a history entry per opened item, so Back closes it
+  const openItem = useCallback(
+    (item: WorkItem) => {
+      const params = new URLSearchParams(window.location.search);
+      params.set(BOARD_PARAM, latest.current.boardId);
+      params.set(ITEM_PARAM, item.key);
+      setOpened(item);
+      pushed.current = true;
+      closedKey.current = null;
+      router.push(`${pathname}?${params}`, { scroll: false });
+    },
+    [router, pathname],
+  );
+  const linkOf = useCallback((item: WorkItem) => itemLink(`${window.location.origin}${pathname}`, latest.current.boardId, item.key), [pathname]);
   // computed on the loaded cards, so the neighbours sent are ones the user actually dropped between
   const moveTo = useCallback(
     (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => {
@@ -140,12 +162,32 @@ export default function Board() {
   );
 
   const loading = lanesBy ? swimlanes.isPending : items.isPending;
+  // the item in the address: the one just opened, else a loaded card, else looked up (a link to one not loaded)
+  const activeKey = itemKey !== closedKey.current ? itemKey : null;
+  const loadedItem = activeKey ? (opened?.key === activeKey ? opened : (lanesBy ? swimlanes.items : items.items).find((candidate) => candidate.key === activeKey)) : undefined;
+  const linked = useWorkItemByKey(board?.id, activeKey && !loadedItem && !loading ? activeKey : null);
+  const shownItem = activeKey ? (loadedItem ?? linked.data ?? null) : null;
+  const missing = Boolean(activeKey && !loadedItem && (linked.data === null || linked.isError));
+  useEffect(() => {
+    // Back (or Forward) moved off the pushed entry
+    if (itemKey) return;
+    pushed.current = false;
+    closedKey.current = null;
+  }, [itemKey]);
+  useEffect(() => {
+    if (!missing) return;
+    toast.error(`${activeKey} isn't on this board.`);
+    const params = new URLSearchParams(window.location.search);
+    params.delete(ITEM_PARAM);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  }, [missing, activeKey, router, pathname]);
+
   // a tracker board that has never synced has nothing to show until its first sync lands
   const firstSync = Boolean(syncTarget && !syncTarget.last_synced_at && boardSync.syncing);
   if (boards.isPending || (board && (loading || sprints.isPending)) || trackers.isPending || firstSync) {
     return (
       <main className="flex h-full gap-4 p-6">
-        {[0, 1, 2].map((index) => <Skeleton key={index} className="h-full flex-1" />)}
+        {[0, 1, 2].map((index) => <Skeleton key={index} className="h-full w-72 shrink-0" />)}
       </main>
     );
   }
@@ -181,10 +223,17 @@ export default function Board() {
       if (value === null) params.delete(key);
       else params.set(key, value);
     }
-    router.replace(`${pathname}?${params}`);
+    router.replace(`${pathname}?${params}`, { scroll: false });
   };
-  // a different board has different sprints
-  const selectBoard = (id: string) => setParams({ [BOARD_PARAM]: id, [SPRINT_PARAM]: null });
+  // a different board has different sprints and items
+  const selectBoard = (id: string) => setParams({ [BOARD_PARAM]: id, [SPRINT_PARAM]: null, [ITEM_PARAM]: null });
+  const closeItem = () => {
+    closedKey.current = itemKey;
+    setOpened(null);
+    if (!pushed.current) return setParams({ [ITEM_PARAM]: null });
+    pushed.current = false;
+    router.back();
+  };
 
   const onDragStart = ({ active }: DragStartEvent) => {
     const columnId = columnFromSortId(String(active.id));
@@ -286,7 +335,7 @@ export default function Board() {
             </Tooltip>
           </span>
         )}
-        <Button variant="primary" onClick={() => openDialog()} disabled={!board.editable}>
+        <Button variant="primary" onClick={() => setCreating(Date.now())} disabled={!board.editable}>
           <Plus /> New item
         </Button>
         <DropdownMenu>
@@ -325,7 +374,7 @@ export default function Board() {
       )}
 
       {scrum && view === VIEW.backlog ? (
-        <BacklogView board={board} sprints={openSprints} isAdmin={isAdmin} trackerName={name} onOpen={openDialog} />
+        <BacklogView board={board} sprints={openSprints} isAdmin={isAdmin} trackerName={name} onOpen={openItem} />
       ) : scrum && !shownSprint ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <Kanban className="size-6 text-muted" aria-hidden />
@@ -350,8 +399,9 @@ export default function Board() {
           by={groupBy}
           cells={swimlanes.cells}
           onLoadMore={swimlanes.loadMore}
-          onOpen={openDialog}
+          onOpen={openItem}
           onMoveTo={moveTo}
+          linkOf={linkOf}
           onDrop={onLaneDrop}
           board={board}
         />
@@ -369,8 +419,9 @@ export default function Board() {
                   hasMore={items.columns[column.id]?.hasMore ?? false}
                   loadingMore={items.columns[column.id]?.loadingMore ?? false}
                   onLoadMore={items.loadMore}
-                  onOpen={openDialog}
+                  onOpen={openItem}
                   onMoveTo={moveTo}
+                  linkOf={linkOf}
                   hint={hintFor(column)}
                 />
               ))}
@@ -385,6 +436,7 @@ export default function Board() {
                 color={columnColor(shownColumns.find((column) => column.id === dragging.card?.column_id) ?? shownColumns[0])}
                 onOpen={() => {}}
                 onMoveTo={() => {}}
+                linkOf={() => ''}
               />
             )}
             {dragging?.column && (
@@ -406,22 +458,22 @@ export default function Board() {
         onGroupByChange={(value) => setGroupBy(viewKey, value)}
         canEditColumns={isAdmin && board.source === NATIVE_SOURCE}
       />
-      {dialog?.item ? (
+      {shownItem ? (
         <ItemDetailsDialog
-          key={dialog.key}
+          key={shownItem.id}
           open
-          onOpenChange={(open) => !open && setDialog(null)}
-          item={dialog.item}
+          onOpenChange={(open) => !open && closeItem()}
+          item={shownItem}
           board={board}
           sprints={openSprints}
           trackerName={name}
           onMove={moveTo}
         />
-      ) : dialog ? (
+      ) : creating ? (
         <WorkItemDialog
-          key={dialog.key}
+          key={creating}
           open
-          onOpenChange={(open) => !open && setDialog(null)}
+          onOpenChange={(open) => !open && setCreating(null)}
           board={board}
           trackerName={name}
           sprintId={scrum && view === VIEW.board ? (shownSprint?.id ?? null) : null}

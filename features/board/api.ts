@@ -1,4 +1,5 @@
 import { api } from '@/shared/api/client';
+import { displayName } from '@/shared/session/lib';
 import { type AllowedMoves, BOARD_KIND, type Board, type Column, type ColumnColor, type CreateWorkItem, type MoveWorkItem, type Person, type Sprint, type SprintFields, type SyncTarget, type Tracker, type WorkItem, type WorkItemChanges, type Comment } from './types';
 
 /** Cards a column shows first, then how many more load each time it's scrolled to the bottom. */
@@ -12,6 +13,12 @@ const DONE_WITHIN_DAYS = 14;
 const BACKLOG_LIMIT = 500;
 
 export const getBoards = () => api.get<Board[]>('/boards');
+
+/** One item on a board by its key (a linked ticket that isn't loaded); `q` matches substrings, so the exact key is picked here. */
+export const getWorkItemByKey = async (boardId: string, key: string) => {
+  const items = await api.get<WorkItem[]>('/work-items', { params: { board_id: boardId, q: key, page_size: 100 } });
+  return items.find((item) => item.key === key) ?? null;
+};
 
 /**
  * One batch (1-based) of a board column, top first. A scrum board shows one sprint (`current` by default);
@@ -86,10 +93,10 @@ export const getTrackerAssignees = (provider: string, targetKey: string) =>
   api.get<Person[]>(`/connections/${provider}/targets/${targetKey}/assignees`);
 
 export const getMembers = async (workspaceId: string): Promise<Person[]> => {
-  const members = await api.get<{ user_id: string; github_login: string; name: string | null; avatar_url: string | null }[]>(
+  const members = await api.get<{ user_id: string; username: string | null; github_login: string | null; name: string | null; avatar_url: string | null }[]>(
     `/workspaces/${workspaceId}/members`,
   );
-  return members.map((m) => ({ id: m.user_id, name: m.name ?? m.github_login, avatar_url: m.avatar_url }));
+  return members.map((m) => ({ id: m.user_id, name: displayName(m), avatar_url: m.avatar_url }));
 };
 
 /** The types an item can be changed to; null when any (a tracker item only to those its tracker allows in place). */

@@ -3,18 +3,20 @@
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowSquareOut, DotsThree, Lock } from '@phosphor-icons/react/ssr';
-import { memo, useState } from 'react';
+import { Copy, DotsThree, LinkSimple, Lock } from '@phosphor-icons/react/ssr';
+import { memo, useState, type ComponentType, type ReactNode } from 'react';
+import { toast } from 'sonner';
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuSeparator, ContextMenuTrigger } from '@/shared/components/context-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
 import Tag from '@/shared/components/tag';
 import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
 import TypeIcon, { typeOf } from '@/shared/work-item-types/type-icon';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
-import { COLOR_CLASSES } from '../lib';
-import { COLUMN_COLOR, NATIVE_SOURCE, type Column, type ColumnColor, type WorkItem } from '../types';
+import { COLOR_CLASSES, columnColor } from '../lib';
+import { COLUMN_COLOR, type Column, type ColumnColor, type WorkItem } from '../types';
 import { useItemMoves, usePrefetchMoves } from '../hooks';
 import PriorityIcon from './priority-icon';
 
@@ -26,9 +28,11 @@ type WorkItemCardProps = {
   onOpen: (item: WorkItem) => void;
   /** Keyboard- and screen-reader-friendly alternative to dragging. */
   onMoveTo: (item: WorkItem, columnId: string) => void;
+  /** The address that opens the item, for "Copy link". */
+  linkOf: (item: WorkItem) => string;
 };
 
-export default function WorkItemCard({ item, columns, color, onOpen, onMoveTo }: WorkItemCardProps) {
+export default function WorkItemCard({ item, columns, color, onOpen, onMoveTo, linkOf }: WorkItemCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: !item.editable });
   const prefetchMoves = usePrefetchMoves();
 
@@ -41,100 +45,122 @@ export default function WorkItemCard({ item, columns, color, onOpen, onMoveTo }:
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('list-none', isDragging && 'opacity-40')}
     >
-      <CardBody item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} attributes={attributes} listeners={listeners} />
+      <CardBody item={item} columns={columns} color={color} onOpen={onOpen} onMoveTo={onMoveTo} linkOf={linkOf} attributes={attributes} listeners={listeners} />
     </li>
   );
 }
 
 type CardBodyProps = WorkItemCardProps & { attributes?: DraggableAttributes; listeners?: DraggableSyntheticListeners };
 
+/** The parts of either menu, so the "…" menu and the right-click menu share one list of actions. */
+type MenuParts = {
+  Item: ComponentType<{ disabled?: boolean; onSelect?: () => void; children: ReactNode }>;
+  Label: ComponentType<{ children: ReactNode }>;
+  Separator: ComponentType;
+};
+const DROPDOWN: MenuParts = { Item: DropdownMenuItem, Label: DropdownMenuLabel, Separator: DropdownMenuSeparator };
+const CONTEXT: MenuParts = { Item: ContextMenuItem, Label: ContextMenuLabel, Separator: ContextMenuSeparator };
+
+function copy(text: string, what: string) {
+  navigator.clipboard.writeText(text).then(
+    () => toast.success(`${what} copied.`),
+    () => toast.error(`Could not copy the ${what.toLowerCase()}.`),
+  );
+}
+
 /**
  * The card itself, also rendered in the drag overlay. Memoised: every sortable re-renders on each
  * pointer move of a drag, and with hundreds of cards that would stall the drag itself.
  */
-export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_COLOR.gray, onOpen, onMoveTo, attributes, listeners }: CardBodyProps) {
-  const tracker = item.source !== NATIVE_SOURCE;
+export const CardBody = memo(function CardBody({ item, columns, color = COLUMN_COLOR.gray, onOpen, onMoveTo, linkOf, attributes, listeners }: CardBodyProps) {
   const type = typeOf(useWorkItemTypes().data, item.type_id);
   const [menuOpen, setMenuOpen] = useState(false);
   const moves = useItemMoves(item, menuOpen);
 
+  const actions = ({ Item, Label, Separator }: MenuParts) => (
+    <>
+      {item.editable && (
+        <>
+          <Label>Move to</Label>
+          {columns.filter((column) => column.id !== item.column_id).map((column) => {
+            // until the moves are read, every column is offered; the server checks the move either way
+            const blocked = moves.data && moves.data.basis !== 'open' && !moves.data.targets.some((target) => target.column_id === column.id);
+            return (
+              <Item key={column.id} disabled={Boolean(blocked)} onSelect={() => onMoveTo(item, column.id)}>
+                <Tag className={COLOR_CLASSES[columnColor(column)].tag}>{column.name}</Tag>
+              </Item>
+            );
+          })}
+          <Separator />
+        </>
+      )}
+      <Item onSelect={() => copy(linkOf(item), 'Link')}>
+        <LinkSimple /> Copy link
+      </Item>
+      <Item onSelect={() => copy(item.key, 'Key')}>
+        <Copy /> Copy key
+      </Item>
+    </>
+  );
+
   return (
     // the whole card opens it; a drag only starts after a few pixels of travel, so a click stays a click
-    <article
-      {...attributes}
-      {...listeners}
-      onClick={() => onOpen(item)}
-      className={cn('group flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-sm shadow-chrome', COLOR_CLASSES[color].edge)}
-    >
-      <div className="flex items-center gap-1.5 text-xs text-muted">
-        <span className="font-medium">{item.key}</span>
-        {!item.editable && (
-          <Tooltip content="Read-only: reconnect the tracker in Settings → Integrations to edit it here">
-            <Lock className="size-3.5" aria-label="Read-only" />
-          </Tooltip>
-        )}
-        <span className="flex-1" />
-        {tracker && item.external_url && (
-          <a
-            href={item.external_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Open ${item.key} in ${item.source}`}
-            className="rounded p-0.5 hover:text-foreground"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <ArrowSquareOut className="size-3.5" />
-          </a>
-        )}
-        {item.editable && (
-          <DropdownMenu onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="tertiary" size="sm" iconOnly aria-label={`Actions for ${item.key}`} className="size-6" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
-                <DotsThree />
-              </Button>
-            </DropdownMenuTrigger>
-            {/* React events bubble through portals: a pick here mustn't also open the card */}
-            <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-              <DropdownMenuLabel>Move to</DropdownMenuLabel>
-              {columns.filter((column) => column.id !== item.column_id).map((column) => {
-                // until the moves are read, every column is offered; the server checks the move either way
-                const blocked = moves.data && moves.data.basis !== 'open' && !moves.data.targets.some((target) => target.column_id === column.id);
-                return (
-                  <DropdownMenuItem key={column.id} disabled={Boolean(blocked)} onSelect={() => onMoveTo(item, column.id)}>
-                    {column.name}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
-      {/* a real button for keyboards: Enter on it clicks, and the click reaches the card */}
-      <button type="button" className="text-left font-medium hover:underline focus-visible:underline">
-        {item.title}
-      </button>
-      {(type || item.status || item.priority || item.assignee?.name) && (
-        <div className="flex items-center gap-2">
-          {type && (
-            <Tooltip content={type.name}>
-              <span className="inline-flex"><TypeIcon type={type} /></span>
-            </Tooltip>
+    <ContextMenu onOpenChange={setMenuOpen}>
+      <ContextMenuTrigger asChild>
+        <article
+          {...attributes}
+          {...listeners}
+          onClick={() => onOpen(item)}
+          className={cn('group flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-sm shadow-chrome', COLOR_CLASSES[color].edge)}
+        >
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <span className="font-medium">{item.key}</span>
+            {!item.editable && (
+              <Tooltip content="Read-only: reconnect the tracker in Settings → Integrations to edit it here">
+                <Lock className="size-3.5" aria-label="Read-only" />
+              </Tooltip>
+            )}
+            <span className="flex-1" />
+            <DropdownMenu onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="tertiary" size="sm" iconOnly aria-label={`Actions for ${item.key}`} className="size-6" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+                  <DotsThree />
+                </Button>
+              </DropdownMenuTrigger>
+              {/* React events bubble through portals: a pick here mustn't also open the card */}
+              <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                {actions(DROPDOWN)}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {/* a real button for keyboards: Enter on it clicks, and the click reaches the card */}
+          <button type="button" className="text-left font-medium hover:underline focus-visible:underline">
+            {item.title}
+          </button>
+          {(type || item.status || item.priority || item.assignee?.name) && (
+            <div className="flex items-center gap-2">
+              {type && (
+                <Tooltip content={type.name}>
+                  <span className="inline-flex"><TypeIcon type={type} /></span>
+                </Tooltip>
+              )}
+              {item.status && <Tag>{item.status}</Tag>}
+              <span className="flex-1" />
+              {item.priority && (
+                <Tooltip content={`${item.priority} priority`}>
+                  <span className="inline-flex"><PriorityIcon priority={item.priority} /></span>
+                </Tooltip>
+              )}
+              {item.assignee?.name && (
+                <Tooltip content={item.assignee.name}>
+                  <Avatar name={item.assignee.name} size="sm" />
+                </Tooltip>
+              )}
+            </div>
           )}
-          {item.status && <Tag>{item.status}</Tag>}
-          <span className="flex-1" />
-          {item.priority && (
-            <Tooltip content={`${item.priority} priority`}>
-              <span className="inline-flex"><PriorityIcon priority={item.priority} /></span>
-            </Tooltip>
-          )}
-          {item.assignee?.name && (
-            <Tooltip content={item.assignee.name}>
-              <Avatar name={item.assignee.name} size="sm" />
-            </Tooltip>
-          )}
-        </div>
-      )}
-    </article>
+        </article>
+      </ContextMenuTrigger>
+      <ContextMenuContent onClick={(event) => event.stopPropagation()}>{actions(CONTEXT)}</ContextMenuContent>
+    </ContextMenu>
   );
 });

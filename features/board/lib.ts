@@ -85,17 +85,29 @@ export function columnColor(column: Column): ColumnColor {
   return column.status_category === STATUS_CATEGORY.inProgress ? COLUMN_COLOR.blue : COLUMN_COLOR.gray;
 }
 
-/** Full class names per color, so Tailwind sees them: the card's raised bottom edge and the column's dot. */
-export const COLOR_CLASSES: Record<ColumnColor, { edge: string; dot: string }> = {
-  gray: { edge: 'shadow-border-strong', dot: 'bg-border-strong' },
-  blue: { edge: 'shadow-accent-blue', dot: 'bg-accent-blue' },
-  green: { edge: 'shadow-success', dot: 'bg-success' },
-  red: { edge: 'shadow-danger', dot: 'bg-danger' },
-  amber: { edge: 'shadow-accent-amber', dot: 'bg-accent-amber' },
-  purple: { edge: 'shadow-accent-purple', dot: 'bg-accent-purple' },
-  orange: { edge: 'shadow-accent-orange', dot: 'bg-accent-orange' },
-  slate: { edge: 'shadow-accent-slate', dot: 'bg-accent-slate' },
+/**
+ * Full class names per color, so Tailwind sees them: the card's raised bottom edge, the column's dot, and a
+ * status pill (tinted like `Tag`; amber and orange text is too faint on white, so those use darker text).
+ */
+export const COLOR_CLASSES: Record<ColumnColor, { edge: string; dot: string; tag: string }> = {
+  gray: { edge: 'shadow-border-strong', dot: 'bg-border-strong', tag: 'border-border-strong bg-fill-hover text-foreground' },
+  blue: { edge: 'shadow-accent-blue', dot: 'bg-accent-blue', tag: 'border-accent-blue/30 bg-accent-blue/10 text-accent-blue' },
+  green: { edge: 'shadow-success', dot: 'bg-success', tag: 'border-success/30 bg-success/10 text-success' },
+  red: { edge: 'shadow-danger', dot: 'bg-danger', tag: 'border-danger/30 bg-danger/10 text-danger' },
+  amber: { edge: 'shadow-accent-amber', dot: 'bg-accent-amber', tag: 'border-accent-amber/50 bg-accent-amber/10 text-warning-strong' },
+  purple: { edge: 'shadow-accent-purple', dot: 'bg-accent-purple', tag: 'border-accent-purple/30 bg-accent-purple/10 text-accent-purple' },
+  orange: { edge: 'shadow-accent-orange', dot: 'bg-accent-orange', tag: 'border-accent-orange/30 bg-accent-orange/10 text-foreground' },
+  slate: { edge: 'shadow-accent-slate', dot: 'bg-accent-slate', tag: 'border-accent-slate/30 bg-accent-slate/10 text-accent-slate' },
 };
+
+/** The board's address params: which board is shown, and which item is open. */
+export const BOARD_PARAM = 'board';
+export const ITEM_PARAM = 'item';
+
+/** The address that opens an item on its board, e.g. `https://app/board?board=b1&item=KAN-43`. */
+export function itemLink(base: string, boardId: string, key: string): string {
+  return `${base}?${new URLSearchParams({ [BOARD_PARAM]: boardId, [ITEM_PARAM]: key })}`;
+}
 
 const PRIORITY_NAMES: [PriorityLevel, string[]][] = [
   [PRIORITY_LEVEL.highest, ['highest', 'blocker', 'critical', 'urgent']],

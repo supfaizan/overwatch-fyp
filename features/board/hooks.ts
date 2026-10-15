@@ -19,6 +19,7 @@ const keys = {
   boards: [...root, 'boards'] as const,
   // under the shared root, so anything invalidating work items refreshes every board's
   items: (boardId: string) => [...queryKeys.workItems, boardId] as const,
+  byKey: (boardId: string, key: string) => [...queryKeys.workItems, boardId, 'key', key] as const,
   planned: (boardId: string, sprintId: string | null) => [...queryKeys.workItems, boardId, 'planned', sprintId ?? 'backlog'] as const,
   sprints: (boardId: string) => [...root, 'sprints', boardId] as const,
   priorities: (boardId: string) => [...root, 'priorities', boardId] as const,
@@ -57,6 +58,16 @@ function usePageCounts(scope: string) {
  * so the board still sees every loaded card in one place (for drops and swimlanes), and scrolling a
  * column only asks for its next page.
  */
+/** A linked item that isn't among the loaded cards; off until there's a key to look up. */
+export function useWorkItemByKey(boardId: string | undefined, key: string | null) {
+  return useQuery({
+    queryKey: keys.byKey(boardId ?? '', key ?? ''),
+    queryFn: () => boardApi.getWorkItemByKey(boardId ?? '', key ?? ''),
+    enabled: Boolean(boardId && key),
+    retry: false,
+  });
+}
+
 export function useBoardItems(board: Board | undefined, columns: Column[], sprint: string) {
   // a different board, kind or sprint starts again from the first page
   const { counts, more } = usePageCounts(`${board?.id}|${board?.kind}|${sprint}`);

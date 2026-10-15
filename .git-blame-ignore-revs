@@ -1,3 +1,5 @@
 # Formatting-only commits, skipped by git blame (git config blame.ignoreRevsFile .git-blame-ignore-revs)
 # style: format with dprint and add braces to every block
 8c347cf95b61bf6525acee9307a7b7ccdf935484
+# style: give every arrow function a braced body
+1c5654c69ea96ef96cef2c542ec17bd7d4b327d2

@@ -4,7 +4,11 @@ import { SESSION_HINT_COOKIE } from './constants';
 
 export type User = {
   id: string;
-  github_login: string;
+  /** null only until an account from before usernames chooses one */
+  username: string | null;
+  email: string | null;
+  /** null until GitHub is connected */
+  github_login: string | null;
   name: string | null;
   avatar_url: string | null;
 };

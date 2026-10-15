@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/dropdown-menu';
+import { displayName, handle } from '@/shared/session/lib';
 import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
 
@@ -19,7 +20,7 @@ export default function UserMenu() {
   const router = useRouter();
   if (!user) return null;
 
-  const name = user.name ?? user.github_login;
+  const name = displayName(user);
   const leave = (everywhere: boolean) => () => {
     void signOut({ everywhere }).finally(() => router.replace('/sign-in'));
   };
@@ -32,7 +33,7 @@ export default function UserMenu() {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="normal-case">
           <span className="block text-sm text-foreground">{name}</span>
-          <span className="block font-normal">@{user.github_login}</span>
+          <span className="block font-normal">{handle(user)}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={leave(false)}>

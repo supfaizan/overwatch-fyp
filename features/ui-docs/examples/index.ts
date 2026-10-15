@@ -11,6 +11,7 @@ import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
 import * as githubMark from './github-mark';
 import * as input from './input';
+import * as inputOtp from './input-otp';
 import * as kbd from './kbd';
 import * as markdown from './markdown';
 import * as repoPicker from './repo-picker';
@@ -40,6 +41,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   'dropdown-menu': dropdownMenu,
   'github-mark': githubMark,
   input,
+  'input-otp': inputOtp,
   kbd,
   markdown,
   'repo-picker': repoPicker,

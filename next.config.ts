@@ -7,9 +7,24 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  // pages may only frame the players of sites docs can embed
   async headers() {
-    return [{ source: "/:path*", headers: [{ key: "Content-Security-Policy", value: `frame-src 'self' ${EMBED_ORIGINS.join(" ")}` }] }];
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // pages may only frame the players of sites docs can embed, and nobody may frame us (clickjacking)
+          {
+            key: "Content-Security-Policy",
+            value: `frame-src 'self' ${EMBED_ORIGINS.join(" ")}; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'`,
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+      // an invite page's address may still carry its token: never send it on as a referrer
+      { source: "/invite/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: "/invite", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+    ];
   },
 };
 

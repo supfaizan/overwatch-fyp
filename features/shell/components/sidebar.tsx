@@ -9,6 +9,7 @@ import Button from '@/shared/components/button';
 import Kbd from '@/shared/components/kbd';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
+import { displayName, handle } from '@/shared/session/lib';
 import { useSession } from '@/shared/session/store';
 import { isActive } from '../lib';
 import { PAGES, SETTINGS_ICON } from '../nav';
@@ -29,7 +30,7 @@ type SidebarProps = {
 export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, onCreateWorkspace, shortcut }: SidebarProps) {
   const pathname = usePathname();
   const user = useSession((state) => state.user);
-  const name = user?.name ?? user?.github_login ?? '';
+  const name = user ? displayName(user) : '';
   // collapsed items are squares the size of the toggle, so every icon sits on the same line
   const item = cn(
     'flex h-8 shrink-0 items-center gap-2 rounded-md text-sm transition-colors focus-visible:outline-2 focus-visible:outline-primary [&>svg]:size-4 [&>svg]:shrink-0',
@@ -84,7 +85,7 @@ export default function Sidebar({ collapsed, onToggle, onSearch, onAddRepo, onCr
             <Avatar src={user?.avatar_url} name={name} size="sm" />
             <span className={cn('flex min-w-0 flex-col leading-tight', collapsed && 'sr-only')}>
               <span className="truncate font-medium text-foreground">{name}</span>
-              <span className="truncate text-xs text-muted">@{user?.github_login}</span>
+              <span className="truncate text-xs text-muted">{user && handle(user)}</span>
             </span>
           </NavLink>
         </Hint>

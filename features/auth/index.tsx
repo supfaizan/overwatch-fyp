@@ -1,3 +1,9 @@
 export { default as AuthComplete } from './components/auth-complete';
+export { default as ChooseUsername } from './components/choose-username';
+export { default as ForgotPassword } from './components/forgot-password';
+export { default as InviteSignUp } from './components/invite-sign-up';
+export { default as ResetPassword } from './components/reset-password';
 export { default as SignIn } from './components/sign-in';
+export { default as SignUp } from './components/sign-up';
 export { default as UserMenu } from './components/user-menu';
+export { default as VerifyEmail } from './components/verify-email';

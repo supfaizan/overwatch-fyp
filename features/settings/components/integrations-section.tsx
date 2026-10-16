@@ -7,20 +7,28 @@ import ConfirmDialog from '@/shared/components/confirm-dialog';
 import GithubMark from '@/shared/components/github-mark';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
-import StatusTag from '@/shared/components/status-tag';
-import Tag from '@/shared/components/tag';
+import Tooltip from '@/shared/components/tooltip';
 import {
   CONNECTION_STATUS,
   CONNECTOR_CATEGORY,
   type ConnectorCategory,
+  PROVIDER,
 } from '@/shared/connections/constants';
+import { INTEGRATION_LOGOS } from '@/shared/lib/integrations';
 import ConnectGithubButton, { useGithubLinkResult } from '@/shared/repos/connect-github-button';
 import { useInstallations } from '@/shared/repos/hooks';
 import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
-import { ArrowSquareOut, BookOpen, Kanban } from '@phosphor-icons/react/ssr';
+import {
+  ArrowsClockwise,
+  ArrowSquareOut,
+  BookOpen,
+  Kanban,
+  Plugs,
+} from '@phosphor-icons/react/ssr';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -35,6 +43,7 @@ import {
 } from '../hooks';
 import type { Connection, Target } from '../types';
 import { SettingsSection } from './settings-layout';
+import { ConnectionStatusIcon, SyncStatusIcon } from './status-icon';
 
 // what a tracker's OAuth callback reports, e.g. ?jira=connected
 const OUTCOMES: Record<string, () => void> = {
@@ -97,30 +106,52 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
   );
 }
 
+// tracker logos, by provider; anything else falls back to its category's icon
+const PROVIDER_LOGOS: Record<string, string> = {
+  [PROVIDER.jira]: INTEGRATION_LOGOS.jira,
+  [PROVIDER.confluence]: INTEGRATION_LOGOS.confluence,
+};
+const LOGO_SIZE = 24;
+
+/** One integration: logo, name and state up top with its actions; what it syncs listed underneath. */
 function IntegrationCard(
-  { icon, category, name, state, children }: {
-    icon: ReactNode;
-    category: string;
+  { logo, name, detail, status, actions, children }: {
+    logo: ReactNode;
     name: string;
-    state: ReactNode;
-    children: ReactNode;
+    /** Under the name, e.g. the category and the connected site. */
+    detail: string;
+    status: ReactNode;
+    actions?: ReactNode;
+    children?: ReactNode;
   },
 ) {
   return (
-    <Card className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-md border border-border [&_svg]:size-4">
-          {icon}
+    <Card className="overflow-hidden p-0">
+      <div className="flex items-center gap-3 p-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface [&_svg]:size-5">
+          {logo}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted">{category}</p>
-          <p className="text-sm font-medium">{name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-medium">{name}</p>
+            {status}
+          </div>
+          <p className="truncate text-xs text-muted">{detail}</p>
         </div>
-        {state}
+        {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
       </div>
       {children}
     </Card>
   );
+}
+
+/** The things an integration covers, one per row, divided like a table. */
+function ItemList({ children }: { children: ReactNode }) {
+  return <ul className="divide-y divide-border border-t border-border text-sm">{children}</ul>;
+}
+
+function Item({ children }: { children: ReactNode }) {
+  return <li className="flex min-h-11 items-center justify-between gap-3 px-4 py-2">{children}</li>;
 }
 
 function SourceControl({ authorized, needsReauth }: { authorized: boolean; needsReauth: boolean }) {
@@ -130,60 +161,58 @@ function SourceControl({ authorized, needsReauth }: { authorized: boolean; needs
     return Boolean(state.user?.github_login);
   });
   useGithubLinkResult();
+  const notConnected = !authorized && !hasGithub;
+  const expired = !notConnected && (needsReauth || !authorized);
 
   return (
     <IntegrationCard
-      icon={<GithubMark />}
-      category="Source control"
+      logo={<GithubMark />}
       name="GitHub"
-      state={!authorized && !hasGithub
-        ? <Tag>Not connected</Tag>
-        : needsReauth || !authorized
-        ? <Tag variant="warning">Needs reconnecting</Tag>
-        : <Tag variant="success">Connected</Tag>}
-    >
-      {!authorized && !hasGithub
-        ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted">Connect your GitHub account to add repositories.</p>
-            <ConnectGithubButton returnTo="settings" />
-          </div>
-        )
-        : (
-          (needsReauth || !authorized) && (
-            <Banner type="warning" action={<ConnectGithubButton returnTo="settings" reconnect />}>
-              Your GitHub authorization expired or was revoked.
-            </Banner>
-          )
+      detail="Source control"
+      status={
+        <ConnectionStatusIcon
+          status={notConnected
+            ? CONNECTION_STATUS.disconnected
+            : expired
+            ? CONNECTION_STATUS.needsReauth
+            : CONNECTION_STATUS.active}
+        />
+      }
+      actions={notConnected
+        ? <ConnectGithubButton returnTo="settings" />
+        : installations.data && (
+          <Button asChild size="sm" variant="tertiary">
+            <a href={installations.data.install_url} target="_blank" rel="noopener noreferrer">
+              Manage on GitHub <ArrowSquareOut />
+            </a>
+          </Button>
         )}
+    >
+      {expired && (
+        <div className="border-t border-border p-4">
+          <Banner type="warning" action={<ConnectGithubButton returnTo="settings" reconnect />}>
+            Your GitHub authorization expired or was revoked.
+          </Banner>
+        </div>
+      )}
       {accounts.length > 0 && (
-        <ul className="flex flex-col gap-1 text-sm">
+        <ItemList>
           {accounts.map((account) => {
             return (
-              <li key={account.id} className="flex items-center justify-between gap-2">
-                <span>
-                  {account.account_login}{' '}
-                  <span className="text-muted">({account.account_type.toLowerCase()})</span>
+              <Item key={account.id}>
+                <span className="min-w-0 truncate">
+                  <span className="font-medium">{account.account_login}</span>
+                  <span className="text-muted">{' · '}{account.account_type.toLowerCase()}</span>
                 </span>
-                <span className="text-xs text-muted">
+                <span className="shrink-0 text-xs text-muted">
                   {account.repository_selection === 'all'
                     ? 'All repositories'
                     : 'Selected repositories'}
                 </span>
-              </li>
+              </Item>
             );
           })}
-        </ul>
-      )}
-      {installations.data && (
-        <a
-          href={installations.data.install_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 self-start text-sm text-primary hover:underline"
-        >
-          Manage the GitHub App <ArrowSquareOut className="size-3.5" />
-        </a>
+        </ItemList>
       )}
     </IntegrationCard>
   );
@@ -264,46 +293,99 @@ function ConnectorCard({ connection }: { connection: Connection }) {
   const connected = status === CONNECTION_STATUS.active;
   // only admins connect, sync and disconnect; members see the state
   const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
+  const logo = PROVIDER_LOGOS[provider];
 
   return (
     <IntegrationCard
-      icon={copy.icon}
-      category={copy.label}
+      logo={logo
+        ? (
+          <Image
+            src={logo}
+            alt=""
+            width={LOGO_SIZE}
+            height={LOGO_SIZE}
+            className="size-6 object-contain"
+          />
+        )
+        : copy.icon}
       name={name}
-      state={status === CONNECTION_STATUS.needsReauth
-        ? <Tag variant="warning">Needs reconnect</Tag>
-        : connected
-        ? <Tag variant="success">Connected</Tag>
-        : <Tag>Not connected</Tag>}
+      detail={[copy.label, external_account?.name].filter(Boolean).join(' · ')}
+      status={<ConnectionStatusIcon status={status} />}
+      actions={isAdmin && (connected
+        ? (
+          <>
+            {targets.length > 0 && (
+              <Tooltip content="Sync now">
+                <Button
+                  size="sm"
+                  variant="tertiary"
+                  iconOnly
+                  aria-label={`Sync ${name} now`}
+                  loading={sync.isPending}
+                  onClick={() => {
+                    return sync.mutate(provider);
+                  }}
+                >
+                  <ArrowsClockwise />
+                </Button>
+              </Tooltip>
+            )}
+            <ConfirmDialog
+              trigger={
+                <Tooltip content="Disconnect">
+                  <Button size="sm" variant="tertiary" iconOnly aria-label={`Disconnect ${name}`}>
+                    <Plugs />
+                  </Button>
+                </Tooltip>
+              }
+              title={`Disconnect ${name}?`}
+              description={copy.disconnect}
+              confirmLabel={`Disconnect ${name}`}
+              pending={disconnect.isPending}
+              onConfirm={(close) => {
+                return disconnect.mutate(provider, { onSuccess: close });
+              }}
+            />
+          </>
+        )
+        : (
+          <Button
+            size="sm"
+            variant="primary"
+            loading={connect.isPending}
+            onClick={() => {
+              return connect.mutate(provider);
+            }}
+          >
+            {status === CONNECTION_STATUS.needsReauth ? 'Reconnect' : 'Connect'}
+          </Button>
+        ))}
     >
       {isAdmin && connected && !can_write && (
-        <Banner
-          type="warning"
-          action={
-            <Button
-              size="sm"
-              loading={connect.isPending}
-              onClick={() => {
-                return connect.mutate(provider);
-              }}
-            >
-              Reconnect
-            </Button>
-          }
-        >
-          Reconnect {name} {copy.reconnect}.
-        </Banner>
+        <div className="border-t border-border p-4">
+          <Banner
+            type="warning"
+            action={
+              <Button
+                size="sm"
+                loading={connect.isPending}
+                onClick={() => {
+                  return connect.mutate(provider);
+                }}
+              >
+                Reconnect
+              </Button>
+            }
+          >
+            Reconnect {name} {copy.reconnect}.
+          </Banner>
+        </div>
       )}
-      {external_account?.name && (
-        <p className="text-sm text-muted">
-          Site <span className="text-foreground">{external_account.name}</span>
-        </p>
-      )}
-      {targets.length > 0 && (
-        <ul className="flex flex-col gap-1.5 text-sm">
+      {(targets.length > 0 || (isAdmin && connected)) && (
+        <ItemList>
           {targets.map((target) => {
             return (
-              <li key={target.key} className="flex items-center justify-between gap-2">
+              <Item key={target.key}>
                 <span className="min-w-0 truncate">
                   {category === CONNECTOR_CATEGORY.documents
                     ? <span className="font-medium">{target.name ?? target.key}</span>
@@ -317,63 +399,25 @@ function ConnectorCard({ connection }: { connection: Connection }) {
                     <span className="text-danger">{' · '}{target.sync_error}</span>
                   )}
                 </span>
-                <StatusTag status={target.sync_status} done="Synced" />
-              </li>
+                <SyncStatusIcon
+                  status={target.sync_status}
+                  lastSyncedAt={target.last_synced_at}
+                  error={target.sync_error}
+                />
+              </Item>
             );
           })}
-        </ul>
-      )}
-      {isAdmin && connected && (
-        <AddTarget
-          provider={provider}
-          noun={copy.target}
-          label={copy.targetLabel}
-          synced={targets.map((t) => {
-            return t.key;
-          })}
-        />
-      )}
-      {isAdmin && (
-        <div className="flex gap-2">
-          {connected
-            ? (
-              <>
-                {targets.length > 0 && (
-                  <Button
-                    size="sm"
-                    loading={sync.isPending}
-                    onClick={() => {
-                      return sync.mutate(provider);
-                    }}
-                  >
-                    Sync now
-                  </Button>
-                )}
-                <ConfirmDialog
-                  trigger={<Button size="sm">Disconnect</Button>}
-                  title={`Disconnect ${name}?`}
-                  description={copy.disconnect}
-                  confirmLabel={`Disconnect ${name}`}
-                  pending={disconnect.isPending}
-                  onConfirm={(close) => {
-                    return disconnect.mutate(provider, { onSuccess: close });
-                  }}
-                />
-              </>
-            )
-            : (
-              <Button
-                size="sm"
-                variant="primary"
-                loading={connect.isPending}
-                onClick={() => {
-                  return connect.mutate(provider);
-                }}
-              >
-                {status === CONNECTION_STATUS.needsReauth ? `Reconnect ${name}` : `Connect ${name}`}
-              </Button>
-            )}
-        </div>
+          {isAdmin && connected && (
+            <AddTarget
+              provider={provider}
+              noun={copy.target}
+              label={copy.targetLabel}
+              synced={targets.map((t) => {
+                return t.key;
+              })}
+            />
+          )}
+        </ItemList>
       )}
     </IntegrationCard>
   );
@@ -398,13 +442,17 @@ function AddTarget(
   });
 
   if (available.isPending) {
-    return <Skeleton className="h-9 w-full" />;
+    return (
+      <Item>
+        <Skeleton className="h-8 w-full" />
+      </Item>
+    );
   }
   if (options.length === 0) {
     return null;
   }
   return (
-    <div className="flex gap-2">
+    <li className="flex gap-2 bg-fill-hover px-4 py-3">
       <Select value={selected} onValueChange={setSelected}>
         <SelectTrigger
           className="flex-1"
@@ -436,6 +484,6 @@ function AddTarget(
       >
         Add
       </Button>
-    </div>
+    </li>
   );
 }

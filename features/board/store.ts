@@ -29,17 +29,38 @@ type ViewState = {
 /** Per-person board preferences, kept in this browser; storage that's unavailable just means defaults. */
 export const useBoardViews = create<ViewState>()(
   persist(
-    (set) => ({
-      views: {},
-      setHidden: (key, columnId, hidden) =>
-        set((state) => {
-          const view = state.views[key] ?? EMPTY;
-          return { views: { ...state.views, [key]: { ...view, hidden: { ...view.hidden, [columnId]: hidden } } } };
-        }),
-      setGroupBy: (key, groupBy) => set((state) => ({ views: { ...state.views, [key]: { ...(state.views[key] ?? EMPTY), groupBy } } })),
-    }),
-    { name: 'overwatch:board-views', storage: createJSONStorage(() => localStorage) },
+    (set) => {
+      return {
+        views: {},
+        setHidden: (key, columnId, hidden) => {
+          return set((state) => {
+            const view = state.views[key] ?? EMPTY;
+            return {
+              views: {
+                ...state.views,
+                [key]: { ...view, hidden: { ...view.hidden, [columnId]: hidden } },
+              },
+            };
+          });
+        },
+        setGroupBy: (key, groupBy) => {
+          return set((state) => {
+            return {
+              views: { ...state.views, [key]: { ...(state.views[key] ?? EMPTY), groupBy } },
+            };
+          });
+        },
+      };
+    },
+    {
+      name: 'overwatch:board-views',
+      storage: createJSONStorage(() => {
+        return localStorage;
+      }),
+    },
   ),
 );
 
-export const viewOf = (views: Record<string, BoardView>, key: string) => views[key] ?? EMPTY;
+export const viewOf = (views: Record<string, BoardView>, key: string) => {
+  return views[key] ?? EMPTY;
+};

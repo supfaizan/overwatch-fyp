@@ -1,9 +1,5 @@
 'use client';
 
-import { ReactFlowProvider } from '@xyflow/react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ChatCircleDots } from '@phosphor-icons/react/ssr';
-import { useEffect } from 'react';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Spinner from '@/shared/components/spinner';
@@ -11,6 +7,10 @@ import { useConnectedRepos } from '@/shared/repos/hooks';
 import { pickRepo, readLastRepo, saveLastRepo } from '@/shared/repos/lib';
 import { useSession } from '@/shared/session/store';
 import { useWorkspace } from '@/shared/workspaces/store';
+import { ChatCircleDots } from '@phosphor-icons/react/ssr';
+import { ReactFlowProvider } from '@xyflow/react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 import ChatPanel from './chat';
 import ChatDock from './chat/components/chat-dock';
 import DiagramCanvas from './components/diagram-canvas';
@@ -28,22 +28,33 @@ export default function Dashboard() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const requested = searchParams.get('repo');
-  const userId = useSession((state) => state.user?.id ?? '');
-  const workspaceId = useWorkspace((state) => state.id ?? '');
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const workspaceId = useWorkspace((state) => {
+    return state.id ?? '';
+  });
   const lastUsed = readLastRepo(userId, workspaceId);
   const repos = useConnectedRepos();
-  const repoName = repos.data ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name : undefined;
+  const repoName = repos.data
+    ? pickRepo(repos.data, requested, lastUsed)?.repo_full_name
+    : undefined;
   const chatOpen = searchParams.get(CHAT_PARAM) === CHAT_OPEN;
 
   const setChatOpen = (open: boolean) => {
     const params = new URLSearchParams(searchParams);
-    if (open) params.set(CHAT_PARAM, CHAT_OPEN);
-    else params.delete(CHAT_PARAM);
+    if (open) {
+      params.set(CHAT_PARAM, CHAT_OPEN);
+    } else {
+      params.delete(CHAT_PARAM);
+    }
     router.replace(`${pathname}?${params}`);
   };
 
   useEffect(() => {
-    if (!repos.data) return;
+    if (!repos.data) {
+      return;
+    }
     // nothing to show yet: onboarding knows which step comes next
     if (!repoName) {
       router.replace('/onboarding');
@@ -65,18 +76,40 @@ export default function Dashboard() {
 
   if (repos.isError) {
     return (
-      <Banner type="error" className="mx-auto mt-10 max-w-xl" action={<Button size="sm" onClick={() => repos.refetch()}>Retry</Button>}>
+      <Banner
+        type="error"
+        className="mx-auto mt-10 max-w-xl"
+        action={
+          <Button
+            size="sm"
+            onClick={() => {
+              return repos.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
         {repos.error.message}
       </Banner>
     );
   }
-  if (!repoName) return <Spinner className="mx-auto mt-10 size-6 text-muted" />;
+  if (!repoName) {
+    return <Spinner className="mx-auto mt-10 size-6 text-muted" />;
+  }
 
   return (
     <div className="flex h-full flex-col gap-2">
       <header className="flex items-center gap-2">
         <h1 className="flex-1 truncate font-mono text-sm font-medium">{repoName}</h1>
-        <Button size="sm" variant={chatOpen ? 'secondary' : 'primary'} aria-pressed={chatOpen} onClick={() => setChatOpen(!chatOpen)}>
+        <Button
+          size="sm"
+          variant={chatOpen ? 'secondary' : 'primary'}
+          aria-pressed={chatOpen}
+          onClick={() => {
+            return setChatOpen(!chatOpen);
+          }}
+        >
           <ChatCircleDots /> Ask
         </Button>
       </header>
@@ -88,7 +121,13 @@ export default function Dashboard() {
         </div>
         {chatOpen && (
           <ChatDock>
-            <ChatPanel key={repoName} repo={repoName} onClose={() => setChatOpen(false)} />
+            <ChatPanel
+              key={repoName}
+              repo={repoName}
+              onClose={() => {
+                return setChatOpen(false);
+              }}
+            />
           </ChatDock>
         )}
       </div>

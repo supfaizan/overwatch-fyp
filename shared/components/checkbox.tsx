@@ -1,14 +1,16 @@
+import { cn } from '@/shared/lib/cn';
 import { Check, Minus } from '@phosphor-icons/react/ssr';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { cn } from '@/shared/lib/cn';
 
 /**
  * Checkbox (Radix Checkbox). Accepts every Radix `Checkbox.Root` prop (`checked`, `onCheckedChange`...).
  * - `checked="indeterminate"` shows the partial state, e.g. "select all" when only some rows are selected.
  * - Wrap it in a `<label>` with the text so the label is clickable.
  */
-export default function Checkbox({ className, ...props }: ComponentProps<typeof CheckboxPrimitive.Root>) {
+export default function Checkbox(
+  { className, ...props }: ComponentProps<typeof CheckboxPrimitive.Root>,
+) {
   return (
     <CheckboxPrimitive.Root
       className={cn(

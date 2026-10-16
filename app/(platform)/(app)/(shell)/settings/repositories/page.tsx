@@ -1,5 +1,7 @@
 import { RepositoriesSection } from '@/features/settings';
 
-const page = () => <RepositoriesSection />;
+const page = () => {
+  return <RepositoriesSection />;
+};
 
 export default page;

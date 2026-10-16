@@ -1,5 +1,5 @@
-import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
+import type { ComponentProps, ReactNode } from 'react';
 
 // shared field chrome (also used by Select); focus/invalid/disabled are read off the inner control via has-*
 export const field =
@@ -31,7 +31,14 @@ type InputProps = Omit<ComponentProps<'input'>, 'size' | 'prefix'> & {
  */
 export function Input({ className, size = 'md', prefix, suffix, ...props }: InputProps) {
   return (
-    <div className={cn(field, fieldSizes[size], 'flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted', className)}>
+    <div
+      className={cn(
+        field,
+        fieldSizes[size],
+        'flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted',
+        className,
+      )}
+    >
       {prefix}
       <input
         className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted disabled:cursor-not-allowed"
@@ -49,7 +56,11 @@ export function Input({ className, size = 'md', prefix, suffix, ...props }: Inpu
 export function TextArea({ className, ...props }: ComponentProps<'textarea'>) {
   return (
     <textarea
-      className={cn(field, 'min-h-20 w-full px-2.5 py-2 text-sm outline-none placeholder:text-muted disabled:cursor-not-allowed', className)}
+      className={cn(
+        field,
+        'min-h-20 w-full px-2.5 py-2 text-sm outline-none placeholder:text-muted disabled:cursor-not-allowed',
+        className,
+      )}
       {...props}
     />
   );

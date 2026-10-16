@@ -1,6 +1,6 @@
+import { cn } from '@/shared/lib/cn';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
-import { cn } from '@/shared/lib/cn';
 
 const tagVariants = cva(
   'inline-flex h-5 items-center gap-1 rounded border px-1.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3',
@@ -28,6 +28,8 @@ const tagVariants = cva(
  * - Don't rely on color alone: the text itself should carry the meaning.
  * - Not clickable. For a filter chip or toggle, use a Button.
  */
-export default function Tag({ className, variant, ...props }: ComponentProps<'span'> & VariantProps<typeof tagVariants>) {
+export default function Tag(
+  { className, variant, ...props }: ComponentProps<'span'> & VariantProps<typeof tagVariants>,
+) {
   return <span className={cn(tagVariants({ variant }), className)} {...props} />;
 }

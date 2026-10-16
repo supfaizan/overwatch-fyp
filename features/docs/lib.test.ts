@@ -1,27 +1,60 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SAVE_STATUS, createAutosave, readingMinutes, timeAgo, withImageLinks, type SaveStatus } from './lib';
+import {
+  createAutosave,
+  readingMinutes,
+  SAVE_STATUS,
+  type SaveStatus,
+  sourceName,
+  syncLabel,
+  withImageLinks,
+} from './lib';
 
 const CONFLICT = new Error('conflict');
 
 function setup(save: () => Promise<void>) {
   const statuses: SaveStatus[] = [];
-  const autosave = createAutosave({ delay: 1000, retryDelay: 5000, save, isConflict: (e) => e === CONFLICT, onStatus: (s) => statuses.push(s) });
+  const autosave = createAutosave({
+    delay: 1000,
+    retryDelay: 5000,
+    save,
+    isConflict: (e) => {
+      return e === CONFLICT;
+    },
+    onStatus: (s) => {
+      return statuses.push(s);
+    },
+  });
   return { autosave, statuses };
 }
 
 /** A save that waits until `finish` is called. */
 function pendingSave() {
   const finishes: (() => void)[] = [];
-  const save = vi.fn(() => new Promise<void>((resolve) => finishes.push(resolve)));
-  return { save, finish: () => finishes.shift()?.() };
+  const save = vi.fn(() => {
+    return new Promise<void>((resolve) => {
+      return finishes.push(resolve);
+    });
+  });
+  return {
+    save,
+    finish: () => {
+      return finishes.shift()?.();
+    },
+  };
 }
 
 describe('createAutosave', () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => {
+    return vi.useFakeTimers();
+  });
+  afterEach(() => {
+    return vi.useRealTimers();
+  });
 
   it('saves once after typing pauses', async () => {
-    const save = vi.fn(() => Promise.resolve());
+    const save = vi.fn(() => {
+      return Promise.resolve();
+    });
     const { autosave, statuses } = setup(save);
 
     autosave.change();
@@ -86,7 +119,9 @@ describe('createAutosave', () => {
   });
 
   it('flushes at once and does nothing when there is nothing to save', async () => {
-    const save = vi.fn(() => Promise.resolve());
+    const save = vi.fn(() => {
+      return Promise.resolve();
+    });
     const { autosave } = setup(save);
 
     await autosave.flush();
@@ -105,18 +140,6 @@ describe('readingMinutes', () => {
   });
 });
 
-describe('timeAgo', () => {
-  const now = Date.parse('2026-10-14T12:00:00Z');
-  it('reads like Confluence', () => {
-    expect(timeAgo('2026-10-14T11:59:30Z', now)).toBe('just now');
-    expect(timeAgo('2026-10-14T11:55:00Z', now)).toBe('5 minutes ago');
-    expect(timeAgo('2026-10-14T09:00:00Z', now)).toBe('3 hours ago');
-    expect(timeAgo('2026-10-13T12:00:00Z', now)).toBe('yesterday');
-    expect(timeAgo('2026-09-30T12:00:00Z', now)).toBe('2 weeks ago');
-    expect(timeAgo('2026-08-01T12:00:00Z', now)).toBe('Aug 1, 2026');
-  });
-});
-
 describe('withImageLinks', () => {
   it('gives uploaded images fresh links and drops ones that never finished uploading', () => {
     const doc = {
@@ -126,13 +149,59 @@ describe('withImageLinks', () => {
         { type: 'image', attrs: { attachmentId: 'gone', src: 'https://old' } },
         { type: 'image', attrs: { attachmentId: null, src: 'blob:http://x/1' } },
         { type: 'image', attrs: { attachmentId: null, src: 'https://pasted.example/a.png' } },
-        { type: 'blockquote', content: [{ type: 'image', attrs: { attachmentId: 'a1', src: 'x' } }] },
+        {
+          type: 'blockquote',
+          content: [{ type: 'image', attrs: { attachmentId: 'a1', src: 'x' } }],
+        },
       ],
     };
 
     const out = withImageLinks(doc, { a1: 'https://fresh' });
 
-    expect(out.content?.map((n) => n.attrs?.src ?? n.type)).toEqual(['https://fresh', 'https://pasted.example/a.png', 'blockquote']);
+    expect(
+      out.content?.map((n) => {
+        return n.attrs?.src ?? n.type;
+      }),
+    ).toEqual([
+      'https://fresh',
+      'https://pasted.example/a.png',
+      'blockquote',
+    ]);
     expect(out.content?.[2].content?.[0].attrs?.src).toBe('https://fresh');
+  });
+});
+
+describe('syncLabel', () => {
+  const now = Date.parse('2026-10-14T12:00:00Z');
+  const mirrored = {
+    source: 'confluence',
+    push_state: 'none' as const,
+    push_error: null,
+    synced_at: '2026-10-14T11:55:00Z',
+  };
+
+  it('says how a mirrored page stands with its source', () => {
+    expect(syncLabel({ ...mirrored, source: 'native', push_state: null }, now)).toBeNull();
+    expect(syncLabel(mirrored, now)).toBe('Synced with Confluence 5 minutes ago');
+    expect(syncLabel({ ...mirrored, synced_at: null }, now)).toBe('From Confluence');
+    expect(syncLabel({ ...mirrored, push_state: 'pending' }, now)).toBe(
+      'Saving to Confluence shortly',
+    );
+    expect(
+      syncLabel({
+        ...mirrored,
+        push_state: 'pending',
+        push_error: "Confluence isn't connected for editing",
+      }, now),
+    ).toBe(
+      "Not saved to Confluence yet: Confluence isn't connected for editing",
+    );
+    expect(syncLabel({ ...mirrored, push_state: 'conflict' }, now)).toBe(
+      'Changed in Confluence too',
+    );
+  });
+
+  it('names sources it has no name for by their id', () => {
+    expect(sourceName('notion')).toBe('Notion');
   });
 });

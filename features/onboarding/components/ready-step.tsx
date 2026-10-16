@@ -1,15 +1,17 @@
 'use client';
 
-import { CheckCircle } from '@phosphor-icons/react/ssr';
-import Link from 'next/link';
 import Button from '@/shared/components/button';
 import { JOB_STATUS } from '@/shared/lib/job-status';
+import { CheckCircle } from '@phosphor-icons/react/ssr';
+import Link from 'next/link';
 import { useOnboardingStatus } from '../hooks';
 import StepCard from './step-card';
 
 export default function ReadyStep() {
   const status = useOnboardingStatus();
-  const indexed = status.data?.github.repos.filter((repo) => repo.parse_status === JOB_STATUS.done).length ?? 0;
+  const indexed = status.data?.github.repos.filter((repo) => {
+    return repo.parse_status === JOB_STATUS.done;
+  }).length ?? 0;
   const project = status.data?.jira.project;
 
   return (
@@ -29,7 +31,9 @@ export default function ReadyStep() {
         </li>
         <li className="flex items-center gap-2">
           <CheckCircle className={project ? 'size-4 text-success' : 'size-4 text-muted'} />
-          {project ? `Jira project ${project.key} connected` : 'Jira skipped. You can connect it later.'}
+          {project
+            ? `Jira project ${project.key} connected`
+            : 'Jira skipped. You can connect it later.'}
         </li>
       </ul>
     </StepCard>

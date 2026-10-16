@@ -1,7 +1,16 @@
 import type { EdgeType, ViewEdge } from '../types';
 
 /** Which relationship names a merged line, most specific first. */
-const PRECEDENCE: EdgeType[] = ['REQUESTS', 'HANDLES', 'CALLS', 'RENDERS', 'EXTENDS', 'IMPLEMENTS', 'IMPORTS', 'USES_PACKAGE'];
+const PRECEDENCE: EdgeType[] = [
+  'REQUESTS',
+  'HANDLES',
+  'CALLS',
+  'RENDERS',
+  'EXTENDS',
+  'IMPLEMENTS',
+  'IMPORTS',
+  'USES_PACKAGE',
+];
 
 const rank = (type: EdgeType) => {
   const index = PRECEDENCE.indexOf(type);
@@ -29,11 +38,22 @@ export function mergeByPair(edges: ViewEdge[]): MergedEdge[] {
       existing.weight += edge.weight;
       existing.collapsed ||= edge.collapsed;
     } else {
-      byPair.set(id, { id, source: edge.source, target: edge.target, types: [edge.type], weight: edge.weight, collapsed: edge.collapsed });
+      byPair.set(id, {
+        id,
+        source: edge.source,
+        target: edge.target,
+        types: [edge.type],
+        weight: edge.weight,
+        collapsed: edge.collapsed,
+      });
     }
   }
   const merged = [...byPair.values()];
-  for (const edge of merged) edge.types.sort((a, b) => rank(a) - rank(b));
+  for (const edge of merged) {
+    edge.types.sort((a, b) => {
+      return rank(a) - rank(b);
+    });
+  }
   return merged;
 }
 
@@ -43,24 +63,40 @@ export type Relation = 'outgoing' | 'incoming' | 'unrelated' | 'none';
 
 /** Where a line stands relative to the node in focus. */
 export function relationTo(edge: Linked, focusId: string | null): Relation {
-  if (!focusId) return 'none';
-  if (edge.source === focusId) return 'outgoing';
-  if (edge.target === focusId) return 'incoming';
+  if (!focusId) {
+    return 'none';
+  }
+  if (edge.source === focusId) {
+    return 'outgoing';
+  }
+  if (edge.target === focusId) {
+    return 'incoming';
+  }
   return 'unrelated';
 }
 
 /** The node in focus and everything one hop from it. */
 export function neighbourhood(edges: Linked[], focusId: string | null): Set<string> {
-  if (!focusId) return new Set();
+  if (!focusId) {
+    return new Set();
+  }
   const found = new Set([focusId]);
   for (const edge of edges) {
-    if (edge.source === focusId) found.add(edge.target);
-    if (edge.target === focusId) found.add(edge.source);
+    if (edge.source === focusId) {
+      found.add(edge.target);
+    }
+    if (edge.target === focusId) {
+      found.add(edge.source);
+    }
   }
   return found;
 }
 
 /** "imports, calls · 14" */
 export function describeEdge(edge: { types: EdgeType[]; weight: number }): string {
-  return `${edge.types.map((type) => type.toLowerCase().replaceAll('_', ' ')).join(', ')} · ${edge.weight}`;
+  return `${
+    edge.types.map((type) => {
+      return type.toLowerCase().replaceAll('_', ' ');
+    }).join(', ')
+  } · ${edge.weight}`;
 }

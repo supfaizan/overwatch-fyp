@@ -1,8 +1,8 @@
 'use client';
 
-import { ToggleGroup } from 'radix-ui';
-import { useState, type ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
+import { ToggleGroup } from 'radix-ui';
+import { type ReactNode, useState } from 'react';
 
 const sizes = {
   sm: 'h-6 px-2 text-xs [&_svg]:size-3.5',
@@ -55,26 +55,30 @@ export default function SegmentedButton<T extends string>({
       value={value ?? current}
       // Radix emits '' when the active item is clicked again; a segmented control always keeps one
       onValueChange={(next) => {
-        if (!next) return;
+        if (!next) {
+          return;
+        }
         // safe: Radix only emits values from our own options
         setCurrent(next as T);
         onValueChange?.(next as T);
       }}
       className="inline-flex gap-0.5 rounded-lg bg-fill-hover p-0.5"
     >
-      {options.map((option) => (
-        <ToggleGroup.Item
-          key={option.value}
-          value={option.value}
-          className={cn(
-            'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-transparent font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm',
-            sizes[size],
-          )}
-        >
-          {option.icon}
-          {option.label}
-        </ToggleGroup.Item>
-      ))}
+      {options.map((option) => {
+        return (
+          <ToggleGroup.Item
+            key={option.value}
+            value={option.value}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-transparent font-medium text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:border-border data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm',
+              sizes[size],
+            )}
+          >
+            {option.icon}
+            {option.label}
+          </ToggleGroup.Item>
+        );
+      })}
     </ToggleGroup.Root>
   );
 }

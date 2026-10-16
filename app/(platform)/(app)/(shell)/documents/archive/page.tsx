@@ -1,5 +1,7 @@
 import { DocsArchive } from '@/features/docs';
 
-const page = () => <DocsArchive />;
+const page = () => {
+  return <DocsArchive />;
+};
 
 export default page;

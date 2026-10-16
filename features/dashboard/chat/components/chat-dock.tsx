@@ -1,6 +1,13 @@
 'use client';
 
-import { useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  useRef,
+  useState,
+} from 'react';
 
 /** Narrower and the messages wrap word by word; wider and the diagram is barely left. */
 const MIN_WIDTH = 320;
@@ -44,13 +51,17 @@ export default function ChatDock({ children }: { children: ReactNode }) {
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId) || !dock.current) return;
+    if (!event.currentTarget.hasPointerCapture(event.pointerId) || !dock.current) {
+      return;
+    }
     resize(dock.current.getBoundingClientRect().right - event.clientX);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = { ArrowLeft: KEYBOARD_STEP, ArrowRight: -KEYBOARD_STEP }[event.key];
-    if (step === undefined) return;
+    if (step === undefined) {
+      return;
+    }
     event.preventDefault();
     saveWidth(resize(width + step));
   };
@@ -75,8 +86,12 @@ export default function ChatDock({ children }: { children: ReactNode }) {
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={onPointerMove}
-        onPointerUp={() => saveWidth(width)}
-        onDoubleClick={() => saveWidth(resize(DEFAULT_WIDTH))}
+        onPointerUp={() => {
+          return saveWidth(width);
+        }}
+        onDoubleClick={() => {
+          return saveWidth(resize(DEFAULT_WIDTH));
+        }}
         onKeyDown={onKeyDown}
       >
         <span className="mx-auto block h-full w-0.5 transition-colors group-hover:bg-primary group-focus-visible:bg-primary group-active:bg-primary" />

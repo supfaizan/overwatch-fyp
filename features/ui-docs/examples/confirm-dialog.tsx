@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
+import { useState } from 'react';
 
 export function Disconnect() {
   const [pending, setPending] = useState(false);

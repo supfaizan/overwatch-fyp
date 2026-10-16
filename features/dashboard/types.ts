@@ -1,10 +1,17 @@
-import type { Edge, Node } from '@xyflow/react';
 import type { JobStatus } from '@/shared/lib/job-status';
+import type { Edge, Node } from '@xyflow/react';
 
 // mirrors the backend schemas (app/graph)
 
 /** `Repository` is the root of the tree: always drawn and always open. */
-export type NodeLabel = 'Repository' | 'Module' | 'File' | 'Symbol' | 'Package' | 'Route' | 'Channel';
+export type NodeLabel =
+  | 'Repository'
+  | 'Module'
+  | 'File'
+  | 'Symbol'
+  | 'Package'
+  | 'Route'
+  | 'Channel';
 
 export type EdgeType =
   | 'IMPORTS'
@@ -36,10 +43,22 @@ export type ViewNode = {
   expanded: boolean;
 };
 
-export type ViewEdge = { source: string; target: string; type: EdgeType; weight: number; collapsed: boolean };
+export type ViewEdge = {
+  source: string;
+  target: string;
+  type: EdgeType;
+  weight: number;
+  collapsed: boolean;
+};
 
 /** The children of an open folder there was no room to draw; opening it draws the rest. */
-export type Overflow = { id: string; container_id: string; container_name: string; shown: number; hidden: number };
+export type Overflow = {
+  id: string;
+  container_id: string;
+  container_name: string;
+  shown: number;
+  hidden: number;
+};
 
 export type GraphView = {
   repo_full_name: string;
@@ -49,7 +68,14 @@ export type GraphView = {
   edges: ViewEdge[];
   containment: { parent: string; child: string }[];
   overflows: Overflow[];
-  expanded: { id: string; name: string; label: NodeLabel; kind: string | null; path: string | null; parent_id: string | null }[];
+  expanded: {
+    id: string;
+    name: string;
+    label: NodeLabel;
+    kind: string | null;
+    path: string | null;
+    parent_id: string | null;
+  }[];
   /** a cap cut the result short */
   truncated: boolean;
 };

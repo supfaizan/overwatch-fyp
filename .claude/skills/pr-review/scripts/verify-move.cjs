@@ -39,7 +39,7 @@ const ts = loadTypeScript(root);
 const load = (ref, rel) => {
   const text = readSpec(root, `${ref}:${rel}`);
   if (text === null) { return null; }
-  return new Map(declarations(ts, text, rel).map((d) => [d.qualified, d]));
+  return new Map(declarations(ts, text, rel).map((d) => {return [d.qualified, d]}));
 };
 
 const before = load(fromRef, sourceRel);
@@ -48,14 +48,14 @@ if (before === null) {
   process.exit(2);
 }
 const after = load(to, sourceRel) || new Map();
-const removed = [...before.keys()].filter((k) => !after.has(k));
+const removed = [...before.keys()].filter((k) => {return !after.has(k)});
 const changedInPlace = [...before.keys()].filter(
   (k) =>
-    after.has(k)
+    {return after.has(k)
     && normalise(before.get(k).text, renames)
-      !== normalise(after.get(k).text, renames),
+      !== normalise(after.get(k).text, renames)},
 );
-const added = [...after.keys()].filter((k) => !before.has(k));
+const added = [...after.keys()].filter((k) => {return !before.has(k)});
 
 const targets = new Map();
 for (const rel of targetsArg.split(',').filter(Boolean)) {
@@ -83,7 +83,7 @@ for (const key of removed) {
   }
   const oldText = normalise(old.text, renames);
   const exact = candidates.find((c) =>
-    normalise(c.d.text, renames) === oldText
+    {return normalise(c.d.text, renames) === oldText}
   );
   if (exact) {
     matchedTargets.add(`${exact.rel}#${exact.d.qualified}`);

@@ -1,8 +1,8 @@
 'use client';
 
+import Button from '@/shared/components/button';
 import { Moon, Sun } from '@phosphor-icons/react/ssr';
 import { useTheme } from 'next-themes';
-import Button from '@/shared/components/button';
 
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -13,7 +13,9 @@ export default function ThemeToggle() {
       variant="tertiary"
       iconOnly
       aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      onClick={() => {
+        return setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+      }}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />

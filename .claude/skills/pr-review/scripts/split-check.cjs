@@ -23,7 +23,7 @@ const [origSpec, origName, splitSpec, splitNames] = args;
 const root = repoRoot();
 const ts = loadTypeScript(root);
 const printer = ts.createPrinter({ removeComments: true });
-const squash = (text) => text.replace(/\s+/g, '').replace(/,([)\]}])/g, '$1');
+const squash = (text) => {return text.replace(/\s+/g, '').replace(/,([)\]}])/g, '$1')};
 
 const statementsOf = (spec, name) => {
   const text = readSpec(root, spec);
@@ -39,23 +39,23 @@ const statementsOf = (spec, name) => {
     throw new Error(`${name} in ${spec} has no block body`);
   }
   const source = node.getSourceFile();
-  return body.statements.map((s) => ({
+  return body.statements.map((s) => {return {
     method: name,
     text: squash(printer.printNode(ts.EmitHint.Unspecified, s, source)),
-  }));
+  }});
 };
 
 const original = statementsOf(origSpec, origName);
 const pool = splitNames
   .split(',')
   .filter(Boolean)
-  .flatMap((name) => statementsOf(splitSpec, name))
-  .map((s) => ({ ...s, used: false }));
+  .flatMap((name) => {return statementsOf(splitSpec, name)})
+  .map((s) => {return { ...s, used: false }});
 
 let found = 0;
 const missing = [];
 for (const statement of original) {
-  const match = pool.find((p) => !p.used && p.text === statement.text);
+  const match = pool.find((p) => {return !p.used && p.text === statement.text});
   if (match) {
     match.used = true;
     found += 1;
@@ -67,7 +67,7 @@ console.log(
   `${origName}: ${found}/${original.length} top-level statements appear verbatim in the split`,
 );
 for (const m of missing) { console.log(`  NOT VERBATIM: ${m.slice(0, 220)}`); }
-const glue = pool.filter((p) => !p.used);
+const glue = pool.filter((p) => {return !p.used});
 console.log(
   `statements in the split that are not from the original (read these): ${glue.length}`,
 );

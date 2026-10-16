@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Button from '@/shared/components/button';
 import { Dialog, DialogClose, DialogContent } from '@/shared/components/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
+import { useState } from 'react';
 import { useCompleteSprint } from '../hooks';
 import { BACKLOG_SECTION } from '../lib';
 import type { Sprint } from '../types';
@@ -18,7 +18,9 @@ type CompleteSprintDialogProps = {
 };
 
 /** Close the active sprint, choosing where its unfinished items go. */
-export default function CompleteSprintDialog({ open, onOpenChange, sprint, others, unfinished }: CompleteSprintDialogProps) {
+export default function CompleteSprintDialog(
+  { open, onOpenChange, sprint, others, unfinished }: CompleteSprintDialogProps,
+) {
   const [destination, setDestination] = useState(others[0]?.id ?? BACKLOG_SECTION);
   const complete = useCompleteSprint();
 
@@ -26,11 +28,11 @@ export default function CompleteSprintDialog({ open, onOpenChange, sprint, other
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title={`Complete ${sprint.name}?`}
-        description={
-          unfinished
-            ? `${unfinished} unfinished ${unfinished === 1 ? 'item moves' : 'items move'} on; finished work stays in this sprint.`
-            : 'Everything in it is done.'
-        }
+        description={unfinished
+          ? `${unfinished} unfinished ${
+            unfinished === 1 ? 'item moves' : 'items move'
+          } on; finished work stays in this sprint.`
+          : 'Everything in it is done.'}
         footer={
           <>
             <DialogClose asChild>
@@ -39,12 +41,19 @@ export default function CompleteSprintDialog({ open, onOpenChange, sprint, other
             <Button
               variant="primary"
               loading={complete.isPending}
-              onClick={() =>
-                complete.mutate(
-                  { id: sprint.id, moveOpenTo: destination === BACKLOG_SECTION ? null : destination },
-                  { onSuccess: () => onOpenChange(false) },
-                )
-              }
+              onClick={() => {
+                return complete.mutate(
+                  {
+                    id: sprint.id,
+                    moveOpenTo: destination === BACKLOG_SECTION ? null : destination,
+                  },
+                  {
+                    onSuccess: () => {
+                      return onOpenChange(false);
+                    },
+                  },
+                );
+              }}
             >
               Complete sprint
             </Button>
@@ -55,9 +64,9 @@ export default function CompleteSprintDialog({ open, onOpenChange, sprint, other
           <Select value={destination} onValueChange={setDestination}>
             <SelectTrigger aria-label="Move unfinished items to" />
             <SelectContent>
-              {others.map((other) => (
-                <SelectItem key={other.id} value={other.id}>{other.name}</SelectItem>
-              ))}
+              {others.map((other) => {
+                return <SelectItem key={other.id} value={other.id}>{other.name}</SelectItem>;
+              })}
               <SelectItem value={BACKLOG_SECTION}>Backlog</SelectItem>
             </SelectContent>
           </Select>

@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { hasRole, pickWorkspace } from './lib';
 import type { Workspace } from './types';
 
-const workspace = (id: string, personal = false): Workspace => ({ id, name: id, personal, role: 'member' });
+const workspace = (id: string, personal = false): Workspace => {
+  return {
+    id,
+    name: id,
+    personal,
+    role: 'member',
+  };
+};
 const list = [workspace('acme'), workspace('me', true), workspace('beta')];
 
 describe('pickWorkspace', () => {

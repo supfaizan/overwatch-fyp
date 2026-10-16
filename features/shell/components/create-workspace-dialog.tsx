@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
 import Button from '@/shared/components/button';
 import { Dialog, DialogClose, DialogContent } from '@/shared/components/dialog';
 import { Input } from '@/shared/components/input';
 import { useCreateWorkspace } from '@/shared/workspaces/hooks';
+import { type FormEvent, useState } from 'react';
 
 /** Name a new workspace; creating it switches to it. */
-export default function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export default function CreateWorkspaceDialog(
+  { open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void },
+) {
   const [name, setName] = useState('');
   const create = useCreateWorkspace();
 
@@ -31,14 +33,29 @@ export default function CreateWorkspaceDialog({ open, onOpenChange }: { open: bo
             <DialogClose asChild>
               <Button>Cancel</Button>
             </DialogClose>
-            <Button variant="primary" type="submit" form="create-workspace" loading={create.isPending} disabled={!name.trim()}>
+            <Button
+              variant="primary"
+              type="submit"
+              form="create-workspace"
+              loading={create.isPending}
+              disabled={!name.trim()}
+            >
               Create workspace
             </Button>
           </>
         }
       >
         <form id="create-workspace" onSubmit={submit}>
-          <Input aria-label="Workspace name" placeholder="Acme Inc" maxLength={60} value={name} onChange={(event) => setName(event.target.value)} autoFocus />
+          <Input
+            aria-label="Workspace name"
+            placeholder="Acme Inc"
+            maxLength={60}
+            value={name}
+            onChange={(event) => {
+              return setName(event.target.value);
+            }}
+            autoFocus
+          />
         </form>
       </DialogContent>
     </Dialog>

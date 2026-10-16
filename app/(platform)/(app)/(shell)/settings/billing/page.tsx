@@ -1,5 +1,7 @@
 import { BillingSection } from '@/features/settings';
 
-const page = () => <BillingSection />;
+const page = () => {
+  return <BillingSection />;
+};
 
 export default page;

@@ -1,5 +1,5 @@
-import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
+import type { ComponentProps } from 'react';
 
 /**
  * Plain surface container with a border. Accepts every native `<div>` prop.
@@ -7,5 +7,7 @@ import { cn } from '@/shared/lib/cn';
  * - Don't nest cards; use a `border-t` divider or spacing inside one card instead.
  */
 export default function Card({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('rounded-lg border border-border bg-surface p-4', className)} {...props} />;
+  return (
+    <div className={cn('rounded-lg border border-border bg-surface p-4', className)} {...props} />
+  );
 }

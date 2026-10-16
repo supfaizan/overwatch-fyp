@@ -1,6 +1,6 @@
-import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react/ssr';
 import { Input, TextArea } from '@/shared/components/input';
 import Kbd from '@/shared/components/kbd';
+import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react/ssr';
 
 export function WithLabel() {
   return (
@@ -16,7 +16,12 @@ export function WithLabel() {
 export function PrefixAndSuffix() {
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
-      <Input aria-label="Search dashboards" placeholder="Search for dashboards" prefix={<MagnifyingGlass />} suffix={<Kbd>⌘K</Kbd>} />
+      <Input
+        aria-label="Search dashboards"
+        placeholder="Search for dashboards"
+        prefix={<MagnifyingGlass />}
+        suffix={<Kbd>⌘K</Kbd>}
+      />
       <Input
         size="lg"
         aria-label="Ask"
@@ -47,5 +52,7 @@ export function Invalid() {
 }
 
 export function MultiLine() {
-  return <TextArea className="max-w-xl" aria-label="Description" placeholder="Describe the issue..." />;
+  return (
+    <TextArea className="max-w-xl" aria-label="Description" placeholder="Describe the issue..." />
+  );
 }

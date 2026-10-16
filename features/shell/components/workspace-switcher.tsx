@@ -1,29 +1,43 @@
 'use client';
 
-import { CaretUpDown, Check, GearSix, Plus, UserPlus } from '@phosphor-icons/react/ssr';
-import { useRouter } from 'next/navigation';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/components/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/components/dropdown-menu';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
 import { useCurrentWorkspace, useSwitchWorkspace, useWorkspaces } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
+import { CaretUpDown, Check, GearSix, Plus, UserPlus } from '@phosphor-icons/react/ssr';
+import { useRouter } from 'next/navigation';
 
 function Initial({ name }: { name: string }) {
   return (
-    <span aria-hidden className="flex size-5 shrink-0 items-center justify-center rounded bg-accent-purple text-xs font-bold text-white">
+    <span
+      aria-hidden
+      className="flex size-5 shrink-0 items-center justify-center rounded bg-accent-purple text-xs font-bold text-white"
+    >
       {name.charAt(0).toUpperCase()}
     </span>
   );
 }
 
 /** Which workspace the app is in; switching reloads everything for it and opens its dashboard. */
-export default function WorkspaceSwitcher({ collapsed, onCreate }: { collapsed: boolean; onCreate: () => void }) {
+export default function WorkspaceSwitcher(
+  { collapsed, onCreate }: { collapsed: boolean; onCreate: () => void },
+) {
   const router = useRouter();
   const workspaces = useWorkspaces();
   const current = useCurrentWorkspace();
   const switchTo = useSwitchWorkspace();
-  if (!current) return null;
+  if (!current) {
+    return null;
+  }
 
   const trigger = (
     <DropdownMenuTrigger
@@ -46,32 +60,47 @@ export default function WorkspaceSwitcher({ collapsed, onCreate }: { collapsed: 
   return (
     // non-modal, so opening the create dialog from it doesn't leave the page's pointer lock behind
     <DropdownMenu modal={false}>
-      {collapsed ? (
-        <Tooltip content={current.name} side="right">
-          {trigger}
-        </Tooltip>
-      ) : (
-        trigger
-      )}
+      {collapsed
+        ? (
+          <Tooltip content={current.name} side="right">
+            {trigger}
+          </Tooltip>
+        )
+        : trigger}
       <DropdownMenuContent side={collapsed ? 'right' : 'bottom'} align="start" className="w-64">
         <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-        {workspaces.data?.map((workspace) => (
-          <DropdownMenuItem key={workspace.id} onSelect={() => workspace.id !== current.id && switchTo(workspace.id)}>
-            <Check className={cn(workspace.id !== current.id && 'invisible')} />
-            <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
-            {workspace.personal && <span className="text-xs text-muted">Personal</span>}
-          </DropdownMenuItem>
-        ))}
+        {workspaces.data?.map((workspace) => {
+          return (
+            <DropdownMenuItem
+              key={workspace.id}
+              onSelect={() => {
+                return workspace.id !== current.id && switchTo(workspace.id);
+              }}
+            >
+              <Check className={cn(workspace.id !== current.id && 'invisible')} />
+              <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+              {workspace.personal && <span className="text-xs text-muted">Personal</span>}
+            </DropdownMenuItem>
+          );
+        })}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onCreate}>
           <Plus /> Create workspace…
         </DropdownMenuItem>
         {hasRole(current.role, ROLE.admin) && (
-          <DropdownMenuItem onSelect={() => router.push('/settings/members')}>
+          <DropdownMenuItem
+            onSelect={() => {
+              return router.push('/settings/members');
+            }}
+          >
             <UserPlus /> Invite people
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => router.push('/settings/workspace')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            return router.push('/settings/workspace');
+          }}
+        >
           <GearSix /> Workspace settings
         </DropdownMenuItem>
       </DropdownMenuContent>

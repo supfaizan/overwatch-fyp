@@ -92,7 +92,7 @@ const collect = (spec) => {
       if (kind && title !== null) {
         const label = `${kind.each ? '[each] ' : ''}${title}`;
         if (kind.kind === 'describe') {
-          ts.forEachChild(node, (child) => visit(child, [...trail, label]));
+          ts.forEachChild(node, (child) => {return visit(child, [...trail, label])});
           return;
         }
         tests.push({
@@ -106,13 +106,13 @@ const collect = (spec) => {
         return;
       }
     }
-    ts.forEachChild(node, (child) => visit(child, trail));
+    ts.forEachChild(node, (child) => {return visit(child, trail)});
   };
   visit(source, []);
   return { spec, missing: false, tests };
 };
 
-const sides = (value) => value.split(',').filter(Boolean).map(collect);
+const sides = (value) => {return value.split(',').filter(Boolean).map(collect)};
 const base = sides(baseOpt.value);
 const head = sides(headOpt.value);
 for (const side of [...base, ...head]) {
@@ -120,17 +120,17 @@ for (const side of [...base, ...head]) {
     console.log(`note: ${side.spec} does not exist (treated as empty)`);
   }
 }
-const baseTests = base.flatMap((s) => s.tests);
-const headTests = head.flatMap((s) => s.tests);
+const baseTests = base.flatMap((s) => {return s.tests});
+const headTests = head.flatMap((s) => {return s.tests});
 
-const pending = baseTests.map((t, i) => ({ t, i }));
+const pending = baseTests.map((t, i) => {return { t, i }});
 const usedHead = new Set();
 const pairs = [];
 const matchPass = (keyOf) => {
   for (const entry of pending) {
     if (entry.done) { continue; }
     const idx = headTests.findIndex((h, j) =>
-      !usedHead.has(j) && keyOf(h) === keyOf(entry.t)
+      {return !usedHead.has(j) && keyOf(h) === keyOf(entry.t)}
     );
     if (idx >= 0) {
       usedHead.add(idx);
@@ -139,23 +139,23 @@ const matchPass = (keyOf) => {
     }
   }
 };
-matchPass((t) => `${t.file}\u0000${t.key}`);
-matchPass((t) => t.key);
-matchPass((t) => t.title);
+matchPass((t) => {return `${t.file}\u0000${t.key}`});
+matchPass((t) => {return t.key});
+matchPass((t) => {return t.title});
 
 const identical = pairs.filter((p) =>
-  p.before.body === p.after.body && p.before.key === p.after.key
-  && p.before.file === p.after.file
+  {return p.before.body === p.after.body && p.before.key === p.after.key
+  && p.before.file === p.after.file}
 );
 const moved = pairs.filter((p) =>
-  p.before.key !== p.after.key || p.before.file !== p.after.file
+  {return p.before.key !== p.after.key || p.before.file !== p.after.file}
 );
 const changed = pairs.filter((p) =>
-  p.before.body !== p.after.body && p.before.key === p.after.key
-  && p.before.file === p.after.file
+  {return p.before.body !== p.after.body && p.before.key === p.after.key
+  && p.before.file === p.after.file}
 );
-const removed = pending.filter((e) => !e.done).map((e) => e.t);
-const added = headTests.filter((_, j) => !usedHead.has(j));
+const removed = pending.filter((e) => {return !e.done}).map((e) => {return e.t});
+const added = headTests.filter((_, j) => {return !usedHead.has(j)});
 
 const counts = (tests) => {
   const m = new Map();
@@ -166,10 +166,10 @@ const counts = (tests) => {
   return m;
 };
 const baseCounts = counts(baseTests);
-const dupes = [...counts(headTests)].filter(([, n]) => n > 1);
-const newDupes = dupes.filter(([k, n]) => n > (baseCounts.get(k) || 0));
+const dupes = [...counts(headTests)].filter(([, n]) => {return n > 1});
+const newDupes = dupes.filter(([k, n]) => {return n > (baseCounts.get(k) || 0)});
 
-const where = (t) => `[${t.file.split('/').pop()}] ${t.key}`;
+const where = (t) => {return `[${t.file.split('/').pop()}] ${t.key}`};
 console.log(`base tests: ${baseTests.length}; head tests: ${headTests.length}`);
 console.log(`identical: ${identical.length}`);
 console.log(`CHANGED BODY (${changed.length}):`);

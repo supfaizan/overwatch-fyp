@@ -2,14 +2,35 @@ import { describe, expect, it } from 'vitest';
 import { currentStep, isRunning, stepIndex } from './steps';
 import type { OnboardingRepo, OnboardingStatus } from './types';
 
-const repo = (parse_status: 'pending' | 'done', access_status: 'active' | 'revoked' = 'active'): OnboardingRepo => ({
-  repo_full_name: 'acme/api', parse_status, parse_error: null, access_status, graph_stats: null,
-});
+const repo = (
+  parse_status: 'pending' | 'done',
+  access_status: 'active' | 'revoked' = 'active',
+): OnboardingRepo => {
+  return {
+    repo_full_name: 'acme/api',
+    parse_status,
+    parse_error: null,
+    access_status,
+    graph_stats: null,
+  };
+};
 
-function status(overrides: { authorized?: boolean; repos?: OnboardingRepo[]; project?: boolean; ready?: boolean; role?: OnboardingStatus['role'] } = {}): OnboardingStatus {
+function status(
+  overrides: {
+    authorized?: boolean;
+    repos?: OnboardingRepo[];
+    project?: boolean;
+    ready?: boolean;
+    role?: OnboardingStatus['role'];
+  } = {},
+): OnboardingStatus {
   return {
     role: overrides.role ?? 'owner',
-    github: { authorized: overrides.authorized ?? true, needs_reauth: false, repos: overrides.repos ?? [] },
+    github: {
+      authorized: overrides.authorized ?? true,
+      needs_reauth: false,
+      repos: overrides.repos ?? [],
+    },
     jira: {
       connected: Boolean(overrides.project),
       needs_reauth: false,
@@ -31,13 +52,19 @@ describe('currentStep', () => {
   });
 
   it('skips Jira for members, who cannot connect it', () => {
-    expect(currentStep(status({ repos: [repo('pending')], role: 'member' }), false)).toBe('indexing');
+    expect(currentStep(status({ repos: [repo('pending')], role: 'member' }), false)).toBe(
+      'indexing',
+    );
     expect(currentStep(status({ repos: [repo('pending')], role: 'admin' }), false)).toBe('jira');
   });
 
   it('waits on indexing, then finishes', () => {
-    expect(currentStep(status({ repos: [repo('pending')], project: true }), false)).toBe('indexing');
-    expect(currentStep(status({ repos: [repo('done')], project: true, ready: true }), false)).toBe('ready');
+    expect(currentStep(status({ repos: [repo('pending')], project: true }), false)).toBe(
+      'indexing',
+    );
+    expect(currentStep(status({ repos: [repo('done')], project: true, ready: true }), false)).toBe(
+      'ready',
+    );
   });
 });
 

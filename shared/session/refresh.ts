@@ -1,14 +1,33 @@
+import { API_URL, type ApiEnvelope, toApiError } from '@/shared/api/envelope';
 import axios from 'axios';
 import { decodeJwt } from 'jose';
-import { API_URL, toApiError, type ApiEnvelope } from '@/shared/api/envelope';
-import { useSession } from './store';
+import { REFRESH_LOCK, SESSION_CHANNEL } from './constants';
+import { type User, useSession } from './store';
+import { sessionAction, type SessionMessage } from './sync';
 
-// tabs share the refresh cookie but not memory: new tokens and sign-outs are broadcast
-type SessionMessage = { type: 'token'; token: string } | { type: 'signed-out' };
+// a refresh that hangs holds the cross-tab lock, so it gives up after this long
+const REFRESH_TIMEOUT_MS = 15_000;
 
-const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('overwatch-session');
+// tabs share the refresh cookie but not memory: new tokens, profile changes and sign-outs are broadcast
+let channel: BroadcastChannel | null | undefined;
+function sessionChannel(): BroadcastChannel | null {
+  // browser only: Node has a BroadcastChannel too, and server rendering mustn't open one
+  channel ??= typeof window === 'undefined' || typeof BroadcastChannel === 'undefined'
+    ? null
+    : new BroadcastChannel(SESSION_CHANNEL);
+  return channel;
+}
+
+function broadcast(message: SessionMessage): void {
+  sessionChannel()?.postMessage(message);
+}
+
 // refresh calls skip the interceptors, so a failed refresh never tries to refresh itself
-const authHttp = axios.create({ baseURL: API_URL, withCredentials: true });
+const authHttp = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  timeout: REFRESH_TIMEOUT_MS,
+});
 
 let inFlight: Promise<string> | null = null;
 
@@ -22,6 +41,18 @@ export function expiresIn(token: string): number {
   }
 }
 
+/** Use a new access token here and in every other tab. */
+export function publishToken(token: string): void {
+  useSession.getState().setToken(token);
+  broadcast({ type: 'token', token });
+}
+
+/** Show a changed profile here and in every other tab of the same user. */
+export function publishUser(user: User): void {
+  useSession.getState().setUser(user);
+  broadcast({ type: 'user', user });
+}
+
 /**
  * Swap the refresh cookie for a new access token. One refresh at a time per tab, and across
  * tabs via a Web Lock: the backend revokes the whole session if a refresh token is used twice.
@@ -31,13 +62,14 @@ export function refreshSession(): Promise<string> {
   inFlight ??= withLock(async () => {
     // another tab may have refreshed (and broadcast) while this one waited for the lock
     const current = useSession.getState().token;
-    if (current && current !== before && expiresIn(current) > 60_000) return current;
+    if (current && current !== before && expiresIn(current) > 60_000) {
+      return current;
+    }
 
     try {
       const { data } = await authHttp.post<ApiEnvelope<{ access_token: string }>>('/auth/refresh');
       const token = data.data.access_token;
-      useSession.getState().setToken(token);
-      channel?.postMessage({ type: 'token', token } satisfies SessionMessage);
+      publishToken(token);
       return token;
     } catch (error) {
       throw toApiError(error);
@@ -48,24 +80,46 @@ export function refreshSession(): Promise<string> {
   return inFlight;
 }
 
-/** Forget the session here and in every other tab. */
+/** Forget the session here and in every other tab of the same user. */
 export function endSession(): void {
+  const userId = useSession.getState().user?.id ?? null;
   useSession.getState().clear();
-  channel?.postMessage({ type: 'signed-out' } satisfies SessionMessage);
+  broadcast({ type: 'signed-out', userId });
 }
 
-/** Mirror other tabs' refreshes and sign-outs; returns an unsubscribe function. */
-export function onSessionBroadcast(): () => void {
-  if (!channel) return () => undefined;
+/**
+ * Follow other tabs: their refreshes, profile changes and sign-outs. A token for someone else (or arriving while
+ * signed out) goes to `onSwitch`, which loads that user. Returns an unsubscribe function.
+ */
+export function onSessionBroadcast(onSwitch: (token: string) => void): () => void {
+  const current = sessionChannel();
+  if (!current) {
+    return () => {
+      return undefined;
+    };
+  }
   const listener = ({ data }: MessageEvent<SessionMessage>) => {
-    if (data.type === 'token') useSession.getState().setToken(data.token);
-    else useSession.getState().clear();
+    const { status, user, setToken, setUser, clear } = useSession.getState();
+    const action = sessionAction({ status, userId: user?.id ?? null }, data);
+    if (action === 'set-token' && data.type === 'token') {
+      setToken(data.token);
+    } else if (action === 'switch-user' && data.type === 'token') {
+      onSwitch(data.token);
+    } else if (action === 'set-user' && data.type === 'user') {
+      setUser(data.user);
+    } else if (action === 'clear') {
+      clear();
+    }
   };
-  channel.addEventListener('message', listener);
-  return () => channel.removeEventListener('message', listener);
+  current.addEventListener('message', listener);
+  return () => {
+    return current.removeEventListener('message', listener);
+  };
 }
 
 function withLock<T>(task: () => Promise<T>): Promise<T> {
-  if (typeof navigator === 'undefined' || !navigator.locks) return task();
-  return navigator.locks.request('overwatch-session-refresh', task) as Promise<T>;
+  if (typeof navigator === 'undefined' || !navigator.locks) {
+    return task();
+  }
+  return navigator.locks.request(REFRESH_LOCK, task) as Promise<T>;
 }

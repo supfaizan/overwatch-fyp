@@ -4,6 +4,7 @@ import { toApiError } from '@/shared/api/envelope';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { startSession } from '@/shared/session/sign-in';
+import { useSession } from '@/shared/session/store';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,10 +23,21 @@ export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<{ message: string; locked: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const status = useSession((state) => {
+    return state.status;
+  });
 
   useEffect(() => {
     return setChallenge(readChallenge(CHALLENGE_PURPOSE.verifyEmail));
   }, []);
+
+  // signed in from another tab meanwhile: this code is no longer needed
+  useEffect(() => {
+    if (status === 'authenticated' && !submitting) {
+      clearChallenge();
+      router.replace(takeDestination());
+    }
+  }, [status, submitting, router]);
 
   if (challenge === undefined) {
     return null;

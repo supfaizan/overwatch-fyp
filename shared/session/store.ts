@@ -20,6 +20,8 @@ type SessionState = {
   token: string | null;
   user: User | null;
   setToken: (token: string) => void;
+  /** Another user's token: back to `loading` until their profile arrives, so nothing renders with the old user. */
+  switchTo: (token: string) => void;
   setUser: (user: User) => void;
   clear: () => void;
 };
@@ -32,6 +34,10 @@ export const useSession = create<SessionState>()((set) => {
     setToken: (token) => {
       Cookies.set(SESSION_HINT_COOKIE, '1', { expires: 30, sameSite: 'lax', path: '/' });
       set({ token });
+    },
+    switchTo: (token) => {
+      Cookies.set(SESSION_HINT_COOKIE, '1', { expires: 30, sameSite: 'lax', path: '/' });
+      set({ token, user: null, status: 'loading' });
     },
     setUser: (user) => {
       return set({ user, status: 'authenticated' });

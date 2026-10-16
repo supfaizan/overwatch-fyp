@@ -3,7 +3,9 @@
 import { queryKeys } from '@/shared/api/query-keys';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { startSession } from '@/shared/session/sign-in';
 import { saveLastWorkspace } from '@/shared/workspaces/lib';
 import { useWorkspace } from '@/shared/workspaces/store';
@@ -13,10 +15,8 @@ import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { signUpWithInvite } from '../api';
-import { applyServerErrors } from '../form-errors';
 import { inviteSignUpSchema, type InviteSignUpValues } from '../schemas';
 import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
 import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
 

@@ -1,12 +1,12 @@
 'use client';
 
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
 import { Eye, EyeSlash } from '@phosphor-icons/react/ssr';
 import { type ComponentProps, useState } from 'react';
 import type { UseFormRegisterReturn } from 'react-hook-form';
 import { PASSWORD_HINT } from '../constants';
-import FormField, { describedBy } from './form-field';
 
 /** A password input with a show/hide toggle; every other prop goes to the `<input>`. */
 export default function PasswordInput(

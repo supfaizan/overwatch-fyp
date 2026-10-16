@@ -1,5 +1,6 @@
 'use client';
 
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
 import Spinner from '@/shared/components/spinner';
 import { CheckCircle, WarningCircle } from '@phosphor-icons/react/ssr';
@@ -9,7 +10,6 @@ import type { UseFormRegisterReturn } from 'react-hook-form';
 import { checkUsername } from '../api';
 import { USERNAME_MAX_LENGTH, USERNAME_MESSAGES } from '../constants';
 import { username as usernameRule } from '../schemas';
-import FormField, { describedBy } from './form-field';
 
 const CHECK_AFTER_MS = 300;
 const keys = {

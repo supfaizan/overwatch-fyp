@@ -2,7 +2,9 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { startSession } from '@/shared/session/sign-in';
 import { useSession } from '@/shared/session/store';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,11 +16,9 @@ import { type ChallengeIssued, signIn } from '../api';
 import { saveChallenge } from '../challenge';
 import { AUTH_ERROR, CHALLENGE_PURPOSE } from '../constants';
 import { signInErrorMessage } from '../errors';
-import { applyServerErrors } from '../form-errors';
 import { rememberDestination, safeDestination } from '../redirect';
 import { signInSchema, type SignInValues } from '../schemas';
 import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
 import GithubSignIn from './github-sign-in';
 import PasswordInput from './password-input';
 

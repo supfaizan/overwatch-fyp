@@ -2,13 +2,13 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { publishUser } from '@/shared/session/refresh';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm, useWatch } from 'react-hook-form';
 import { setUsername } from '../api';
 import { AUTH_ERROR } from '../constants';
-import { applyServerErrors } from '../form-errors';
 import { safeDestination } from '../redirect';
 import { usernameSchema, type UsernameValues } from '../schemas';
 import AuthCard from './auth-card';

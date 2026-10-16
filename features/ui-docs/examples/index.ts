@@ -9,11 +9,13 @@ import * as confirmDialog from './confirm-dialog';
 import * as contextMenu from './context-menu';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
+import * as formField from './form-field';
 import * as githubMark from './github-mark';
 import * as input from './input';
 import * as inputOtp from './input-otp';
 import * as kbd from './kbd';
 import * as markdown from './markdown';
+import * as radioGroup from './radio-group';
 import * as repoPicker from './repo-picker';
 import * as richTextEditor from './rich-text-editor';
 import * as segmentedButton from './segmented-button';
@@ -39,11 +41,13 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   'context-menu': contextMenu,
   dialog,
   'dropdown-menu': dropdownMenu,
+  'form-field': formField,
   'github-mark': githubMark,
   input,
   'input-otp': inputOtp,
   kbd,
   markdown,
+  'radio-group': radioGroup,
   'repo-picker': repoPicker,
   'rich-text-editor': richTextEditor,
   'segmented-button': segmentedButton,

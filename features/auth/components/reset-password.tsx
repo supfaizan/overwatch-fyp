@@ -2,6 +2,7 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,7 +11,6 @@ import { useForm } from 'react-hook-form';
 import { resetPassword } from '../api';
 import { type Challenge, clearChallenge, readChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE, OTP_LENGTH } from '../constants';
-import { applyServerErrors } from '../form-errors';
 import { codeSchema, resetPasswordSchema, type ResetPasswordValues } from '../schemas';
 import AuthCard from './auth-card';
 import CodeInput from './code-input';

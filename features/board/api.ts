@@ -38,23 +38,21 @@ export const getBoards = () => {
   return api.get<Board[]>('/boards');
 };
 
-/** One item on a board by its key (a linked ticket that isn't loaded); `q` matches substrings, so the exact key is picked here. */
+/** One item on a board by its exact key (a linked ticket that isn't loaded); null when the board has none. */
 export const getWorkItemByKey = async (boardId: string, key: string) => {
   const items = await api.get<WorkItem[]>('/work-items', {
-    params: { board_id: boardId, q: key, page_size: 100 },
+    params: { board_id: boardId, key, page_size: 1 },
   });
-  return items.find((item) => {
-    return item.key === key;
-  }) ?? null;
+  return items[0] ?? null;
 };
+
+/** A run of cards and how many match in all, loaded or not. */
+export type ItemPage = { items: WorkItem[]; total: number };
 
 /**
  * One batch (1-based) of a board column, top first. A scrum board shows one sprint (`current` by default);
  * a kanban board shows only recent done work.
  */
-/** A run of cards and how many match in all, loaded or not. */
-export type ItemPage = { items: WorkItem[]; total: number };
-
 export const getColumnPage = async (
   board: Board,
   column: Column,

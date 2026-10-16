@@ -89,11 +89,6 @@ function usePageCounts(scope: string) {
   return { counts, more };
 }
 
-/**
- * The loaded cards of a board's columns, a page at a time per column: each page is its own query,
- * so the board still sees every loaded card in one place (for drops and swimlanes), and scrolling a
- * column only asks for its next page.
- */
 /** A linked item that isn't among the loaded cards; off until there's a key to look up. */
 export function useWorkItemByKey(boardId: string | undefined, key: string | null) {
   return useQuery({
@@ -106,6 +101,11 @@ export function useWorkItemByKey(boardId: string | undefined, key: string | null
   });
 }
 
+/**
+ * The loaded cards of a board's columns, a page at a time per column: each page is its own query,
+ * so the board still sees every loaded card in one place (for drops and swimlanes), and scrolling a
+ * column only asks for its next page.
+ */
 export function useBoardItems(board: Board | undefined, columns: Column[], sprint: string) {
   // a different board, kind or sprint starts again from the first page
   const { counts, more } = usePageCounts(`${board?.id}|${board?.kind}|${sprint}`);

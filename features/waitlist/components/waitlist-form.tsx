@@ -7,17 +7,17 @@ import { Input } from '@/shared/components/input';
 import RadioGroup from '@/shared/components/radio-group';
 import { applyServerErrors } from '@/shared/lib/form-errors';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle } from '@phosphor-icons/react/ssr';
+import { CheckCircle, HandWaving } from '@phosphor-icons/react/ssr';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { joinWaitlist } from '../api';
+import { joinWaitlist, type WaitlistJoined } from '../api';
 import { HEARD_FROM_OPTIONS } from '../constants';
 import { waitlistSchema, type WaitlistValues } from '../schemas';
 
 const FIELDS = ['name', 'email', 'heard_from'] as const;
 
 export default function WaitlistForm() {
-  const [joined, setJoined] = useState(false);
+  const [joined, setJoined] = useState<WaitlistJoined | null>(null);
   const form = useForm<WaitlistValues>({
     resolver: zodResolver(waitlistSchema),
     defaultValues: { name: '', email: '' },
@@ -26,8 +26,7 @@ export default function WaitlistForm() {
 
   const submit = form.handleSubmit(async (values) => {
     try {
-      await joinWaitlist(values);
-      setJoined(true);
+      setJoined(await joinWaitlist(values));
     } catch (failure) {
       applyServerErrors(failure, form.setError, FIELDS);
     }
@@ -38,9 +37,24 @@ export default function WaitlistForm() {
       {joined
         ? (
           <div className="flex flex-col items-center gap-2 py-6 text-center">
-            <CheckCircle className="size-8 text-success" weight="fill" />
-            <p className="font-semibold">You&apos;re on the list.</p>
-            <p className="text-sm text-muted">Check your inbox, we just sent you a note.</p>
+            {joined.already_joined
+              ? (
+                <>
+                  <HandWaving className="size-8 text-primary" weight="fill" />
+                  <p className="font-semibold">You&apos;re already on the list!</p>
+                  <p className="max-w-xs text-sm text-muted">
+                    Good to see you again. Your spot is saved, and we&apos;ll email you as soon as
+                    the private beta has room for you.
+                  </p>
+                </>
+              )
+              : (
+                <>
+                  <CheckCircle className="size-8 text-success" weight="fill" />
+                  <p className="font-semibold">You&apos;re on the list.</p>
+                  <p className="text-sm text-muted">Check your inbox, we just sent you a note.</p>
+                </>
+              )}
           </div>
         )
         : (

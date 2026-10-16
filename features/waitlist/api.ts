@@ -1,7 +1,9 @@
 import { api } from '@/shared/api/client';
 import type { WaitlistValues } from './schemas';
 
-/** Accepted the same way whether or not the email was already on the list. */
+/** `already_joined`: the email was on the list before, so nothing changed and no email went out. */
+export type WaitlistJoined = { already_joined: boolean };
+
 export function joinWaitlist(values: WaitlistValues) {
-  return api.post<null>('/waitlist', values);
+  return api.post<WaitlistJoined>('/waitlist', values);
 }

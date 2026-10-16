@@ -27,10 +27,14 @@ const name = z.string().trim().min(1, 'Enter your name').max(
   `Use at most ${NAME_MAX_LENGTH} characters`,
 );
 
-export const signInSchema = z.object({ email, password: z.string().min(1, 'Enter your password') });
+const currentPassword = z.string().min(1, 'Enter your password');
+
+export const signInSchema = z.object({ email, password: currentPassword });
 export const signUpSchema = z.object({ name, username, email, password: newPassword });
 export const inviteSignUpSchema = z.object({ name, username, password: newPassword });
 export const forgotPasswordSchema = z.object({ email });
+export const addEmailSchema = z.object({ email, password: newPassword });
+export const currentPasswordSchema = z.object({ password: currentPassword });
 export const resetPasswordSchema = z
   .object({ password: newPassword, confirm: z.string() })
   .refine((values) => {
@@ -51,3 +55,5 @@ export type InviteSignUpValues = z.infer<typeof inviteSignUpSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type UsernameValues = z.infer<typeof usernameSchema>;
+export type AddEmailValues = z.infer<typeof addEmailSchema>;
+export type CurrentPasswordValues = z.infer<typeof currentPasswordSchema>;

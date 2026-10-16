@@ -3,16 +3,16 @@
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
-import GithubMark from '@/shared/components/github-mark';
-import ConnectGithubButton from '@/shared/repos/connect-github-button';
 import { displayName, handle } from '@/shared/session/lib';
 import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
 import { Devices, SignOut } from '@phosphor-icons/react/ssr';
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { SettingsSection } from './settings-layout';
 
-export default function ProfileSection() {
+/** `loginMethods` is the sign-in methods card, composed in from the auth feature. */
+export default function ProfileSection({ loginMethods }: { loginMethods: ReactNode }) {
   const user = useSession((state) => {
     return state.user;
   });
@@ -44,14 +44,8 @@ export default function ProfileSection() {
             {user.email && user.username && <>{' · '}{user.email}</>}
           </p>
         </div>
-        {user.github_login
-          ? (
-            <span className="flex items-center gap-1.5 text-xs text-muted">
-              <GithubMark /> GitHub: @{user.github_login}
-            </span>
-          )
-          : <ConnectGithubButton returnTo="settings" />}
       </Card>
+      {loginMethods}
       <Card className="flex flex-col gap-3">
         <div>
           <p className="text-sm font-medium">Sessions</p>

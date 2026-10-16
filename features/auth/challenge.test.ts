@@ -33,7 +33,10 @@ describe('the challenge a tab waits on', () => {
 
   it('moves its resend time and can be forgotten', () => {
     saveChallenge(ISSUED, CHALLENGE_PURPOSE.resetPassword, 0);
-    setResendAt(30, 5_000);
+    setResendAt('c1', 30, 5_000);
+    expect(readChallenge(CHALLENGE_PURPOSE.resetPassword)?.resendAt).toBe(35_000);
+    // another challenge's countdown (one kept only in a dialog) leaves the stored one alone
+    setResendAt('other', 90, 5_000);
     expect(readChallenge(CHALLENGE_PURPOSE.resetPassword)?.resendAt).toBe(35_000);
     clearChallenge();
     expect(readChallenge(CHALLENGE_PURPOSE.resetPassword)).toBeNull();

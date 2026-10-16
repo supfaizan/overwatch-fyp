@@ -1,6 +1,6 @@
 'use client';
 
-import { InviteSignUp, SignIn } from '@/features/auth';
+import { AddEmailAction, InviteSignUp, SignIn } from '@/features/auth';
 import Invite from '@/features/invite';
 
 // composes the invite feature with the auth screens a signed-out invitee needs
@@ -12,6 +12,9 @@ export default function InvitePage() {
       }}
       renderSignUp={(props) => {
         return <InviteSignUp {...props} />;
+      }}
+      renderAddEmail={(props) => {
+        return <AddEmailAction {...props} />;
       }}
     />
   );

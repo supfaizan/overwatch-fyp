@@ -37,7 +37,7 @@ export default function ResendCode(
   }, [resendAt]);
 
   const restart = (seconds: number) => {
-    setResendAt(seconds);
+    setResendAt(challenge.id, seconds);
     setAt(Date.now() + seconds * 1000);
   };
 

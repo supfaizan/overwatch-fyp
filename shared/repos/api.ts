@@ -16,9 +16,9 @@ export const connectRepo = (repoFullName: string) => {
 };
 
 /** Where a "connect GitHub" round trip comes back to; the backend only redirects to these. */
-export type GithubLinkReturn = 'onboarding' | 'settings';
+export type GithubLinkReturn = 'onboarding' | 'settings' | 'profile';
 
-/** Leave for GitHub to connect it to the signed-in account; it returns with `?github=linked|denied|in_use|error`. */
+/** Leave for GitHub to connect it to the signed-in account; it returns with `?github=linked|denied|in_use|error`, or `merge` on the profile page. */
 export async function linkGithub(returnTo: GithubLinkReturn): Promise<void> {
   const { authorization_url } = await api.post<{ authorization_url: string }>('/auth/github/link', {
     return_to: returnTo,

@@ -9,17 +9,22 @@ export type Challenge = { id: string; email: string; purpose: ChallengePurpose; 
 
 const CHALLENGE_KEY = 'ow_auth_challenge';
 
-export function saveChallenge(
+/** The challenge the backend just issued, as this tab tracks it. */
+export function challengeFrom(
   { challenge_id, email, resend_available_in }: ChallengeIssued,
   purpose: ChallengePurpose,
   now = Date.now(),
 ): Challenge {
-  const challenge = {
-    id: challenge_id,
-    email,
-    purpose,
-    resendAt: now + resend_available_in * 1000,
-  };
+  return { id: challenge_id, email, purpose, resendAt: now + resend_available_in * 1000 };
+}
+
+/** Keep the challenge for the code screen the browser goes to next. */
+export function saveChallenge(
+  issued: ChallengeIssued,
+  purpose: ChallengePurpose,
+  now = Date.now(),
+): Challenge {
+  const challenge = challengeFrom(issued, purpose, now);
   try {
     sessionStorage.setItem(CHALLENGE_KEY, JSON.stringify(challenge));
   } catch {
@@ -43,13 +48,14 @@ export function readChallenge(purpose: ChallengePurpose): Challenge | null {
   }
 }
 
-export function setResendAt(seconds: number, now = Date.now()): void {
+/** Move a stored challenge's resend countdown; a challenge kept only in a dialog's state has nothing stored. */
+export function setResendAt(id: string, seconds: number, now = Date.now()): void {
   try {
-    const value = sessionStorage.getItem(CHALLENGE_KEY);
-    if (value) {
+    const stored: unknown = JSON.parse(sessionStorage.getItem(CHALLENGE_KEY) ?? 'null');
+    if (stored && typeof stored === 'object' && (stored as Partial<Challenge>).id === id) {
       sessionStorage.setItem(
         CHALLENGE_KEY,
-        JSON.stringify({ ...JSON.parse(value), resendAt: now + seconds * 1000 }),
+        JSON.stringify({ ...stored, resendAt: now + seconds * 1000 }),
       );
     }
   } catch {

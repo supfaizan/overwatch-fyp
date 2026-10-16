@@ -18,11 +18,14 @@ export const AUTH_ERROR = {
   otpAttemptsExceeded: 'otp_attempts_exceeded',
   otpResendCooldown: 'otp_resend_cooldown',
   usernameAlreadySet: 'username_already_set',
+  mergeNotFound: 'merge_not_found',
+  mergeConflict: 'merge_conflict',
 } as const;
 
 export const CHALLENGE_PURPOSE = {
   verifyEmail: 'verify_email',
   resetPassword: 'reset_password',
+  addEmail: 'add_email',
 } as const;
 export type ChallengePurpose = (typeof CHALLENGE_PURPOSE)[keyof typeof CHALLENGE_PURPOSE];
 

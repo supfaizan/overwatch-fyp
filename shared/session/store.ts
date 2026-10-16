@@ -11,6 +11,9 @@ export type User = {
   github_login: string | null;
   name: string | null;
   avatar_url: string | null;
+  /** has a verified email to sign in with */
+  email_verified: boolean;
+  has_password: boolean;
 };
 
 type SessionState = {

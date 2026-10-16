@@ -36,6 +36,8 @@ type InviteProps = {
   renderSignIn: (props: Intro & { email: string }) => ReactNode;
   /** Creating an account for the invited address straight from the link. */
   renderSignUp: (props: Intro & { token: string; email: string }) => ReactNode;
+  /** Adding the invited address to the signed-in account (one without an email yet), then joining. */
+  renderAddEmail: (props: { email: string; onAdded: () => void }) => ReactNode;
 };
 
 function invitedAs(preview: InvitePreview): string {
@@ -45,7 +47,7 @@ function invitedAs(preview: InvitePreview): string {
 }
 
 /** Join a workspace from an invite link: signed in, accept it; signed out, sign in or create an account first. */
-export default function Invite({ renderSignIn, renderSignUp }: InviteProps) {
+export default function Invite({ renderSignIn, renderSignUp, renderAddEmail }: InviteProps) {
   const status = useSession((state) => {
     return state.status;
   });
@@ -73,7 +75,7 @@ export default function Invite({ renderSignIn, renderSignUp }: InviteProps) {
   return status === 'authenticated'
     ? (
       <Shell>
-        <AcceptInvite token={token} />
+        <AcceptInvite token={token} renderAddEmail={renderAddEmail} />
       </Shell>
     )
     : <GuestInvite token={token} renderSignIn={renderSignIn} renderSignUp={renderSignUp} />;
@@ -102,7 +104,9 @@ function Heading({ preview }: { preview: InvitePreview }) {
   );
 }
 
-function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { token: string }) {
+function GuestInvite(
+  { token, renderSignIn, renderSignUp }: Omit<InviteProps, 'renderAddEmail'> & { token: string },
+) {
   // a used or expired link stays that way, so a failed preview isn't retried
   const preview = useQuery({
     queryKey: keys.publicPreview(token),
@@ -161,7 +165,9 @@ function GuestInvite({ token, renderSignIn, renderSignUp }: InviteProps & { toke
   );
 }
 
-function AcceptInvite({ token }: { token: string }) {
+function AcceptInvite(
+  { token, renderAddEmail }: Pick<InviteProps, 'renderAddEmail'> & { token: string },
+) {
   const user = useSession((state) => {
     return state.user;
   });
@@ -190,11 +196,22 @@ function AcceptInvite({ token }: { token: string }) {
     },
   });
 
+  const wrongAccount = preview.error?.errorCode === INVITE_ERROR.wrongAccount;
+  // an email invite to someone signed in without any email: they can add the invited address and join
+  const invitedEmail = useQuery({
+    queryKey: keys.publicPreview(token),
+    queryFn: () => {
+      return publicPreview(token);
+    },
+    enabled: wrongAccount && user?.email_verified === false,
+    retry: false,
+  });
+
   if (preview.isPending) {
     return <Skeleton className="h-24 w-full" />;
   }
   if (preview.isError) {
-    const wrongAccount = preview.error.errorCode === INVITE_ERROR.wrongAccount;
+    const addable = invitedEmail.data?.kind === INVITE_KIND.email ? invitedEmail.data.email : null;
     const invited = typeof preview.error.meta.invited === 'string'
       ? ` (${preview.error.meta.invited})`
       : '';
@@ -205,7 +222,13 @@ function AcceptInvite({ token }: { token: string }) {
           {' '}
           {user && <>You&apos;re signed in as {handle(user)}.</>}
         </Banner>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          {addable && renderAddEmail({
+            email: addable,
+            onAdded: () => {
+              void preview.refetch();
+            },
+          })}
           {/* the token stays in this tab, so the invite opens again once signed out */}
           {wrongAccount && (
             <Button

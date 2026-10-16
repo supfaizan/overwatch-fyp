@@ -47,10 +47,26 @@
   --animate-grid-drift: grid-drift 12s linear infinite;
   /* dashes travelling along a path toward its end; pair with a dash array whose period is 10 */
   --animate-dash-flow: dash-flow 1.2s linear infinite;
+  --animate-orbit: orbit 24s linear infinite;
+  /* letters flying out of line from where they belong; `backwards`, so hover can still move them after */
+  --animate-scatter-in: scatter-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 
   @keyframes dash-flow {
     to {
       stroke-dashoffset: -10;
+    }
+  }
+
+  @keyframes scatter-in {
+    from {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+  }
+
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
     }
   }
 

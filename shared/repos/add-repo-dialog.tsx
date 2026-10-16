@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from '@/shared/components/dialog';
 import GithubMark from '@/shared/components/github-mark';
 import RepoPicker from '@/shared/components/repo-picker';
 import Skeleton from '@/shared/components/skeleton';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
 import ConnectGithubButton from './connect-github-button';
 import { useAvailableRepos, useConnectRepo, useInstallations } from './hooks';
@@ -44,7 +45,7 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title="Add a repository"
-        description="Overwatch maps its architecture and keeps it current on every push."
+        description="We map its architecture and keep it current on every push."
         footer={installUrl && (
           <a
             href={installUrl}
@@ -89,8 +90,8 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
           ? (
             <div className="flex flex-col items-start gap-3">
               <p className="text-muted">
-                Install the Overwatch GitHub App on the account that owns your repositories, then
-                come back here.
+                Install the {PRODUCT_NAME}{' '}
+                GitHub App on the account that owns your repositories, then come back here.
               </p>
               <Button variant="primary" asChild>
                 <a href={installUrl} target="_blank" rel="noopener noreferrer">

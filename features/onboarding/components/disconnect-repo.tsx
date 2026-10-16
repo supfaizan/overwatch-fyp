@@ -24,7 +24,7 @@ export default function DisconnectRepo({ repoFullName }: { repoFullName: string 
         </Tooltip>
       }
       title={`Disconnect ${repoFullName}?`}
-      description="Overwatch stops tracking it and deletes its copy of the code and its graph."
+      description="We stop tracking it and delete its copy of the code and its graph."
       confirmLabel="Disconnect repository"
       pending={disconnect.isPending}
       onConfirm={(close) => {

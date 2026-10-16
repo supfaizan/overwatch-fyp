@@ -14,6 +14,7 @@ import SegmentedButton from '@/shared/components/segmented-button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import Tooltip from '@/shared/components/tooltip';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import { JOB_STATUS } from '@/shared/lib/job-status';
 import { timeAgo } from '@/shared/lib/time';
 import { useSession } from '@/shared/session/store';
@@ -338,7 +339,7 @@ export default function Board() {
   });
   const boardLabel = (candidate: BoardType) => {
     return candidate.source === NATIVE_SOURCE
-      ? 'Overwatch'
+      ? PRODUCT_NAME
       : `${trackerName(trackers.data, candidate.source)} · ${candidate.name}`;
   };
 
@@ -616,7 +617,7 @@ export default function Board() {
             </Button>
           }
         >
-          Connect Jira to see its tickets here alongside the items you create in Overwatch.
+          Connect Jira to see its tickets here alongside the items you create here.
         </Banner>
       )}
       <ColumnOffer board={board} trackerName={trackerName(trackers.data, board.source)} />

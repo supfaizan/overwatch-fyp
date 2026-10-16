@@ -20,7 +20,7 @@ export default function IndexingStep() {
   return (
     <StepCard
       title="Indexing your code"
-      description="Overwatch is reading the repository and building its architecture graph. Large repositories take a few minutes."
+      description="We're reading the repository and building its architecture graph. Large repositories take a few minutes."
       actions={
         <Button
           variant="primary"

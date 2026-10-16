@@ -2,7 +2,9 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,10 +12,8 @@ import { useForm } from 'react-hook-form';
 import { requestPasswordReset } from '../api';
 import { saveChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE } from '../constants';
-import { applyServerErrors } from '../form-errors';
 import { forgotPasswordSchema, type ForgotPasswordValues } from '../schemas';
-import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
+import AuthShell from './auth-shell';
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function ForgotPassword() {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Reset your password"
       description="Enter your account's email. If it has an account, we'll send a code to reset the password."
     >
@@ -60,6 +60,6 @@ export default function ForgotPassword() {
           Back to sign in
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

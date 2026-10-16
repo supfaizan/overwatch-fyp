@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async redirects() {
+    // the waitlist used to be its own page; it's now a section of the landing page
+    return [{ source: '/waitlist', destination: '/#waitlist', permanent: true }];
+  },
   async headers() {
     return [
       {

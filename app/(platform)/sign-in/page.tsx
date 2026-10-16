@@ -1,7 +1,7 @@
 import { SignIn } from '@/features/auth';
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Sign in · Overwatch' };
+export const metadata: Metadata = { title: 'Sign in' };
 
 const page = async (
   { searchParams }: { searchParams: Promise<{ error?: string; from?: string; reset?: string }> },

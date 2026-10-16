@@ -40,7 +40,7 @@ export default function RepositoriesSection() {
   return (
     <SettingsSection
       title="Repositories"
-      description="The repositories Overwatch indexes and keeps in sync on every push."
+      description="The repositories we index and keep in sync on every push."
       action={isAdmin && (
         <Button
           variant="primary"
@@ -172,7 +172,7 @@ function RepoRow({ repo, canDisconnect }: { repo: ConnectedRepo; canDisconnect: 
               </Tooltip>
             }
             title={`Disconnect ${repo.repo_full_name}?`}
-            description="Overwatch stops tracking it for this workspace. Its copy of the code and its graph are deleted once no other workspace uses them."
+            description="We stop tracking it for this workspace. Its copy of the code and its graph are deleted once no other workspace uses them."
             confirmLabel="Disconnect repository"
             pending={disconnect.isPending}
             onConfirm={(close) => {

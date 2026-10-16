@@ -3,7 +3,9 @@
 import { queryKeys } from '@/shared/api/query-keys';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { startSession } from '@/shared/session/sign-in';
 import { saveLastWorkspace } from '@/shared/workspaces/lib';
 import { useWorkspace } from '@/shared/workspaces/store';
@@ -13,10 +15,8 @@ import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { signUpWithInvite } from '../api';
-import { applyServerErrors } from '../form-errors';
 import { inviteSignUpSchema, type InviteSignUpValues } from '../schemas';
-import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
+import AuthShell from './auth-shell';
 import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
 
@@ -59,7 +59,7 @@ export default function InviteSignUp(
   });
 
   return (
-    <AuthCard title={title} description={description}>
+    <AuthShell title={title} description={description}>
       {errors.root?.message && <Banner type="error">{errors.root.message}</Banner>}
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
         <FormField
@@ -101,6 +101,6 @@ export default function InviteSignUp(
           Create account and join
         </Button>
       </form>
-    </AuthCard>
+    </AuthShell>
   );
 }

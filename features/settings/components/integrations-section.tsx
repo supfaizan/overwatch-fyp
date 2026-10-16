@@ -310,10 +310,12 @@ function ConnectorCard({ connection }: { connection: Connection }) {
                     : (
                       <>
                         <span className="font-medium">{target.key}</span>
-                        {target.name && <span className="text-muted">· {target.name}</span>}
+                        {target.name && <span className="text-muted">{' · '}{target.name}</span>}
                       </>
                     )}
-                  {target.sync_error && <span className="text-danger">· {target.sync_error}</span>}
+                  {target.sync_error && (
+                    <span className="text-danger">{' · '}{target.sync_error}</span>
+                  )}
                 </span>
                 <StatusTag status={target.sync_status} done="Synced" />
               </li>

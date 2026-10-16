@@ -41,7 +41,7 @@ export default function ProfileSection() {
           <p className="truncate font-medium">{name}</p>
           <p className="truncate text-sm text-muted">
             {handle(user)}
-            {user.email && user.username && <>· {user.email}</>}
+            {user.email && user.username && <>{' · '}{user.email}</>}
           </p>
         </div>
         {user.github_login

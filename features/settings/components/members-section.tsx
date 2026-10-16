@@ -111,7 +111,7 @@ function MemberRow({ workspace, member }: { workspace: Workspace; member: Member
         </p>
         <p className="truncate text-xs text-muted">
           {handle(member)}
-          {member.email && member.username && <>· {member.email}</>}
+          {member.email && member.username && <>{' · '}{member.email}</>}
         </p>
       </div>
       {canManage

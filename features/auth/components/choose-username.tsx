@@ -11,7 +11,7 @@ import { setUsername } from '../api';
 import { AUTH_ERROR } from '../constants';
 import { safeDestination } from '../redirect';
 import { usernameSchema, type UsernameValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import UsernameField, { useUsernameAvailability } from './username-input';
 
 /** Asked once of accounts without a username (from before usernames, or whose GitHub login was taken). */
@@ -41,7 +41,7 @@ export default function ChooseUsername({ from }: { from?: string }) {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Choose a username"
       description="It's how teammates mention and find you. You can't change it later."
     >
@@ -58,6 +58,6 @@ export default function ChooseUsername({ from }: { from?: string }) {
           Continue
         </Button>
       </form>
-    </AuthCard>
+    </AuthShell>
   );
 }

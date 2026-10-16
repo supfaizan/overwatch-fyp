@@ -13,7 +13,7 @@ import { requestPasswordReset } from '../api';
 import { saveChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE } from '../constants';
 import { forgotPasswordSchema, type ForgotPasswordValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function ForgotPassword() {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Reset your password"
       description="Enter your account's email. If it has an account, we'll send a code to reset the password."
     >
@@ -60,6 +60,6 @@ export default function ForgotPassword() {
           Back to sign in
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

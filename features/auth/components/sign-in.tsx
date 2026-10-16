@@ -19,7 +19,7 @@ import { AUTH_ERROR, CHALLENGE_PURPOSE } from '../constants';
 import { signInErrorMessage } from '../errors';
 import { rememberDestination, safeDestination } from '../redirect';
 import { signInSchema, type SignInValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import GithubSignIn from './github-sign-in';
 import PasswordInput from './password-input';
 
@@ -77,7 +77,7 @@ export default function SignIn(
   });
 
   return (
-    <AuthCard title={title} description={description}>
+    <AuthShell title={title} description={description}>
       {message && <Banner type="error">{message}</Banner>}
       {reset && (
         <Banner type="success">
@@ -126,6 +126,6 @@ export default function SignIn(
           Create an account
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

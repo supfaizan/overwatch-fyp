@@ -16,7 +16,7 @@ import { saveChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE } from '../constants';
 import { rememberDestination, safeDestination } from '../redirect';
 import { signUpSchema, type SignUpValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import GithubSignIn from './github-sign-in';
 import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
@@ -54,7 +54,7 @@ export default function SignUp({ from }: { from?: string }) {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Create your account"
       description="Map your codebase and your team's work in one place."
     >
@@ -98,6 +98,6 @@ export default function SignUp({ from }: { from?: string }) {
           Sign in
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

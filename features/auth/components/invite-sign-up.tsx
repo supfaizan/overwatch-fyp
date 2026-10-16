@@ -16,7 +16,7 @@ import type { ReactNode } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { signUpWithInvite } from '../api';
 import { inviteSignUpSchema, type InviteSignUpValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
 
@@ -59,7 +59,7 @@ export default function InviteSignUp(
   });
 
   return (
-    <AuthCard title={title} description={description}>
+    <AuthShell title={title} description={description}>
       {errors.root?.message && <Banner type="error">{errors.root.message}</Banner>}
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
         <FormField
@@ -101,6 +101,6 @@ export default function InviteSignUp(
           Create account and join
         </Button>
       </form>
-    </AuthCard>
+    </AuthShell>
   );
 }

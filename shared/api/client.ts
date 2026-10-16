@@ -20,29 +20,40 @@ http.interceptors.request.use((config) => {
 });
 
 // a missing or expired access token is recoverable while the refresh cookie is still good
-const RECOVERABLE = new Set<string>([ERROR_CODE.invalidToken, ERROR_CODE.missingToken]);
+const RECOVERABLE = new Set<string>([
+  ERROR_CODE.invalidToken,
+  ERROR_CODE.missingToken,
+]);
 
-http.interceptors.response.use(undefined, async (error: AxiosError<ApiEnvelope<null>>) => {
-  const request = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
-  const errorCode = error.response?.data?.meta?.error_code;
+http.interceptors.response.use(
+  undefined,
+  async (error: AxiosError<ApiEnvelope<null>>) => {
+    const request = error.config as
+      | (InternalAxiosRequestConfig & { _retried?: boolean })
+      | undefined;
+    const errorCode = error.response?.data?.meta?.error_code;
 
-  if (
-    error.response?.status === 401 && typeof errorCode === 'string' && RECOVERABLE.has(errorCode)
-    && request && !request._retried
-  ) {
-    request._retried = true;
-    try {
-      request.headers.Authorization = `Bearer ${await refreshSession()}`;
-      return http(request);
-    } catch (refreshError) {
-      if (refreshError instanceof ApiError && refreshError.status === 401) {
-        endSession();
+    if (
+      error.response?.status === 401
+      && typeof errorCode === 'string'
+      && RECOVERABLE.has(errorCode)
+      && request
+      && !request._retried
+    ) {
+      request._retried = true;
+      try {
+        request.headers.Authorization = `Bearer ${await refreshSession()}`;
+        return http(request);
+      } catch (refreshError) {
+        if (refreshError instanceof ApiError && refreshError.status === 401) {
+          endSession();
+        }
+        throw refreshError;
       }
-      throw refreshError;
     }
-  }
-  throw toApiError(error);
-});
+    throw toApiError(error);
+  },
+);
 
 /** Send a request and return the envelope's `data`. */
 async function request<T>(config: AxiosRequestConfig): Promise<T> {

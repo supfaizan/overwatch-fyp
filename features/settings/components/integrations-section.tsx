@@ -64,7 +64,7 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
   return (
     <SettingsSection
       title="Integrations"
-      description="The tools Overwatch reads from to understand your project."
+      description="The tools we read from to understand your project."
     >
       {status.isPending && <Skeleton className="h-40 w-full" />}
       {status.isError && (

@@ -4,6 +4,7 @@ import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import { applyServerErrors } from '@/shared/lib/form-errors';
 import { startSession } from '@/shared/session/sign-in';
 import { useSession } from '@/shared/session/store';
@@ -117,7 +118,7 @@ export default function SignIn(
       </form>
       <GithubSignIn from={from} label="Continue with GitHub" />
       <p className="text-center text-sm text-muted">
-        New to Overwatch?{' '}
+        New to {PRODUCT_NAME}?{' '}
         <Link
           href={from ? `/sign-up?from=${encodeURIComponent(safeDestination(from))}` : '/sign-up'}
           className="font-medium text-primary hover:underline"

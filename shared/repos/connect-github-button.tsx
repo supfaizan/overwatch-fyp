@@ -39,8 +39,7 @@ const LINK_RESULTS: Record<string, { ok: boolean; message: string }> = {
   linked: { ok: true, message: 'GitHub connected.' },
   in_use: {
     ok: false,
-    message:
-      "That GitHub account belongs to another Overwatch account that can't be merged with this one. "
+    message: "That GitHub account belongs to another account that can't be merged with this one. "
       + 'Remove a sign-in method from one of them first.',
   },
   denied: { ok: false, message: 'Connecting GitHub was cancelled.' },

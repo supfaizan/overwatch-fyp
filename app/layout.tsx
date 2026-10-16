@@ -1,4 +1,5 @@
 import Toaster from '@/shared/components/toaster';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
@@ -7,7 +8,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Overwatch',
+  title: { default: PRODUCT_NAME, template: `%s · ${PRODUCT_NAME}` },
 };
 
 export default function RootLayout({

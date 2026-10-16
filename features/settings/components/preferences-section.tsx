@@ -29,7 +29,7 @@ export default function PreferencesSection() {
   return (
     <SettingsSection
       title="Preferences"
-      description="How Overwatch looks and works for you on this device."
+      description="How the app looks and works for you on this device."
     >
       <Card className="flex flex-wrap items-center justify-between gap-3">
         <div>

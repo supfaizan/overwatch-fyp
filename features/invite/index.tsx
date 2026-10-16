@@ -7,6 +7,7 @@ import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
 import Skeleton from '@/shared/components/skeleton';
 import Spinner from '@/shared/components/spinner';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import { handle } from '@/shared/session/lib';
 import { signOut } from '@/shared/session/sign-out';
 import { useSession } from '@/shared/session/store';
@@ -136,7 +137,7 @@ function GuestInvite(
 
   const { data } = preview;
   if (data.kind === INVITE_KIND.email && data.email) {
-    const title = `Join ${data.workspace_name} on Overwatch`;
+    const title = `Join ${data.workspace_name} on ${PRODUCT_NAME}`;
     return data.account_exists
       ? renderSignIn({
         email: data.email,

@@ -102,12 +102,6 @@ const INLINE_CLASS = cn(
   '[&_.ProseMirror-selectednode:is([data-emoji],[data-status],time)]:outline-2 [&_.ProseMirror-selectednode:is([data-emoji],[data-status],time)]:outline-primary',
 );
 
-const IMAGE_CLASS = cn(
-  '[&_img]:my-2 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-border',
-  '[&_img.ProseMirror-selectednode]:outline-2 [&_img.ProseMirror-selectednode]:outline-offset-2 [&_img.ProseMirror-selectednode]:outline-primary',
-  '[&_img[data-uploading]]:animate-pulse [&_img[data-uploading]]:opacity-60',
-);
-
 const imageFiles = (list: FileList | undefined | null) => {
   return Array.from(list ?? []).filter((file) => {
     return file.type.startsWith('image/');
@@ -151,7 +145,6 @@ export default function DocEditor(
           TABLE_CLASS,
           LAYOUT_CLASS,
           INLINE_CLASS,
-          IMAGE_CLASS,
           SOURCE_CLASS,
         ),
         'aria-label': 'Page content',

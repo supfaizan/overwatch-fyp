@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  ALT_MAX_LENGTH,
+  altFromFileName,
+  clampImageWidth,
   createAutosave,
+  IMAGE_SIZE,
+  IMAGE_WIDTH,
+  imageAlt,
+  markdownAlt,
   readingMinutes,
   SAVE_STATUS,
   type SaveStatus,
@@ -168,6 +175,56 @@ describe('withImageLinks', () => {
       'blockquote',
     ]);
     expect(out.content?.[2].content?.[0].attrs?.src).toBe('https://fresh');
+  });
+
+  it("keeps an image's size and alt text", () => {
+    const doc = {
+      type: 'doc',
+      content: [{
+        type: 'image',
+        attrs: { attachmentId: 'a1', src: 'x', width: 50, alt: 'Diagram' },
+      }],
+    };
+
+    expect(withImageLinks(doc, { a1: 'https://fresh' }).content?.[0].attrs).toMatchObject({
+      src: 'https://fresh',
+      width: 50,
+      alt: 'Diagram',
+    });
+  });
+});
+
+describe('image sizes', () => {
+  it('keeps widths within the column, in whole percents', () => {
+    expect(clampImageWidth(3)).toBe(IMAGE_WIDTH.min);
+    expect(clampImageWidth(140)).toBe(IMAGE_WIDTH.max);
+    expect(clampImageWidth(42.6)).toBe(43);
+    expect(clampImageWidth(Number.NaN)).toBe(IMAGE_WIDTH.max);
+  });
+
+  it('offers only sizes the handles could reach', () => {
+    for (const width of Object.values(IMAGE_SIZE)) {
+      expect(width === null || clampImageWidth(width) === width).toBe(true);
+    }
+  });
+});
+
+describe('alt text', () => {
+  it('is one trimmed line, capped, and empty means decorative', () => {
+    expect(imageAlt('  A  diagram\nof the graph ')).toBe('A diagram of the graph');
+    expect(imageAlt('   ')).toBeNull();
+    expect(imageAlt('x'.repeat(ALT_MAX_LENGTH + 20))).toHaveLength(ALT_MAX_LENGTH);
+  });
+
+  it('starts as the file name without its extension', () => {
+    expect(altFromFileName('architecture-diagram.png')).toBe('architecture-diagram');
+    expect(altFromFileName('photo.final.jpeg')).toBe('photo.final');
+    expect(altFromFileName('.png')).toBeNull();
+  });
+
+  it('cannot break out of a markdown image', () => {
+    expect(markdownAlt('a [b] \\c')).toBe('a \\[b\\] \\\\c');
+    expect(markdownAlt(null)).toBe('');
   });
 });
 

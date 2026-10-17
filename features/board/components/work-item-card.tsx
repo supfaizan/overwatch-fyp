@@ -3,20 +3,17 @@
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import {
+  CONTEXT_MENU_PARTS,
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/components/context-menu';
 import {
+  DROPDOWN_MENU_PARTS,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  type MenuParts,
 } from '@/shared/components/dropdown-menu';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
@@ -27,7 +24,7 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Copy, DotsThree, LinkSimple, Lock } from '@phosphor-icons/react/ssr';
-import { type ComponentType, memo, type ReactNode, useState } from 'react';
+import { memo, useState } from 'react';
 import { toast } from 'sonner';
 import { useItemMoves, usePrefetchMoves } from '../hooks';
 import { COLOR_CLASSES, columnColor } from '../lib';
@@ -85,23 +82,6 @@ export default function WorkItemCard(
 type CardBodyProps = WorkItemCardProps & {
   attributes?: DraggableAttributes;
   listeners?: DraggableSyntheticListeners;
-};
-
-/** The parts of either menu, so the "…" menu and the right-click menu share one list of actions. */
-type MenuParts = {
-  Item: ComponentType<{ disabled?: boolean; onSelect?: () => void; children: ReactNode }>;
-  Label: ComponentType<{ children: ReactNode }>;
-  Separator: ComponentType;
-};
-const DROPDOWN: MenuParts = {
-  Item: DropdownMenuItem,
-  Label: DropdownMenuLabel,
-  Separator: DropdownMenuSeparator,
-};
-const CONTEXT: MenuParts = {
-  Item: ContextMenuItem,
-  Label: ContextMenuLabel,
-  Separator: ContextMenuSeparator,
 };
 
 function copy(text: string, what: string) {
@@ -223,7 +203,7 @@ export const CardBody = memo(
                     return event.stopPropagation();
                   }}
                 >
-                  {actions(DROPDOWN)}
+                  {actions(DROPDOWN_MENU_PARTS)}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -266,7 +246,7 @@ export const CardBody = memo(
             return event.stopPropagation();
           }}
         >
-          {actions(CONTEXT)}
+          {actions(CONTEXT_MENU_PARTS)}
         </ContextMenuContent>
       </ContextMenu>
     );

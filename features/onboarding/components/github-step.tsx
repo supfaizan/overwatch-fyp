@@ -6,6 +6,7 @@ import GithubMark from '@/shared/components/github-mark';
 import RepoPicker from '@/shared/components/repo-picker';
 import Skeleton from '@/shared/components/skeleton';
 import StatusTag from '@/shared/components/status-tag';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import ConnectGithubButton, { useGithubLinkResult } from '@/shared/repos/connect-github-button';
 import { useAvailableRepos, useConnectRepo, useInstallations } from '@/shared/repos/hooks';
 import { useSession } from '@/shared/session/store';
@@ -45,7 +46,7 @@ export default function GithubStep() {
       : (
         <StepCard
           title="Connect GitHub"
-          description="Overwatch reads your repositories through GitHub. Connect your GitHub account to pick the ones to map."
+          description="We read your repositories through GitHub. Connect your GitHub account to pick the ones to map."
           actions={<ConnectGithubButton returnTo="onboarding" size="md" />}
         >
           <p className="text-sm text-muted">
@@ -67,8 +68,8 @@ export default function GithubStep() {
   if (!hasInstallation) {
     return (
       <StepCard
-        title="Install the Overwatch GitHub App"
-        description="Pick the account and repositories Overwatch may read. GitHub opens in a new tab; come back here when you're done."
+        title={`Install the ${PRODUCT_NAME} GitHub App`}
+        description="Pick the account and repositories we may read. GitHub opens in a new tab; come back here when you're done."
         actions={
           <Button variant="primary" asChild>
             <a href={installUrl} target="_blank" rel="noopener noreferrer">
@@ -78,8 +79,8 @@ export default function GithubStep() {
         }
       >
         <p className="text-sm text-muted">
-          Overwatch only asks for read access to code. You can change the repository list on GitHub
-          any time.
+          We only ask for read access to code. You can change the repository list on GitHub any
+          time.
         </p>
       </StepCard>
     );
@@ -88,7 +89,7 @@ export default function GithubStep() {
   return (
     <StepCard
       title="Connect a repository"
-      description="Overwatch maps the repository's architecture and keeps it current on every push."
+      description="We map the repository's architecture and keep it current on every push."
       actions={connected.length > 0 && (
         <Button
           variant="primary"

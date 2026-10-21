@@ -117,7 +117,7 @@ export default function ArchiveList() {
                     title={`Delete “${item.title || 'Untitled'}” for good?`}
                     description={item.source === NATIVE_SOURCE
                       ? "It and everything archived with it are deleted, with their images. This can't be undone."
-                      : `It and everything archived with it are deleted, here and, for pages archived from Overwatch, in ${
+                      : `It and everything archived with it are deleted, here and, for pages archived here, in ${
                         sourceName(item.source)
                       }. This can't be undone.`}
                     confirmLabel="Delete for good"

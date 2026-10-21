@@ -2,6 +2,7 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,9 +11,8 @@ import { useForm } from 'react-hook-form';
 import { resetPassword } from '../api';
 import { type Challenge, clearChallenge, readChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE, OTP_LENGTH } from '../constants';
-import { applyServerErrors } from '../form-errors';
 import { codeSchema, resetPasswordSchema, type ResetPasswordValues } from '../schemas';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import CodeInput from './code-input';
 import { NewPasswordField } from './password-input';
 import ResendCode from './resend-code';
@@ -38,14 +38,14 @@ export default function ResetPassword() {
   }
   if (challenge === null) {
     return (
-      <AuthCard
+      <AuthShell
         title="That reset request expired"
         description="Ask for a new code to reset your password."
       >
         <Button asChild variant="primary" size="lg">
           <Link href="/forgot-password">Send a new code</Link>
         </Button>
-      </AuthCard>
+      </AuthShell>
     );
   }
 
@@ -70,7 +70,7 @@ export default function ResetPassword() {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Choose a new password"
       description={
         <>
@@ -123,6 +123,6 @@ export default function ResetPassword() {
           return setChallenge(null);
         }}
       />
-    </AuthCard>
+    </AuthShell>
   );
 }

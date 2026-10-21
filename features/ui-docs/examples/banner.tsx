@@ -14,7 +14,7 @@ export function WithAction() {
         </Button>
       }
     >
-      Get more out of Overwatch by inviting your team for free
+      Get more out of your workspace by inviting your team for free
     </Banner>
   );
 }

@@ -12,7 +12,7 @@ import { verifyEmail } from '../api';
 import { type Challenge, clearChallenge, readChallenge } from '../challenge';
 import { AUTH_ERROR, CHALLENGE_PURPOSE, OTP_LENGTH, OTP_TTL_MINUTES } from '../constants';
 import { takeDestination } from '../redirect';
-import AuthCard from './auth-card';
+import AuthShell from './auth-shell';
 import CodeInput from './code-input';
 import ResendCode from './resend-code';
 
@@ -65,7 +65,7 @@ export default function VerifyEmail() {
   };
 
   return (
-    <AuthCard
+    <AuthShell
       title="Check your email"
       description={
         <>
@@ -133,13 +133,13 @@ export default function VerifyEmail() {
           Use a different email
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }
 
 function StartAgain() {
   return (
-    <AuthCard
+    <AuthShell
       title="That code request expired"
       description="Sign in or sign up again and we'll send a new code."
     >
@@ -154,6 +154,6 @@ function StartAgain() {
           <Link href="/sign-in">Sign in</Link>
         </Button>
       </div>
-    </AuthCard>
+    </AuthShell>
   );
 }

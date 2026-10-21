@@ -2,7 +2,9 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { useSession } from '@/shared/session/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
@@ -12,11 +14,9 @@ import { useForm, useWatch } from 'react-hook-form';
 import { signUp } from '../api';
 import { saveChallenge } from '../challenge';
 import { CHALLENGE_PURPOSE } from '../constants';
-import { applyServerErrors } from '../form-errors';
 import { rememberDestination, safeDestination } from '../redirect';
 import { signUpSchema, type SignUpValues } from '../schemas';
-import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
+import AuthShell from './auth-shell';
 import GithubSignIn from './github-sign-in';
 import { NewPasswordField } from './password-input';
 import UsernameField, { useUsernameAvailability } from './username-input';
@@ -54,7 +54,7 @@ export default function SignUp({ from }: { from?: string }) {
   });
 
   return (
-    <AuthCard
+    <AuthShell
       title="Create your account"
       description="Map your codebase and your team's work in one place."
     >
@@ -98,6 +98,6 @@ export default function SignUp({ from }: { from?: string }) {
           Sign in
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

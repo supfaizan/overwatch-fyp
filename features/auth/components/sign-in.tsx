@@ -2,7 +2,10 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import FormField, { describedBy } from '@/shared/components/form-field';
 import { Input } from '@/shared/components/input';
+import { PRODUCT_NAME } from '@/shared/lib/env';
+import { applyServerErrors } from '@/shared/lib/form-errors';
 import { startSession } from '@/shared/session/sign-in';
 import { useSession } from '@/shared/session/store';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,11 +17,9 @@ import { type ChallengeIssued, signIn } from '../api';
 import { saveChallenge } from '../challenge';
 import { AUTH_ERROR, CHALLENGE_PURPOSE } from '../constants';
 import { signInErrorMessage } from '../errors';
-import { applyServerErrors } from '../form-errors';
 import { rememberDestination, safeDestination } from '../redirect';
 import { signInSchema, type SignInValues } from '../schemas';
-import AuthCard from './auth-card';
-import FormField, { describedBy } from './form-field';
+import AuthShell from './auth-shell';
 import GithubSignIn from './github-sign-in';
 import PasswordInput from './password-input';
 
@@ -76,7 +77,7 @@ export default function SignIn(
   });
 
   return (
-    <AuthCard title={title} description={description}>
+    <AuthShell title={title} description={description}>
       {message && <Banner type="error">{message}</Banner>}
       {reset && (
         <Banner type="success">
@@ -117,7 +118,7 @@ export default function SignIn(
       </form>
       <GithubSignIn from={from} label="Continue with GitHub" />
       <p className="text-center text-sm text-muted">
-        New to Overwatch?{' '}
+        New to {PRODUCT_NAME}?{' '}
         <Link
           href={from ? `/sign-up?from=${encodeURIComponent(safeDestination(from))}` : '/sign-up'}
           className="font-medium text-primary hover:underline"
@@ -125,6 +126,6 @@ export default function SignIn(
           Create an account
         </Link>
       </p>
-    </AuthCard>
+    </AuthShell>
   );
 }

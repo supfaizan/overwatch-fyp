@@ -1,13 +1,14 @@
 import Toaster from '@/shared/components/toaster';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import type { Metadata } from 'next';
-import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import ThemeProvider from './theme-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Overwatch',
+  title: { default: PRODUCT_NAME, template: `%s · ${PRODUCT_NAME}` },
 };
 
 export default function RootLayout({
@@ -19,7 +20,7 @@ export default function RootLayout({
     // next-themes sets the class before hydration, so the mismatch warning is expected
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
-        <ThemeProvider attribute="class" disableTransitionOnChange>
+        <ThemeProvider>
           {/* padding lives here, not on body: Radix's scroll lock overrides body padding while a menu or dialog is open */}
           <div className="px-4 py-2">{children}</div>
           <Toaster />

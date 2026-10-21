@@ -93,7 +93,7 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
     return (
       <StepCard
         title={jira.needs_reauth ? 'Reconnect Jira' : 'Connect Jira'}
-        description="Optional. Link a Jira project so Overwatch can show which code each ticket touches."
+        description="Optional. Link a Jira project so we can show which code each ticket touches."
         actions={
           <>
             <Button variant="tertiary" onClick={skip}>
@@ -117,7 +117,7 @@ export default function JiraStep({ outcome }: { outcome?: string }) {
   return (
     <StepCard
       title="Pick a Jira project"
-      description="Overwatch syncs this project's tickets."
+      description="We sync this project's tickets."
       actions={
         <>
           <Button variant="tertiary" onClick={skip}>

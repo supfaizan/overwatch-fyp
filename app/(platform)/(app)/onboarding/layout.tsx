@@ -1,5 +1,6 @@
 import { UserMenu } from '@/features/auth';
 import { OnboardingProgress } from '@/features/onboarding';
+import { PRODUCT_NAME } from '@/shared/lib/env';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -9,7 +10,7 @@ const layout = ({ children }: { children: ReactNode }) => {
     <>
       <header className="flex h-12 items-center justify-between border-b border-border">
         <Link href="/dashboard" className="text-sm font-bold">
-          Overwatch
+          {PRODUCT_NAME}
         </Link>
         <UserMenu />
       </header>

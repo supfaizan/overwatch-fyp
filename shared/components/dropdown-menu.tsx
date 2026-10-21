@@ -1,7 +1,7 @@
 import { popIn } from '@/shared/lib/animations';
 import { cn } from '@/shared/lib/cn';
 import { DropdownMenu as Menu } from 'radix-ui';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ComponentType, ReactNode } from 'react';
 
 /** A menu panel's look, shared with the context menu so both menus match. */
 export const MENU_CONTENT_CLASS = cn(
@@ -72,3 +72,22 @@ export function DropdownMenuSeparator(
 ) {
   return <Menu.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
 }
+
+/**
+ * The pieces of a menu, so one list of actions can render as both a `DropdownMenu` and a `ContextMenu`:
+ * write the list once as `(parts: MenuParts) => …` and pass `DROPDOWN_MENU_PARTS` or `CONTEXT_MENU_PARTS`.
+ */
+export type MenuParts = {
+  Item: ComponentType<
+    { disabled?: boolean; danger?: boolean; onSelect?: () => void; children: ReactNode }
+  >;
+  Label: ComponentType<{ children: ReactNode }>;
+  Separator: ComponentType;
+};
+
+/** This menu's parts, for an actions list shared with a context menu. */
+export const DROPDOWN_MENU_PARTS: MenuParts = {
+  Item: DropdownMenuItem,
+  Label: DropdownMenuLabel,
+  Separator: DropdownMenuSeparator,
+};

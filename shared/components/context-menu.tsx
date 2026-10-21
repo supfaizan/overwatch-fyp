@@ -1,7 +1,12 @@
 import { cn } from '@/shared/lib/cn';
 import { ContextMenu as Menu } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { MENU_CONTENT_CLASS, MENU_LABEL_CLASS, menuItemClass } from './dropdown-menu';
+import {
+  MENU_CONTENT_CLASS,
+  MENU_LABEL_CLASS,
+  menuItemClass,
+  type MenuParts,
+} from './dropdown-menu';
 
 // unstyled Radix parts, re-exported so callers only import from here
 export const ContextMenu = Menu.Root;
@@ -13,6 +18,7 @@ export const ContextMenuTrigger = Menu.Trigger;
  * - Right-click can't be found by keyboard or trackpad users: offer the same actions in a visible `DropdownMenu` too.
  * - Put destructive items last, after a separator, with `danger`.
  * - Use `onSelect` (not `onClick`) on items.
+ * - Share one actions list with the visible menu through `MenuParts` (see `CONTEXT_MENU_PARTS`).
  */
 export function ContextMenuContent({ className, ...props }: ComponentProps<typeof Menu.Content>) {
   return (
@@ -43,3 +49,10 @@ export function ContextMenuSeparator(
 ) {
   return <Menu.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
 }
+
+/** This menu's parts, for an actions list shared with a dropdown menu (`MenuParts`). */
+export const CONTEXT_MENU_PARTS: MenuParts = {
+  Item: ContextMenuItem,
+  Label: ContextMenuLabel,
+  Separator: ContextMenuSeparator,
+};

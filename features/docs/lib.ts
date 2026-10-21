@@ -156,6 +156,35 @@ export function withImageLinks<T extends ContentNode>(node: T, urls: Record<stri
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+/** An image's width, in percent of the page column; the keyboard resizes in steps (big steps with Shift). */
+export const IMAGE_WIDTH = { min: 10, max: 100, step: 5, bigStep: 10 } as const;
+/** The sizes the image menu offers; `null` is the image's own size, capped at the column. */
+export const IMAGE_SIZE = { small: 25, medium: 50, full: 100, original: null } as const;
+export const ALT_MAX_LENGTH = 250;
+
+export function clampImageWidth(value: number): number {
+  if (!Number.isFinite(value)) {
+    return IMAGE_WIDTH.max;
+  }
+  return Math.min(IMAGE_WIDTH.max, Math.max(IMAGE_WIDTH.min, Math.round(value)));
+}
+
+/** Alt text as it's kept: one line, trimmed, capped; empty means the image is decorative. */
+export function imageAlt(text: string): string | null {
+  const alt = text.replace(/\s+/g, ' ').trim().slice(0, ALT_MAX_LENGTH).trim();
+  return alt || null;
+}
+
+/** A new image's alt text: its file name without the extension. */
+export function altFromFileName(name: string): string | null {
+  return imageAlt(name.replace(/\.[^.]+$/, ''));
+}
+
+/** Alt text that can't end a markdown image early. */
+export function markdownAlt(alt: string | null): string {
+  return (alt ?? '').replace(/[\\[\]]/g, '\\$&');
+}
+
 // docs sources by their names as people know them; others show their id, capitalised
 const SOURCE_NAMES: Record<string, string> = { confluence: 'Confluence' };
 

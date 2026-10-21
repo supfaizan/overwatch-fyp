@@ -2,7 +2,7 @@ import { toApiError } from '@/shared/api/envelope';
 import type { Editor } from '@tiptap/react';
 import { toast } from 'sonner';
 import { uploadImage } from './api';
-import { IMAGE_TYPES, MAX_IMAGE_BYTES } from './lib';
+import { altFromFileName, IMAGE_TYPES, MAX_IMAGE_BYTES } from './lib';
 
 /**
  * Puts images into a page at once (a local preview, dimmed), uploads them side by side, then swaps
@@ -29,7 +29,7 @@ export function insertImages(editor: Editor, pageId: string, files: File[], at?:
   const nodes = uploads.map(({ file, uploadId, preview }) => {
     return {
       type: 'image',
-      attrs: { src: preview, alt: file.name, uploadId },
+      attrs: { src: preview, alt: altFromFileName(file.name), uploadId },
     };
   });
   editor.chain().focus().insertContentAt(at ?? editor.state.selection.to, nodes).run();

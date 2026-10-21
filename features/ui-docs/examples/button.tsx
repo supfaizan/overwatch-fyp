@@ -1,5 +1,5 @@
-import { Plus, Trash } from '@phosphor-icons/react/ssr';
 import Button from '@/shared/components/button';
+import { Plus, Trash } from '@phosphor-icons/react/ssr';
 
 export function Variants() {
   return (

@@ -2,8 +2,10 @@ import { JOB_STATUS, type JobStatus } from '@/shared/lib/job-status';
 import Spinner from './spinner';
 import Tag from './tag';
 
-
-const labels: Record<JobStatus, { text: string; variant: 'default' | 'primary' | 'success' | 'danger' }> = {
+const labels: Record<
+  JobStatus,
+  { text: string; variant: 'default' | 'primary' | 'success' | 'danger' }
+> = {
   pending: { text: 'Queued', variant: 'default' },
   in_progress: { text: 'Indexing', variant: 'primary' },
   done: { text: 'Indexed', variant: 'success' },

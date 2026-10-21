@@ -1,5 +1,7 @@
 import { PreferencesSection } from '@/features/settings';
 
-const page = () => <PreferencesSection />;
+const page = () => {
+  return <PreferencesSection />;
+};
 
 export default page;

@@ -1,26 +1,38 @@
 'use client';
 
+import { cn } from '@/shared/lib/cn';
 import type { ComponentProps } from 'react';
 import { Streamdown } from 'streamdown';
-import { cn } from '@/shared/lib/cn';
 
 type Components = NonNullable<ComponentProps<typeof Streamdown>['components']>;
 
 /** Links open in a new tab and tell the destination nothing about where they came from. */
-const SafeLink: Components['a'] = ({ href, children }) => (
-  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-2 hover:underline">
-    {children}
-  </a>
-);
+const SafeLink: Components['a'] = ({ href, children }) => {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary underline-offset-2 hover:underline"
+    >
+      {children}
+    </a>
+  );
+};
 
 /** Images never load by default: an image URL is a request to whoever wrote it. Pass `components.img` to allow some. */
-const ImagePlaceholder: Components['img'] = ({ alt }) => <span className="text-xs text-muted">[image{alt ? `: ${alt}` : ''}]</span>;
+const ImagePlaceholder: Components['img'] = ({ alt }) => {
+  return <span className="text-xs text-muted">[image{alt ? `: ${alt}` : ''}]</span>;
+};
 
 /** `code` in a sentence: a light primary tint, readable in both themes (Streamdown's default is a dark block). */
 /** The inline-code look; `rich-text-editor.tsx` spells out the same classes, so keep the two in step. */
-const INLINE_CODE_CLASS = 'rounded bg-primary/10 px-1 py-0.5 font-mono text-[0.85em] text-primary-strong dark:text-primary';
+const INLINE_CODE_CLASS =
+  'rounded bg-primary/10 px-1 py-0.5 font-mono text-[0.85em] text-primary-strong dark:text-primary';
 
-export function InlineCode({ children, className, node: _node, ...props }: ComponentProps<'code'> & { node?: unknown }) {
+export function InlineCode(
+  { children, className, node: _node, ...props }: ComponentProps<'code'> & { node?: unknown },
+) {
   return (
     <code className={cn(INLINE_CODE_CLASS, className)} {...props}>
       {children}

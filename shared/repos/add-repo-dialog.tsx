@@ -1,7 +1,6 @@
 'use client';
 
-import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
-import { ApiError, GITHUB_SIGN_IN_URL } from '@/shared/api/envelope';
+import { ApiError } from '@/shared/api/envelope';
 import { ERROR_CODE } from '@/shared/api/error-codes';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
@@ -9,6 +8,9 @@ import { Dialog, DialogContent } from '@/shared/components/dialog';
 import GithubMark from '@/shared/components/github-mark';
 import RepoPicker from '@/shared/components/repo-picker';
 import Skeleton from '@/shared/components/skeleton';
+import { PRODUCT_NAME } from '@/shared/lib/env';
+import { ArrowSquareOut } from '@phosphor-icons/react/ssr';
+import ConnectGithubButton from './connect-github-button';
 import { useAvailableRepos, useConnectRepo, useInstallations } from './hooks';
 
 type AddRepoDialogProps = {
@@ -27,7 +29,9 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
   const installations = useInstallations(open);
   const hasInstallation = (installations.data?.installations.length ?? 0) > 0;
   const available = useAvailableRepos(open && hasInstallation);
-  const connect = useConnectRepo((repo) => done(repo.repo_full_name));
+  const connect = useConnectRepo((repo) => {
+    return done(repo.repo_full_name);
+  });
 
   function done(repoFullName: string) {
     onOpenChange(false);
@@ -41,42 +45,77 @@ export default function AddRepoDialog({ open, onOpenChange, onConnected }: AddRe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title="Add a repository"
-        description="Overwatch maps its architecture and keeps it current on every push."
-        footer={
-          installUrl && (
-            <a href={installUrl} target="_blank" rel="noopener noreferrer" className="mr-auto inline-flex items-center gap-1 self-center text-sm text-primary hover:underline">
-              Missing a repository? Configure the GitHub App <ArrowSquareOut className="size-3.5" />
-            </a>
-          )
-        }
-      >
-        {error instanceof ApiError && error.errorCode === ERROR_CODE.githubNeedsReauth ? (
-          <Banner type="warning" action={<Button size="sm" asChild><a href={GITHUB_SIGN_IN_URL}>Sign in again</a></Button>}>
-            Your GitHub authorization expired or was revoked.
-          </Banner>
-        ) : error ? (
-          <Banner type="error" action={<Button size="sm" onClick={() => void (installations.isError ? installations.refetch() : available.refetch())}>Retry</Button>}>
-            {error.message}
-          </Banner>
-        ) : installations.isPending ? (
-          <Skeleton className="h-40 w-full" />
-        ) : !hasInstallation ? (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-muted">Install the Overwatch GitHub App on the account that owns your repositories, then come back here.</p>
-            <Button variant="primary" asChild>
-              <a href={installUrl} target="_blank" rel="noopener noreferrer">
-                <GithubMark /> Install GitHub App
-              </a>
-            </Button>
-          </div>
-        ) : (
-          <RepoPicker
-            repos={available.data ?? []}
-            loading={available.isPending}
-            pending={connect.isPending ? (connect.variables ?? null) : null}
-            onSelect={(name) => (available.data?.find((repo) => repo.full_name === name)?.connected ? done(name) : connect.mutate(name))}
-          />
+        description="We map its architecture and keep it current on every push."
+        footer={installUrl && (
+          <a
+            href={installUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mr-auto inline-flex items-center gap-1 self-center text-sm text-primary hover:underline"
+          >
+            Missing a repository? Configure the GitHub App <ArrowSquareOut className="size-3.5" />
+          </a>
         )}
+      >
+        {error instanceof ApiError && error.errorCode === ERROR_CODE.githubNeedsReauth
+          ? (
+            <Banner type="warning" action={<ConnectGithubButton returnTo="settings" />}>
+              Connect your GitHub account to add repositories. If it was connected, the
+              authorization expired or was revoked.
+            </Banner>
+          )
+          : error
+          ? (
+            <Banner
+              type="error"
+              action={
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    return void (installations.isError
+                      ? installations.refetch()
+                      : available.refetch());
+                  }}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              {error.message}
+            </Banner>
+          )
+          : installations.isPending
+          ? <Skeleton className="h-40 w-full" />
+          : !hasInstallation
+          ? (
+            <div className="flex flex-col items-start gap-3">
+              <p className="text-muted">
+                Install the {PRODUCT_NAME}{' '}
+                GitHub App on the account that owns your repositories, then come back here.
+              </p>
+              <Button variant="primary" asChild>
+                <a href={installUrl} target="_blank" rel="noopener noreferrer">
+                  <GithubMark /> Install GitHub App
+                </a>
+              </Button>
+            </div>
+          )
+          : (
+            <RepoPicker
+              repos={available.data ?? []}
+              loading={available.isPending}
+              pending={connect.isPending ? (connect.variables ?? null) : null}
+              onSelect={(
+                name,
+              ) => {
+                return (available.data?.find((repo) => {
+                    return repo.full_name === name;
+                  })?.connected
+                  ? done(name)
+                  : connect.mutate(name));
+              }}
+            />
+          )}
       </DialogContent>
     </Dialog>
   );

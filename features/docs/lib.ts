@@ -1,3 +1,6 @@
+import { timeAgo } from '@/shared/lib/time';
+import { type Document, NATIVE_SOURCE, PUSH_STATE } from './types';
+
 export const SAVE_STATUS = {
   saved: 'saved',
   /** edited, waiting for the pause that triggers a save */
@@ -43,7 +46,9 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
   async function flush(): Promise<void> {
     clear();
     // a save in flight sends this change when it finishes
-    if (stopped || saving || !dirty) return;
+    if (stopped || saving || !dirty) {
+      return;
+    }
     saving = true;
     dirty = false;
     onStatus(SAVE_STATUS.saving);
@@ -62,12 +67,16 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
     } finally {
       saving = false;
     }
-    if (dirty && !stopped && !timer) schedule(delay);
+    if (dirty && !stopped && !timer) {
+      schedule(delay);
+    }
   }
 
   return {
     change() {
-      if (stopped) return;
+      if (stopped) {
+        return;
+      }
       dirty = true;
       onStatus(SAVE_STATUS.dirty);
       schedule(delay);
@@ -79,7 +88,9 @@ export function createAutosave({ delay, retryDelay, save, isConflict, onStatus }
       stopped = false;
       return flush();
     },
-    hasUnsaved: () => dirty || saving,
+    hasUnsaved: () => {
+      return dirty || saving;
+    },
     dispose: clear,
   };
 }
@@ -111,33 +122,31 @@ export function readingMinutes(markdown: string | null): number {
   return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
-/** "just now", "5 minutes ago", "3 days ago"; past a month, the date itself. */
-export function timeAgo(iso: string, now = Date.now()): string {
-  const seconds = Math.round((now - new Date(iso).getTime()) / 1000);
-  if (seconds < 60) return 'just now';
-  const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return relative.format(-minutes, 'minute');
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return relative.format(-hours, 'hour');
-  const days = Math.floor(hours / 24);
-  if (days < 7) return relative.format(-days, 'day');
-  if (days < 30) return relative.format(-Math.floor(days / 7), 'week');
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(iso));
-}
-
-type ContentNode = { type?: string; attrs?: Record<string, unknown>; content?: ContentNode[]; [key: string]: unknown };
+type ContentNode = {
+  type?: string;
+  attrs?: Record<string, unknown>;
+  content?: ContentNode[];
+  [key: string]: unknown;
+};
 
 /**
  * A page's content as it's opened: uploaded images get their fresh signed links, and an image whose
  * upload never finished (saved with only its local preview) is left out.
  */
 export function withImageLinks<T extends ContentNode>(node: T, urls: Record<string, string>): T {
-  if (!node.content) return node;
+  if (!node.content) {
+    return node;
+  }
   const content = node.content.flatMap((child) => {
-    if (child.type !== 'image') return [withImageLinks(child, urls)];
+    if (child.type !== 'image') {
+      return [withImageLinks(child, urls)];
+    }
     const id = child.attrs?.attachmentId;
-    if (typeof id === 'string') return urls[id] ? [{ ...child, attrs: { ...child.attrs, src: urls[id], uploadId: null } }] : [];
+    if (typeof id === 'string') {
+      return urls[id]
+        ? [{ ...child, attrs: { ...child.attrs, src: urls[id], uploadId: null } }]
+        : [];
+    }
     return String(child.attrs?.src ?? '').startsWith('blob:') ? [] : [child];
   });
   return { ...node, content };
@@ -146,3 +155,66 @@ export function withImageLinks<T extends ContentNode>(node: T, urls: Record<stri
 /** Images a page can take: what the backend accepts, at most 10 MB. */
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+/** An image's width, in percent of the page column; the keyboard resizes in steps (big steps with Shift). */
+export const IMAGE_WIDTH = { min: 10, max: 100, step: 5, bigStep: 10 } as const;
+/** The sizes the image menu offers; `null` is the image's own size, capped at the column. */
+export const IMAGE_SIZE = { small: 25, medium: 50, full: 100, original: null } as const;
+export const ALT_MAX_LENGTH = 250;
+
+export function clampImageWidth(value: number): number {
+  if (!Number.isFinite(value)) {
+    return IMAGE_WIDTH.max;
+  }
+  return Math.min(IMAGE_WIDTH.max, Math.max(IMAGE_WIDTH.min, Math.round(value)));
+}
+
+/** Alt text as it's kept: one line, trimmed, capped; empty means the image is decorative. */
+export function imageAlt(text: string): string | null {
+  const alt = text.replace(/\s+/g, ' ').trim().slice(0, ALT_MAX_LENGTH).trim();
+  return alt || null;
+}
+
+/** A new image's alt text: its file name without the extension. */
+export function altFromFileName(name: string): string | null {
+  return imageAlt(name.replace(/\.[^.]+$/, ''));
+}
+
+/** Alt text that can't end a markdown image early. */
+export function markdownAlt(alt: string | null): string {
+  return (alt ?? '').replace(/[\\[\]]/g, '\\$&');
+}
+
+// docs sources by their names as people know them; others show their id, capitalised
+const SOURCE_NAMES: Record<string, string> = { confluence: 'Confluence' };
+
+export const sourceName = (source: string) => {
+  return SOURCE_NAMES[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
+};
+
+/** How a mirrored page stands with its source, for under its title; null for pages written here. */
+export function syncLabel(
+  doc: Pick<Document, 'source' | 'push_state' | 'push_error' | 'synced_at'>,
+  now = Date.now(),
+): string | null {
+  if (doc.source === NATIVE_SOURCE) {
+    return null;
+  }
+  const name = sourceName(doc.source);
+  if (doc.push_state === PUSH_STATE.conflict) {
+    return `Changed in ${name} too`;
+  }
+  if (doc.push_state === PUSH_STATE.pending || doc.push_state === PUSH_STATE.pushing) {
+    return doc.push_error
+      ? `Not saved to ${name} yet: ${doc.push_error}`
+      : `Saving to ${name} shortly`;
+  }
+  return doc.synced_at ? `Synced with ${name} ${timeAgo(doc.synced_at, now)}` : `From ${name}`;
+}
+
+/** A colour from a mirrored page, when it's a plain one (`#deebff`, `red`); anything else is dropped. */
+export const plainColor = (value: unknown): string | undefined => {
+  return typeof value === 'string' && /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(value)
+    ? value
+    : undefined;
+};

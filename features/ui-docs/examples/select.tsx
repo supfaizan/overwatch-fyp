@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
+import { useState } from 'react';
 
 export function Basic() {
   const [repo, setRepo] = useState('');
@@ -27,15 +27,17 @@ export function Basic() {
 export function Sizes() {
   return (
     <>
-      {(['sm', 'md', 'lg'] as const).map((size) => (
-        <Select key={size} defaultValue="main">
-          <SelectTrigger size={size} aria-label={`Branch (${size})`} className="w-40" />
-          <SelectContent>
-            <SelectItem value="main">main</SelectItem>
-            <SelectItem value="develop">develop</SelectItem>
-          </SelectContent>
-        </Select>
-      ))}
+      {(['sm', 'md', 'lg'] as const).map((size) => {
+        return (
+          <Select key={size} defaultValue="main">
+            <SelectTrigger size={size} aria-label={`Branch (${size})`} className="w-40" />
+            <SelectContent>
+              <SelectItem value="main">main</SelectItem>
+              <SelectItem value="develop">develop</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      })}
     </>
   );
 }

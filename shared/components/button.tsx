@@ -1,7 +1,7 @@
+import { cn } from '@/shared/lib/cn';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from 'radix-ui';
 import type { ComponentProps, CSSProperties } from 'react';
-import { cn } from '@/shared/lib/cn';
 import Spinner from './spinner';
 
 const buttonVariants = cva(
@@ -55,8 +55,10 @@ const buttonVariants = cva(
   },
 );
 
-type ButtonProps = ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
+type ButtonProps =
+  & ComponentProps<'button'>
+  & VariantProps<typeof buttonVariants>
+  & {
     /** Render as the child element instead, e.g. `<Button asChild><Link href="/" /></Button>`. */
     asChild?: boolean;
     /** Disables the button and shows a spinner. Ignored with `asChild` (Slot needs a single child). */
@@ -108,9 +110,7 @@ export default function Button({
       {...props}
     >
       {/* Slot needs a single child; aria-busy already announces loading; icon-only buttons swap their icon for the spinner */}
-      {asChild ? (
-        children
-      ) : (
+      {asChild ? children : (
         <>
           {busy && <Spinner aria-hidden />}
           {!(busy && iconOnly) && children}

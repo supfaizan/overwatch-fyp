@@ -1,7 +1,7 @@
 'use client';
 
 import { DotsThree } from '@phosphor-icons/react/ssr';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, type NodeProps, Position } from '@xyflow/react';
 import { useViewStore } from '../store';
 import type { OverflowFlowNode } from '../types';
 
@@ -9,7 +9,9 @@ const handle = '!size-1.5 !border-0 !bg-border-strong';
 
 /** Stands for the children there was no room for; their relationships are drawn against it. Clicking draws the rest. */
 export default function OverflowNode({ data }: NodeProps<OverflowFlowNode>) {
-  const reveal = useViewStore((state) => state.reveal);
+  const reveal = useViewStore((state) => {
+    return state.reveal;
+  });
 
   return (
     <button

@@ -1,13 +1,15 @@
+import { cn } from '@/shared/lib/cn';
 import { Switch as SwitchPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { cn } from '@/shared/lib/cn';
 
 /**
  * On/off toggle that applies immediately (Radix Switch). Accepts every Radix `Switch.Root` prop (`checked`, `onCheckedChange`...).
  * - Wrap it in a `<label>` with the text so the whole row is clickable.
  * - Use it for settings that take effect right away; inside a form that's submitted later, use a Checkbox.
  */
-export default function Switch({ className, ...props }: ComponentProps<typeof SwitchPrimitive.Root>) {
+export default function Switch(
+  { className, ...props }: ComponentProps<typeof SwitchPrimitive.Root>,
+) {
   return (
     <SwitchPrimitive.Root
       className={cn(

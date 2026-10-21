@@ -104,12 +104,12 @@ if (config.value !== undefined) {
   args = parsed.rest;
   if (args.length !== 3) { usage(); }
   const [from, to, names] = args;
-  jobs = names.split(',').filter(Boolean).map((name) => ({
+  jobs = names.split(',').filter(Boolean).map((name) => {return {
     name,
     from,
     to,
     renames: parsed.renames,
-  }));
+  }});
 }
 
 let ok = true;

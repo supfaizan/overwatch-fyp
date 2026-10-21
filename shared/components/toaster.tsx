@@ -11,13 +11,11 @@ import { Toaster as Sonner } from 'sonner';
 export default function Toaster() {
   return (
     <Sonner
-      style={
-        {
-          '--normal-bg': 'var(--color-surface)',
-          '--normal-text': 'var(--color-foreground)',
-          '--normal-border': 'var(--color-border)',
-        } as CSSProperties
-      }
+      style={{
+        '--normal-bg': 'var(--color-surface)',
+        '--normal-text': 'var(--color-foreground)',
+        '--normal-border': 'var(--color-border)',
+      } as CSSProperties}
       toastOptions={{
         classNames: {
           toast: 'font-sans shadow-chrome! shadow-border!',

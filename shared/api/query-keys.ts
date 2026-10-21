@@ -7,5 +7,6 @@ export const queryKeys = {
   github: ['github'] as const,
   connections: ['connections'] as const,
   workItems: ['work-items'] as const,
+  workItemTypes: ['work-item-types'] as const,
   workspaces: ['workspaces'] as const,
 };

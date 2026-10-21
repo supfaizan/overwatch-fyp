@@ -6,7 +6,11 @@ type WorkspaceState = {
   setId: (id: string | null) => void;
 };
 
-export const useWorkspace = create<WorkspaceState>()((set) => ({
-  id: null,
-  setId: (id) => set({ id }),
-}));
+export const useWorkspace = create<WorkspaceState>()((set) => {
+  return {
+    id: null,
+    setId: (id) => {
+      return set({ id });
+    },
+  };
+});

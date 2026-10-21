@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import Button from './button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from './dialog';
 
@@ -23,7 +23,9 @@ type ConfirmDialogProps = {
  * - Use it for actions that are hard to undo (disconnect, delete); skip it for reversible ones.
  * - Close only on success, so an error leaves the user where they were.
  */
-export default function ConfirmDialog({ trigger, title, description, confirmLabel, pending, onConfirm }: ConfirmDialogProps) {
+export default function ConfirmDialog(
+  { trigger, title, description, confirmLabel, pending, onConfirm }: ConfirmDialogProps,
+) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -36,7 +38,15 @@ export default function ConfirmDialog({ trigger, title, description, confirmLabe
             <DialogClose asChild>
               <Button>Cancel</Button>
             </DialogClose>
-            <Button variant="danger" loading={pending} onClick={() => onConfirm(() => setOpen(false))}>
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() => {
+                return onConfirm(() => {
+                  return setOpen(false);
+                });
+              }}
+            >
               {confirmLabel}
             </Button>
           </>

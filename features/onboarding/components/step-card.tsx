@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import Card from '@/shared/components/card';
+import type { ReactNode } from 'react';
 
 /** The frame every onboarding step sits in: heading, body, and an action row. */
 export default function StepCard({ title, description, children, actions }: {
@@ -15,7 +15,11 @@ export default function StepCard({ title, description, children, actions }: {
         <p className="text-sm text-muted">{description}</p>
       </div>
       {children}
-      {actions && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
+          {actions}
+        </div>
+      )}
     </Card>
   );
 }

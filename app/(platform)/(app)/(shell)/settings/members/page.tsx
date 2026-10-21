@@ -1,5 +1,7 @@
 import { MembersSection } from '@/features/settings';
 
-const page = () => <MembersSection />;
+const page = () => {
+  return <MembersSection />;
+};
 
 export default page;

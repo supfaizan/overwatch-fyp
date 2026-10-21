@@ -31,8 +31,8 @@ const [base, ours, theirs] = args;
 
 const root = repoRoot();
 const significant = (line) =>
-  line.length >= 12 && !/^[\])}{([;,>:</\s]*$/.test(line)
-  && !/^<\/\w+>$/.test(line);
+  {return line.length >= 12 && !/^[\])}{([;,>:</\s]*$/.test(line)
+  && !/^<\/\w+>$/.test(line)};
 const { added, removed } = patchFiles(git(root, ['diff', base, ours]));
 
 const created = git(root, [
@@ -43,11 +43,11 @@ const created = git(root, [
   theirs,
 ])
   .split(/\r?\n/)
-  .filter((f) => f && /\.(tsx?|jsx?|cjs|mjs)$/.test(f));
+  .filter((f) => {return f && /\.(tsx?|jsx?|cjs|mjs)$/.test(f)});
 const createdLines = created
-  .map((f) => [f, readAt(root, mergedOpt.value, f)])
-  .filter(([, text]) => text !== null)
-  .map(([f, text]) => [f, text.split(/\r?\n/).map(norm)]);
+  .map((f) => {return [f, readAt(root, mergedOpt.value, f)]})
+  .filter(([, text]) => {return text !== null})
+  .map(([f, text]) => {return [f, text.split(/\r?\n/).map(norm)]});
 
 const pairs = new Map();
 for (const [file, lines] of removed) {
@@ -73,9 +73,9 @@ for (const [file, lines] of removed) {
   }
 }
 
-const ranked = [...pairs].sort((a, b) => b[1].length - a[1].length);
-const strong = ranked.filter(([, hits]) => hits.length >= minHits);
-const weak = ranked.filter(([, hits]) => hits.length < minHits);
+const ranked = [...pairs].sort((a, b) => {return b[1].length - a[1].length});
+const strong = ranked.filter(([, hits]) => {return hits.length >= minHits});
+const weak = ranked.filter(([, hits]) => {return hits.length < minHits});
 for (const [pair, hits] of strong) {
   console.log(`\n${pair}  (${hits.length} line(s))`);
   for (const h of hits.slice(0, 8)) { console.log(`    ${h}`); }
@@ -84,7 +84,7 @@ for (const [pair, hits] of strong) {
 if (weak.length) {
   console.log(
     `\n${weak.length} pair(s) below ${minHits} hit(s), likely boilerplate: ${
-      weak.map(([p, h]) => `${p} (${h.length})`).join('; ')
+      weak.map(([p, h]) => {return `${p} (${h.length})`}).join('; ')
     }`,
   );
 }

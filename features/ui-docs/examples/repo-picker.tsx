@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import RepoPicker from '@/shared/components/repo-picker';
+import { useState } from 'react';
 
 const repos = [
   { id: 1, full_name: 'acme/api', private: true, connected: true },
@@ -19,7 +19,9 @@ export function Picker() {
         pending={pending}
         onSelect={(name) => {
           setPending(name);
-          setTimeout(() => setPending(null), 1000);
+          setTimeout(() => {
+            return setPending(null);
+          }, 1000);
         }}
       />
     </div>

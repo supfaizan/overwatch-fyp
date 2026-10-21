@@ -3,27 +3,49 @@ import { isInside } from '../store';
 import type { ViewEdge } from '../types';
 import { describeEdge, mergeByPair, neighbourhood, relationTo } from './edges';
 
-const edge = (source: string, target: string, type: ViewEdge['type'], weight = 1, collapsed = false): ViewEdge => ({
-  source,
-  target,
-  type,
-  weight,
-  collapsed,
-});
+const edge = (
+  source: string,
+  target: string,
+  type: ViewEdge['type'],
+  weight = 1,
+  collapsed = false,
+): ViewEdge => {
+  return {
+    source,
+    target,
+    type,
+    weight,
+    collapsed,
+  };
+};
 
 describe('mergeByPair', () => {
   it('draws one line per direction of a pair, named by the most specific relationship', () => {
-    const merged = mergeByPair([edge('a', 'b', 'IMPORTS', 3), edge('a', 'b', 'CALLS', 2, true), edge('b', 'a', 'IMPORTS')]);
+    const merged = mergeByPair([
+      edge('a', 'b', 'IMPORTS', 3),
+      edge('a', 'b', 'CALLS', 2, true),
+      edge('b', 'a', 'IMPORTS'),
+    ]);
 
     expect(merged).toEqual([
-      { id: 'a->b', source: 'a', target: 'b', types: ['CALLS', 'IMPORTS'], weight: 5, collapsed: true },
+      {
+        id: 'a->b',
+        source: 'a',
+        target: 'b',
+        types: ['CALLS', 'IMPORTS'],
+        weight: 5,
+        collapsed: true,
+      },
       { id: 'b->a', source: 'b', target: 'a', types: ['IMPORTS'], weight: 1, collapsed: false },
     ]);
     expect(describeEdge(merged[0])).toBe('calls, imports · 5');
   });
 
   it('ranks unlisted types after the listed ones', () => {
-    expect(mergeByPair([edge('a', 'b', 'SENDS'), edge('a', 'b', 'IMPORTS')])[0].types).toEqual(['IMPORTS', 'SENDS']);
+    expect(mergeByPair([edge('a', 'b', 'SENDS'), edge('a', 'b', 'IMPORTS')])[0].types).toEqual([
+      'IMPORTS',
+      'SENDS',
+    ]);
   });
 });
 
@@ -31,7 +53,13 @@ describe('focus', () => {
   const lines = [edge('a', 'b', 'CALLS'), edge('c', 'a', 'IMPORTS'), edge('c', 'd', 'IMPORTS')];
 
   it('tells what the focused node uses from what uses it', () => {
-    expect(lines.map((line) => relationTo(line, 'a'))).toEqual(['outgoing', 'incoming', 'unrelated']);
+    expect(lines.map((line) => {
+      return relationTo(line, 'a');
+    })).toEqual([
+      'outgoing',
+      'incoming',
+      'unrelated',
+    ]);
     expect(relationTo(lines[0], null)).toBe('none');
   });
 

@@ -18,12 +18,12 @@ const repoRoot = (cwd = process.cwd()) => {
 };
 
 const git = (root, args) =>
-  execFileSync('git', args, {
+  {return execFileSync('git', args, {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 1 << 28,
     stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  })};
 
 const loadTypeScript = (root) => {
   try {
@@ -89,8 +89,8 @@ const takeFlag = (args, name) => {
 };
 
 const normalise = (text, renames = []) =>
-  renames
-    .reduce((acc, [from, to]) => acc.split(from).join(to), text)
+  {return renames
+    .reduce((acc, [from, to]) => {return acc.split(from).join(to)}, text)
     .replace(
       /^(\s*)((?:public|private|protected|readonly|override)\s+)+/gm,
       '$1',
@@ -100,22 +100,22 @@ const normalise = (text, renames = []) =>
     .replace(/([([{])\s+/g, '$1')
     .replace(/\s+([)\]}])/g, '$1')
     .replace(/ \./g, '.')
-    .trim();
+    .trim()};
 
 const splitLines = (text) =>
-  text
+  {return text
     .replace(/([;{])/g, '$1\n')
     .replace(/\}/g, '\n}')
     .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+    .map((line) => {return line.trim()})
+    .filter(Boolean)};
 
 const lineDiff = (aText, bText, max = 40) => {
   const a = splitLines(aText);
   const b = splitLines(bText);
   const n = a.length;
   const m = b.length;
-  const dp = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+  const dp = Array.from({ length: n + 1 }, () => {return new Uint32Array(m + 1)});
   for (let i = n - 1; i >= 0; i -= 1) {
     for (let j = m - 1; j >= 0; j -= 1) {
       dp[i][j] = a[i] === b[j]
@@ -150,12 +150,12 @@ const declarations = (ts, text, file) => {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const found = [];
   const add = (owner, name, node) =>
-    found.push({
+    {return found.push({
       owner,
       name,
       node,
       qualified: owner ? `${owner}.${name}` : name,
-    });
+    })};
   const memberName = (member) => {
     if (ts.isConstructorDeclaration(member)) { return 'constructor'; }
     if (!member.name) { return null; }
@@ -201,21 +201,21 @@ const declarations = (ts, text, file) => {
   };
   source.statements.forEach(visitTop);
   const printer = ts.createPrinter({ removeComments: true });
-  return found.map((d) => ({
+  return found.map((d) => {return {
     ...d,
     text: printer.printNode(ts.EmitHint.Unspecified, d.node, source),
-  }));
+  }});
 };
 
 const resolveName = (decls, wanted) => {
   const matches = wanted.includes('.')
-    ? decls.filter((d) => d.qualified === wanted)
-    : decls.filter((d) => d.name === wanted);
+    ? decls.filter((d) => {return d.qualified === wanted})
+    : decls.filter((d) => {return d.name === wanted});
   if (matches.length === 1) { return { match: matches[0] }; }
   if (matches.length === 0) { return { error: 'MISSING' }; }
   return {
     error: `AMBIGUOUS (${
-      matches.map((m) => m.qualified).join(', ')
+      matches.map((m) => {return m.qualified}).join(', ')
     }; qualify as Class.member)`,
   };
 };

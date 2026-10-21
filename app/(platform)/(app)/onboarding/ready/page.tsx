@@ -1,5 +1,7 @@
 import { ReadyStep } from '@/features/onboarding';
 
-const page = () => <ReadyStep />;
+const page = () => {
+  return <ReadyStep />;
+};
 
 export default page;

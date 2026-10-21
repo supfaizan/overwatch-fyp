@@ -1,8 +1,8 @@
+import { popIn } from '@/shared/lib/animations';
+import { cn } from '@/shared/lib/cn';
 import { CaretDown, Check } from '@phosphor-icons/react/ssr';
 import { Select as SelectPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { popIn } from '@/shared/lib/animations';
-import { cn } from '@/shared/lib/cn';
 import { field, fieldSizes } from './input';
 
 // unstyled Radix root, re-exported so callers only import from here; takes `value`/`onValueChange`
@@ -25,7 +25,9 @@ type SelectTriggerProps = ComponentProps<typeof SelectPrimitive.Trigger> & {
  * - Label it with a visible `<label htmlFor>` pointing at the trigger's `id`, or `aria-label`.
  * - Past a few dozen options, sort them so typeahead stays useful.
  */
-export function SelectTrigger({ className, placeholder, size = 'md', ...props }: SelectTriggerProps) {
+export function SelectTrigger(
+  { className, placeholder, size = 'md', ...props }: SelectTriggerProps,
+) {
   return (
     <SelectPrimitive.Trigger
       className={cn(
@@ -45,7 +47,9 @@ export function SelectTrigger({ className, placeholder, size = 'md', ...props }:
 }
 
 /** The dropdown list, as wide as the trigger. Scrolls when long. */
-export function SelectContent({ className, children, ...props }: ComponentProps<typeof SelectPrimitive.Content>) {
+export function SelectContent(
+  { className, children, ...props }: ComponentProps<typeof SelectPrimitive.Content>,
+) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -65,7 +69,9 @@ export function SelectContent({ className, children, ...props }: ComponentProps<
 }
 
 /** One option. `value` is what `onValueChange` receives; children are what's shown. */
-export function SelectItem({ className, children, ...props }: ComponentProps<typeof SelectPrimitive.Item>) {
+export function SelectItem(
+  { className, children, ...props }: ComponentProps<typeof SelectPrimitive.Item>,
+) {
   return (
     <SelectPrimitive.Item
       className={cn(

@@ -1,7 +1,5 @@
 'use client';
 
-import { SignOut, Trash } from '@phosphor-icons/react/ssr';
-import { useState, type FormEvent } from 'react';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
@@ -10,15 +8,22 @@ import { useSession } from '@/shared/session/store';
 import { useCurrentWorkspace, useSwitchWorkspace, useWorkspaces } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE, type Workspace } from '@/shared/workspaces/types';
+import { SignOut, Trash } from '@phosphor-icons/react/ssr';
+import { type FormEvent, useState } from 'react';
 import { useDeleteWorkspace, useRemoveMember, useRenameWorkspace } from '../hooks';
 import { SettingsSection } from './settings-layout';
 
 export default function WorkspaceSection() {
   const workspace = useCurrentWorkspace();
-  if (!workspace) return null;
+  if (!workspace) {
+    return null;
+  }
 
   return (
-    <SettingsSection title="Workspace" description="Everyone in a workspace shares its repositories and integrations.">
+    <SettingsSection
+      title="Workspace"
+      description="Everyone in a workspace shares its repositories and integrations."
+    >
       {/* keyed so the name field resets when the workspace changes */}
       <NameCard key={workspace.id} workspace={workspace} />
       {!workspace.personal && <DangerCard workspace={workspace} />}
@@ -44,12 +49,31 @@ function NameCard({ workspace }: { workspace: Workspace }) {
           <label htmlFor="workspace-name" className="text-sm font-medium">
             Name
           </label>
-          <p className="text-sm text-muted">{canEdit ? 'Shown in the sidebar and on invites.' : 'Only admins can rename the workspace.'}</p>
+          <p className="text-sm text-muted">
+            {canEdit
+              ? 'Shown in the sidebar and on invites.'
+              : 'Only admins can rename the workspace.'}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Input id="workspace-name" className="max-w-md flex-1" maxLength={60} value={name} disabled={!canEdit} onChange={(event) => setName(event.target.value)} />
+          <Input
+            id="workspace-name"
+            className="max-w-md flex-1"
+            maxLength={60}
+            value={name}
+            disabled={!canEdit}
+            onChange={(event) => {
+              return setName(event.target.value);
+            }}
+          />
           {canEdit && (
-            <Button type="submit" variant="primary" className="ml-auto" loading={rename.isPending} disabled={!trimmed || trimmed === workspace.name}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="ml-auto"
+              loading={rename.isPending}
+              disabled={!trimmed || trimmed === workspace.name}
+            >
               Save
             </Button>
           )}
@@ -60,22 +84,31 @@ function NameCard({ workspace }: { workspace: Workspace }) {
 }
 
 function DangerCard({ workspace }: { workspace: Workspace }) {
-  const userId = useSession((state) => state.user?.id ?? '');
-  const personal = useWorkspaces().data?.find((candidate) => candidate.personal);
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const personal = useWorkspaces().data?.find((candidate) => {
+    return candidate.personal;
+  });
   const switchTo = useSwitchWorkspace();
   const leave = useRemoveMember();
   const remove = useDeleteWorkspace();
   // both take the workspace away, so the personal one opens instead
   const leaveFor = (close: () => void) => {
     close();
-    if (personal) switchTo(personal.id);
+    if (personal) {
+      switchTo(personal.id);
+    }
   };
 
   return (
     <Card className="flex flex-col gap-3">
       <div>
         <p className="text-sm font-medium">Leave or delete</p>
-        <p className="text-sm text-muted">Deleting hides the workspace from everyone. Its repositories, tickets and graphs are kept, not erased.</p>
+        <p className="text-sm text-muted">
+          Deleting hides the workspace from everyone. Its repositories, tickets and graphs are kept,
+          not erased.
+        </p>
       </div>
       <div className="flex flex-wrap gap-2">
         <ConfirmDialog
@@ -88,7 +121,13 @@ function DangerCard({ workspace }: { workspace: Workspace }) {
           description="You lose access until someone invites you again."
           confirmLabel="Leave workspace"
           pending={leave.isPending}
-          onConfirm={(close) => leave.mutate({ id: workspace.id, userId }, { onSuccess: () => leaveFor(close) })}
+          onConfirm={(close) => {
+            return leave.mutate({ id: workspace.id, userId }, {
+              onSuccess: () => {
+                return leaveFor(close);
+              },
+            });
+          }}
         />
         {hasRole(workspace.role, ROLE.owner) && (
           <ConfirmDialog
@@ -101,7 +140,13 @@ function DangerCard({ workspace }: { workspace: Workspace }) {
             description="Every member loses access to it. Its data is kept, so it can be restored on request."
             confirmLabel="Delete workspace"
             pending={remove.isPending}
-            onConfirm={(close) => remove.mutate(workspace.id, { onSuccess: () => leaveFor(close) })}
+            onConfirm={(close) => {
+              return remove.mutate(workspace.id, {
+                onSuccess: () => {
+                  return leaveFor(close);
+                },
+              });
+            }}
           />
         )}
       </div>

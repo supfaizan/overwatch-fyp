@@ -2,7 +2,11 @@
 
 import type { JobStatus } from '@/shared/lib/job-status';
 
-export const ACCESS_STATUS = { active: 'active', revoked: 'revoked', needsInstall: 'needs_install' } as const;
+export const ACCESS_STATUS = {
+  active: 'active',
+  revoked: 'revoked',
+  needsInstall: 'needs_install',
+} as const;
 
 export type AccessStatus = (typeof ACCESS_STATUS)[keyof typeof ACCESS_STATUS];
 
@@ -28,5 +32,10 @@ export type AvailableRepo = {
 
 export type Installations = {
   install_url: string;
-  installations: { id: number; account_login: string; account_type: string; repository_selection: string | null }[];
+  installations: {
+    id: number;
+    account_login: string;
+    account_type: string;
+    repository_selection: string | null;
+  }[];
 };

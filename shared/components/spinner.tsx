@@ -1,6 +1,6 @@
+import { cn } from '@/shared/lib/cn';
 import { CircleNotch } from '@phosphor-icons/react/ssr';
 import type { ComponentProps } from 'react';
-import { cn } from '@/shared/lib/cn';
 
 /**
  * Loading spinner, announced as "Loading" to screen readers. Inherits text color; size via `className` (`size-6`).
@@ -8,5 +8,12 @@ import { cn } from '@/shared/lib/cn';
  * - For content that has a known shape (lists, cards), prefer a Skeleton.
  */
 export default function Spinner({ className, ...props }: ComponentProps<typeof CircleNotch>) {
-  return <CircleNotch role="status" aria-label="Loading" className={cn('size-4 animate-spin', className)} {...props} />;
+  return (
+    <CircleNotch
+      role="status"
+      aria-label="Loading"
+      className={cn('size-4 animate-spin', className)}
+      {...props}
+    />
+  );
 }

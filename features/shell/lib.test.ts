@@ -11,8 +11,16 @@ describe('isActive', () => {
 });
 
 describe('isCommandShortcut', () => {
-  const key = (overrides: Partial<Parameters<typeof isCommandShortcut>[0]>) =>
-    isCommandShortcut({ key: 'k', metaKey: false, ctrlKey: false, altKey: false, isComposing: false, ...overrides });
+  const key = (overrides: Partial<Parameters<typeof isCommandShortcut>[0]>) => {
+    return isCommandShortcut({
+      key: 'k',
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      isComposing: false,
+      ...overrides,
+    });
+  };
 
   it('opens on ⌘K or Ctrl+K, caps lock included', () => {
     expect(key({ metaKey: true })).toBe(true);

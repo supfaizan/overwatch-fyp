@@ -1,6 +1,6 @@
-import { Plus } from '@phosphor-icons/react/ssr';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import { Plus } from '@phosphor-icons/react/ssr';
 
 export function WithAction() {
   return (
@@ -14,7 +14,7 @@ export function WithAction() {
         </Button>
       }
     >
-      Get more out of Overwatch by inviting your team for free
+      Get more out of your workspace by inviting your team for free
     </Banner>
   );
 }

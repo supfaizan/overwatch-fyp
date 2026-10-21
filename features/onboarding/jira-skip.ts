@@ -1,7 +1,9 @@
 import { useWorkspace } from '@/shared/workspaces/store';
 
 // remembered per tab and workspace: skipping Jira is a "not now", not a setting
-const key = () => `ow_jira_skipped:${useWorkspace.getState().id}`;
+const key = () => {
+  return `ow_jira_skipped:${useWorkspace.getState().id}`;
+};
 
 export function isJiraSkipped(): boolean {
   try {

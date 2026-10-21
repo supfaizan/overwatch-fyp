@@ -20,7 +20,9 @@ const EDGE_STYLES: Record<EdgeType, EdgeStyle> = {
   RECEIVES: { stroke: primary, dash: '6 3', label: 'handles message' },
 };
 
-export const edgeStyle = (type: EdgeType): EdgeStyle => EDGE_STYLES[type] ?? { stroke: line, label: 'relates to' };
+export const edgeStyle = (type: EdgeType): EdgeStyle => {
+  return EDGE_STYLES[type] ?? { stroke: line, label: 'relates to' };
+};
 
 /** With a node in focus, "what this uses" and "what uses this" are coloured apart. */
 export const FOCUS_STROKE = { outgoing: primary, incoming: warning } as const;
@@ -31,20 +33,38 @@ export const TREE_STROKE = 'var(--color-border-hover)';
 /** What a node is, in one word. */
 export function describeNode(label: NodeLabel, kind: string | null): string {
   if (label === 'Module') {
-    if (kind === 'external') return 'packages';
-    if (kind === 'routes') return 'routes';
-    if (kind === 'channels') return 'messages';
+    if (kind === 'external') {
+      return 'packages';
+    }
+    if (kind === 'routes') {
+      return 'routes';
+    }
+    if (kind === 'channels') {
+      return 'messages';
+    }
     return 'folder';
   }
-  if (label === 'Symbol') return kind ?? 'definition';
-  if (label === 'Channel') return kind ?? 'message';
+  if (label === 'Symbol') {
+    return kind ?? 'definition';
+  }
+  if (label === 'Channel') {
+    return kind ?? 'message';
+  }
   return label.toLowerCase();
 }
 
 /** What opening a node would show; counts are subtree totals. */
-export function describeContents(node: Pick<ViewNode, 'label' | 'file_count' | 'definition_count' | 'child_count'>): string {
-  if (node.label === 'Module' && node.file_count > 0) return `${node.file_count} ${node.file_count === 1 ? 'file' : 'files'}`;
-  if (node.label === 'File' && node.definition_count > 0) return `${node.definition_count} defs`;
-  if (node.child_count > 0) return `${node.child_count} inside`;
+export function describeContents(
+  node: Pick<ViewNode, 'label' | 'file_count' | 'definition_count' | 'child_count'>,
+): string {
+  if (node.label === 'Module' && node.file_count > 0) {
+    return `${node.file_count} ${node.file_count === 1 ? 'file' : 'files'}`;
+  }
+  if (node.label === 'File' && node.definition_count > 0) {
+    return `${node.definition_count} defs`;
+  }
+  if (node.child_count > 0) {
+    return `${node.child_count} inside`;
+  }
   return '';
 }

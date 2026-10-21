@@ -1,12 +1,12 @@
 'use client';
 
-import { Markdown } from '@tiptap/markdown';
+import { cn } from '@/shared/lib/cn';
 import { TableKit } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
+import { Markdown } from '@tiptap/markdown';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useRef } from 'react';
-import { cn } from '@/shared/lib/cn';
 import { field } from './input';
 
 // ProseMirror renders plain elements, so the typography is set on them from the editor's root
@@ -30,12 +30,14 @@ export const RICH_TEXT_CLASS = cn(
   '[&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]',
 );
 
-const richTextExtensions = (placeholder?: string) => [
-  StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
-  TableKit,
-  Markdown,
-  Placeholder.configure({ placeholder }),
-];
+const richTextExtensions = (placeholder?: string) => {
+  return [
+    StarterKit.configure({ underline: false, link: { openOnClick: false, autolink: true } }),
+    TableKit,
+    Markdown,
+    Placeholder.configure({ placeholder }),
+  ];
+};
 
 type RichTextEditorProps = {
   /** The starting Markdown. Read once: the editor owns the text after that. */
@@ -65,7 +67,10 @@ type RichTextEditorProps = {
  * - Keyboard: Mod+B / Mod+I / Mod+E for bold, italic and code; `onSubmit` on Mod+Enter, `onCancel` on Esc.
  * - No underline, colors or panels: the text must stay expressible as Markdown.
  */
-export default function RichTextEditor({ value, onChange, placeholder, autoFocus = false, onSubmit, onCancel, className, ...props }: RichTextEditorProps) {
+export default function RichTextEditor(
+  { value, onChange, placeholder, autoFocus = false, onSubmit, onCancel, className, ...props }:
+    RichTextEditorProps,
+) {
   // the editor is set up once, so it calls the latest handlers through here
   const handlers = useRef({ onChange, onSubmit, onCancel });
   useEffect(() => {
@@ -80,7 +85,12 @@ export default function RichTextEditor({ value, onChange, placeholder, autoFocus
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     editorProps: {
-      attributes: { class: cn('min-h-32 px-3 py-2', RICH_TEXT_CLASS), 'aria-label': props['aria-label'], 'aria-multiline': 'true', role: 'textbox' },
+      attributes: {
+        class: cn('min-h-32 px-3 py-2', RICH_TEXT_CLASS),
+        'aria-label': props['aria-label'],
+        'aria-multiline': 'true',
+        role: 'textbox',
+      },
       handleKeyDown: (_view, event) => {
         const { onSubmit: submit, onCancel: cancel } = handlers.current;
         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && submit) {
@@ -94,7 +104,9 @@ export default function RichTextEditor({ value, onChange, placeholder, autoFocus
         return false;
       },
     },
-    onUpdate: ({ editor: current }) => handlers.current.onChange(current.getMarkdown()),
+    onUpdate: ({ editor: current }) => {
+      return handlers.current.onChange(current.getMarkdown());
+    },
   });
 
   return <EditorContent editor={editor} className={cn(field, 'overflow-y-auto', className)} />;

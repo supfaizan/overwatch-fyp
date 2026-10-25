@@ -19,6 +19,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.4.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@streamdown/code": "^2.0.0",
     "@tanstack/react-query": "^5.101.2",
     "@tiptap/extension-list": "3.31.4",
     "@tiptap/extension-table": "3.31.4",
@@ -33,6 +34,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "d3-force": "^3.0.0",
     "input-otp": "^1.5.0",
     "jose": "^6.2.3",
     "js-cookie": "^3.0.8",
@@ -51,6 +53,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/d3-force": "^3.0.10",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",

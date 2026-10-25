@@ -37,9 +37,12 @@ function saveWidth(width: number) {
 
 /**
  * Holds the chat beside the diagram, resizable by dragging (or arrow keys on) its left edge; the
- * width is remembered per browser. On narrow screens it covers the diagram instead.
+ * width is remembered per browser. On narrow screens it covers the diagram instead. `hidden` keeps a
+ * closed chat mounted, so an answer still being written carries on.
  */
-export default function ChatDock({ children }: { children: ReactNode }) {
+export default function ChatDock(
+  { children, hidden = false }: { children: ReactNode; hidden?: boolean },
+) {
   const dock = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(readWidth);
 
@@ -69,6 +72,7 @@ export default function ChatDock({ children }: { children: ReactNode }) {
   return (
     <div
       ref={dock}
+      hidden={hidden}
       className="absolute inset-0 z-10 md:relative md:inset-auto md:w-(--chat-width) md:max-w-2/3 md:shrink-0"
       style={{ '--chat-width': `${width}px` } as CSSProperties}
     >

@@ -1,4 +1,5 @@
-import type { EdgeType, NodeLabel, ViewNode } from '../types';
+import type { EdgeType, GraphView, NodeLabel, ViewNode } from '../types';
+import { EXTERNAL_MODULE, topModuleOf } from './ancestors';
 
 type EdgeStyle = { stroke: string; dash?: string; label: string };
 
@@ -27,8 +28,42 @@ export const edgeStyle = (type: EdgeType): EdgeStyle => {
 /** With a node in focus, "what this uses" and "what uses this" are coloured apart. */
 export const FOCUS_STROKE = { outgoing: primary, incoming: warning } as const;
 
+/** A walkthrough's path between its steps. */
+export const WALK_STROKE = primary;
+
 /** Tree lines: drawn solidly, since the folder tree is what the view is for. */
 export const TREE_STROKE = 'var(--color-border-hover)';
+
+const MODULE_TINTS = [
+  'var(--color-accent-blue)',
+  'var(--color-accent-orange)',
+  'var(--color-accent-purple)',
+  'var(--color-accent-amber)',
+  'var(--color-success)',
+];
+
+/**
+ * A colour per top-level folder, so the web's regions read apart. Handed out in name order over the
+ * repo's top-level folders, which are always drawn, so a folder keeps its colour as others open.
+ */
+export function moduleTints(view: GraphView): (nodeId: string) => string {
+  const folders = view.nodes.filter((node) => {
+    return node.label === 'Module' && node.parent_id === view.repo_full_name;
+  }).map((node) => {
+    return topModuleOf(node.id);
+  }).filter((top) => {
+    return top !== null && top !== EXTERNAL_MODULE;
+  }).sort();
+  return (nodeId) => {
+    const top = topModuleOf(nodeId);
+    if (top === null) {
+      return primary;
+    }
+    const index = folders.indexOf(top);
+    // packages, and files at the top level, belong to no folder
+    return index === -1 ? quiet : MODULE_TINTS[index % MODULE_TINTS.length];
+  };
+}
 
 /** What a node is, in one word. */
 export function describeNode(label: NodeLabel, kind: string | null): string {

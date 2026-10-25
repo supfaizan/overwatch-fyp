@@ -6,12 +6,11 @@ import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import { Dialog, DialogContent } from '@/shared/components/dialog';
 import GithubMark from '@/shared/components/github-mark';
-import SegmentedButton from '@/shared/components/segmented-button';
-import { cn } from '@/shared/lib/cn';
 import { displayName, handle } from '@/shared/session/lib';
 import { publishUser } from '@/shared/session/refresh';
-import { EnvelopeSimple } from '@phosphor-icons/react/ssr';
+import { CheckCircle, EnvelopeSimple } from '@phosphor-icons/react/ssr';
 import { useQueryClient } from '@tanstack/react-query';
+import { RadioGroup } from 'radix-ui';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -23,10 +22,6 @@ import {
 } from '../api';
 import { AUTH_ERROR } from '../constants';
 
-const KEEP_OPTIONS: { value: KeepProfile; label: string }[] = [
-  { value: 'current', label: 'This account' },
-  { value: 'other', label: 'The other account' },
-];
 const CONFLICTS: Record<MergePreview['conflicts'][number], string> = {
   github:
     'Both accounts sign in with a different GitHub account. Disconnect GitHub from one of them first.',
@@ -108,11 +103,13 @@ export default function MergeDialog(
     >
       <DialogContent
         title="Merge accounts"
-        description="You proved you own both accounts. Merging moves everything into the account you're signed in to."
+        description="Pick the profile to keep. Everything moves into one account."
         className="max-w-xl"
         footer={
           <>
-            <Button onClick={dismiss}>Keep them separate</Button>
+            <Button variant="tertiary" className="mr-auto" onClick={dismiss}>
+              Keep them separate
+            </Button>
             <Button
               variant="primary"
               loading={pending}
@@ -134,39 +131,33 @@ export default function MergeDialog(
               })}
             </Banner>
           )}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <ProfileCard label="Signed in" profile={preview.current} kept={keep === 'current'} />
-            <ProfileCard label="Other account" profile={preview.other} kept={keep === 'other'} />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm">Keep name, username and picture from</span>
-            <SegmentedButton
-              aria-label="Profile to keep"
-              options={KEEP_OPTIONS}
-              value={keep}
-              onValueChange={setKeep}
-            />
-          </div>
+          <RadioGroup.Root
+            aria-label="Profile to keep"
+            value={keep}
+            onValueChange={(value) => {
+              // Radix hands back a string; only the two cards' values are ever picked
+              if (value === 'current' || value === 'other') {
+                setKeep(value);
+              }
+            }}
+            className="grid gap-3 sm:grid-cols-2"
+          >
+            <ProfileCard value="current" label="Signed in" profile={preview.current} />
+            <ProfileCard value="other" label="Other account" profile={preview.other} />
+          </RadioGroup.Root>
           <div className="flex flex-col gap-1 text-sm text-muted">
-            {brings.length > 0 && <p>Moves here: {brings.join(', ')}.</p>}
-            {preview.personal_workspace_name && (
-              <p>
-                Its personal workspace stays as{' '}
-                <span className="font-medium text-foreground">
-                  {preview.personal_workspace_name}
-                </span>.
-              </p>
-            )}
             <p>
-              The other account is signed out everywhere and removed. Both sign-in methods then open
-              this one.
+              {brings.length > 0 ? `Moves here: ${brings.join(', ')}` : 'Nothing else moves'}
+              {preview.personal_workspace_name
+                ? `, keeping its personal workspace as “${preview.personal_workspace_name}”.`
+                : '.'}
             </p>
-            {preview.proof === 'email_otp' && (
-              <p>
-                Sign in with email using the other account&apos;s existing password; the one you
-                just chose isn&apos;t kept.
-              </p>
-            )}
+            <p>
+              The other account is signed out and removed
+              {preview.proof === 'email_otp'
+                ? '; email sign-in keeps its existing password.'
+                : '; both sign-ins open this one.'}
+            </p>
           </div>
         </div>
       </DialogContent>
@@ -174,37 +165,40 @@ export default function MergeDialog(
   );
 }
 
+/** One account, as a radio: picking it keeps its name, username and picture. */
 function ProfileCard(
-  { label, profile, kept }: { label: string; profile: MergeProfile; kept: boolean },
+  { value, label, profile }: { value: KeepProfile; label: string; profile: MergeProfile },
 ) {
   const name = displayName(profile);
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border p-3',
-        kept ? 'border-primary' : 'border-border',
-      )}
+    <RadioGroup.Item
+      value={value}
+      className="group relative flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-border-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary data-[state=checked]:border-primary data-[state=checked]:bg-primary/5"
     >
       <span className="text-xs font-medium text-muted uppercase">{label}</span>
-      <div className="flex items-center gap-2">
+      <RadioGroup.Indicator className="absolute top-2.5 right-2.5 text-primary">
+        <CheckCircle weight="fill" className="size-5" aria-hidden />
+      </RadioGroup.Indicator>
+      <span className="flex items-center gap-2">
         <Avatar src={profile.avatar_url} name={name} />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{name}</p>
-          <p className="truncate text-xs text-muted">{handle(profile)}</p>
-        </div>
-      </div>
-      <div className="flex flex-col gap-1 text-xs text-muted">
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium">{name}</span>
+          <span className="block truncate text-xs text-muted">{handle(profile)}</span>
+        </span>
+      </span>
+      <span className="flex flex-col gap-1 text-xs text-muted">
         {profile.github_login && (
           <span className="flex items-center gap-1.5">
             <GithubMark /> @{profile.github_login}
           </span>
         )}
         {profile.email && (
-          <span className="flex items-center gap-1.5">
-            <EnvelopeSimple /> {profile.email}
+          <span className="flex min-w-0 items-center gap-1.5">
+            <EnvelopeSimple className="shrink-0" />{' '}
+            <span className="truncate">{profile.email}</span>
           </span>
         )}
-      </div>
-    </div>
+      </span>
+    </RadioGroup.Item>
   );
 }

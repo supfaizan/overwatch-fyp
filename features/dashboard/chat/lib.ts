@@ -1,10 +1,13 @@
 import { API_URL } from '@/shared/api/envelope';
-import type { ChatMessage, Mention, NodeRef } from './types';
+import type { AskResult, ChatMessage, CodeCitation, Mention, NodeRef } from './types';
 
 export type Segment = { type: 'text'; text: string } | { type: 'node'; node: NodeRef };
 
-/** A cited node in an answer's markdown becomes an inline code span holding this, which renders as a chip. */
-export const CHIP_RE = /^⟦(n\d+)⟧$/;
+/**
+ * A cited node (`n4`) or code citation (`c1`) in an answer's markdown becomes an inline code span
+ * holding this, which renders as a chip.
+ */
+export const CHIP_RE = /^⟦([nc]\d+)⟧$/;
 const chip = (ref: string) => {
   return `\`⟦${ref}⟧\``;
 };
@@ -12,16 +15,21 @@ const chip = (ref: string) => {
 const FENCE_RE = /(```[\s\S]*?(?:```|$))/;
 
 /**
- * An answer's markdown with its `[nX]` references turned into chips. The model writes `login [n4]`
- * (or `` `login` [n4] ``, `**login** [n4]`); the name already there becomes the chip, so it reads once.
+ * Markdown from an answer (its text, or one of its steps) with its `[nX]` references and `[cN]` code
+ * citations turned into chips. The model writes `login [n4]` (or `` `login` [n4] ``, `**login** [n4]`);
+ * the name already there becomes the chip, so it reads once. A code citation stays where it is, as a
+ * chip of its own.
  */
-export function answerMarkdown(message: ChatMessage): string {
-  const names = new Map(
+export function answerMarkdown(message: ChatMessage, text = message.text): string {
+  const names = new Map<string, string>(
     message.nodes.flatMap((node) => {
       return (node.ref ? [[node.ref, node.name] as const] : []);
     }),
   );
-  return message.text
+  for (const citation of message.citations) {
+    names.set(citation.ref, '');
+  }
+  return text
     .split(FENCE_RE)
     .map((part, index) => {
       return (index % 2 === 1 ? part : chipRefs(part, names));
@@ -32,18 +40,20 @@ export function answerMarkdown(message: ChatMessage): string {
 function chipRefs(text: string, names: Map<string, string>): string {
   let out = '';
   let last = 0;
-  for (const match of text.matchAll(/[ \t]?\[(n\d+)\]/g)) {
+  for (const match of text.matchAll(/[ \t]?\[([nc]\d+)\]/g)) {
     let before = out + text.slice(last, match.index);
     last = match.index + match[0].length;
     const name = names.get(match[1]);
     // the backend drops unknown refs; this only guards a stale message
-    if (!name) {
+    if (name === undefined) {
       out = before;
       continue;
     }
-    const shown = [`**${name}**`, `\`${name}\``, `*${name}*`, name].find((form) => {
-      return before.endsWith(form);
-    });
+    const shown = !name
+      ? undefined
+      : [`**${name}**`, `\`${name}\``, `*${name}*`, name].find((form) => {
+        return before.endsWith(form);
+      });
     if (shown) {
       before = before.slice(0, -shown.length);
     } else if (before && !/\s$/.test(before)) {
@@ -147,4 +157,137 @@ export function safeImageSrc(src: unknown): string | null {
   } catch {
     return null;
   }
+}
+
+/** Where a citation's lines are on GitHub, pinned to the commit they were read at. */
+export function githubLineUrl(
+  repo: string,
+  citation: Pick<CodeCitation, 'commit_sha' | 'path' | 'start_line' | 'end_line'>,
+) {
+  const path = citation.path.split('/').map(encodeURIComponent).join('/');
+  const lines = citation.start_line === citation.end_line
+    ? `L${citation.start_line}`
+    : `L${citation.start_line}-L${citation.end_line}`;
+  return `https://github.com/${repo}/blob/${citation.commit_sha}/${path}#${lines}`;
+}
+
+/** `42` or `42–58`, for a citation's label. */
+export function lineRange(citation: Pick<CodeCitation, 'start_line' | 'end_line'>) {
+  return citation.start_line === citation.end_line
+    ? `${citation.start_line}`
+    : `${citation.start_line}–${citation.end_line}`;
+}
+
+/** What `/chat/ask/stream` sends, piece by piece. */
+export type AskStreamEvent =
+  | { event: 'started'; data: Record<string, never> }
+  | { event: 'thinking' | 'answer'; data: { text: string } }
+  /** a lookup the model made while working the answer out, like "Reading SignupForm" */
+  | { event: 'status'; data: { text: string } }
+  | { event: 'done'; data: AskResult }
+  | { event: 'error'; data: { error_code: string; message: string } };
+
+/**
+ * The complete server-sent events in `buffer`, and what's left of an event still arriving. Chunks
+ * split anywhere, so a partial event waits for the next one.
+ */
+export function parseServerSent(buffer: string): { events: AskStreamEvent[]; rest: string } {
+  const blocks = buffer.replaceAll('\r\n', '\n').split('\n\n');
+  const rest = blocks.pop() ?? '';
+  const events = blocks.flatMap((block) => {
+    let event = 'message';
+    const data: string[] = [];
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event:')) {
+        event = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        data.push(line.slice(5).trimStart());
+      }
+    }
+    try {
+      return [{ event, data: JSON.parse(data.join('\n')) } as AskStreamEvent];
+    } catch {
+      return [];
+    }
+  });
+  return { events, rest };
+}
+
+// the line a flow's steps start after, as the backend reads it (`STEPS:`, `**Steps:**`)
+const STEPS_LINE_RE = /^[ \t*_#]*steps[ \t*_]*:[ \t*_]*$/gim;
+// the sections a reply ends with (`FOLLOW_UPS:`, `ASK:`), shown as their own blocks once it's checked
+// (any case for follow-ups; upper case only for `ASK`, as the backend reads them)
+const TRAILING_SECTION_RE =
+  /^[ \t*_#]*(?:[Ff](?:ollow|OLLOW)[ _-]?[Uu](?:ps|PS)[ \t*_]*:|ASK[ \t*_]*:)[\s\S]*$/m;
+
+/**
+ * An answer still being written, ready to show: its `[n4]` references and `[s3:42-58]` citations
+ * (including one cut off at the end), header lines a model wrote late, the line its steps start
+ * after and the follow-ups or question back it ends with are left out until the checked answer
+ * replaces it.
+ */
+export function draftMarkdown(text: string): string {
+  return text
+    .replace(/^[ \t*_>#-]*(?:answerable|relations)[ \t*_]*:.*$/gim, '')
+    .replace(TRAILING_SECTION_RE, '')
+    .replace(STEPS_LINE_RE, '')
+    .replace(/[ \t]?[[【]\s*(?:n\d+|s\d+\s*:[^\]】\n]*)[\]】]/g, '')
+    .replace(/[ \t]?[[【]\s*(?:[ns]\d*(?:\s*:[^\]】\n]*)?)?$/, '');
+}
+
+/** The callouts an answer may use, as the backend writes their markers (`> [!WARNING]`). */
+const CALLOUT_KIND = { note: 'NOTE', tip: 'TIP', warning: 'WARNING' } as const;
+export type CalloutKind = keyof typeof CALLOUT_KIND;
+
+/** An answer cut into what renders as Markdown and what renders as a callout. */
+type AnswerBlock =
+  | { type: 'markdown'; text: string }
+  | { type: 'callout'; kind: CalloutKind; text: string };
+
+const CALLOUT_START_RE = /^[ \t]*>[ \t]*\[!(NOTE|TIP|WARNING)\][ \t]*$/;
+const QUOTE_LINE_RE = /^[ \t]*>[ \t]?/;
+
+/**
+ * Markdown split around its callouts: a `> [!KIND]` line and the quote lines after it become one
+ * callout, without the `> `. Quotes inside fenced code are code, not callouts.
+ */
+export function answerBlocks(markdown: string): AnswerBlock[] {
+  const kinds = new Map<string, CalloutKind>(
+    Object.entries(CALLOUT_KIND).map(([kind, marker]) => {
+      return [marker, kind as CalloutKind];
+    }),
+  );
+  const blocks: AnswerBlock[] = [];
+  let prose: string[] = [];
+  let callout: { kind: CalloutKind; lines: string[] } | null = null;
+  let fenced = false;
+  const flush = () => {
+    if (callout) {
+      blocks.push({ type: 'callout', kind: callout.kind, text: callout.lines.join('\n').trim() });
+      callout = null;
+    }
+    if (prose.join('').trim()) {
+      blocks.push({ type: 'markdown', text: prose.join('\n').trim() });
+    }
+    prose = [];
+  };
+  for (const line of markdown.split('\n')) {
+    if (line.trimStart().startsWith('```')) {
+      fenced = !fenced;
+    }
+    const start = fenced ? null : CALLOUT_START_RE.exec(line);
+    if (start) {
+      flush();
+      callout = { kind: kinds.get(start[1]) ?? 'note', lines: [] };
+    } else if (callout && QUOTE_LINE_RE.test(line)) {
+      callout.lines.push(line.replace(QUOTE_LINE_RE, ''));
+    } else {
+      if (callout) {
+        flush();
+      }
+      prose.push(line);
+    }
+  }
+  flush();
+  return blocks;
 }

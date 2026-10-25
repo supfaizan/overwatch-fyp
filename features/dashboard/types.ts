@@ -92,7 +92,8 @@ export type ViewOptions = {
 
 export type ViewQuery = { expand: string[]; reveal: string[] };
 
-export type GraphFlowNode = Node<ViewNode, 'graphNode'>;
+/** `tint` is its top-level folder's colour (lib/appearance moduleTints). */
+export type GraphFlowNode = Node<ViewNode & { tint: string }, 'graphNode'>;
 export type OverflowFlowNode = Node<Overflow, 'overflow'>;
 export type CanvasNode = GraphFlowNode | OverflowFlowNode;
 

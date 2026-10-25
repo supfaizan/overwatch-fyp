@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/shared/lib/cn';
+import { code } from '@streamdown/code';
 import type { ComponentProps } from 'react';
 import { Streamdown } from 'streamdown';
 
@@ -40,6 +41,9 @@ export function InlineCode(
   );
 }
 
+/** Each streamed word fades in; quick enough that fast text still keeps up. */
+const REVEAL = { animation: 'fadeIn', sep: 'word', duration: 150 } as const;
+
 type MarkdownProps = {
   /** The Markdown to render. */
   children: string;
@@ -48,6 +52,22 @@ type MarkdownProps = {
    * @default links open in a new tab; images show as their description; inline code is tinted (`InlineCode`)
    */
   components?: Components;
+  /**
+   * Colour fenced code by its language (Shiki, loaded per language on first use).
+   * @default false
+   */
+  highlightCode?: boolean;
+  /**
+   * Text still arriving: unfinished Markdown (an open code fence, half a list) renders as it will
+   * end up, and a caret marks where writing continues.
+   * @default false
+   */
+  streaming?: boolean;
+  /**
+   * While `streaming`, fade each new word in rather than popping it in; still for reduced motion.
+   * @default false
+   */
+  reveal?: boolean;
   className?: string;
 };
 
@@ -56,13 +76,22 @@ type MarkdownProps = {
  * - For text we didn't write: tracker descriptions, comments, AI answers. Raw HTML in it is dropped.
  * - Images don't load unless `components.img` allows them; decide per use which sources are safe.
  * - Overriding `inlineCode` for some spans only? Fall back to the exported `InlineCode` for the rest.
- * - Static: renders the whole string at once. It isn't a streaming view.
+ * - Renders the whole string at once; pass `streaming` while text is still arriving, then drop it.
+ * - `reveal` with `streaming` fades words in as they arrive: for live answers, not for text that's already there.
+ * - `highlightCode` where code is the point (AI answers); plain monospace reads fine in prose-heavy text.
  */
-export default function Markdown({ children, components, className }: MarkdownProps) {
+export default function Markdown(
+  { children, components, highlightCode = false, streaming = false, reveal = false, className }:
+    MarkdownProps,
+) {
   return (
     <Streamdown
-      mode="static"
+      mode={streaming ? 'streaming' : 'static'}
+      isAnimating={streaming}
+      caret={streaming ? 'block' : undefined}
+      animated={streaming && reveal ? REVEAL : false}
       skipHtml
+      plugins={highlightCode ? { code } : undefined}
       controls={{ table: false, code: true, mermaid: false }}
       className={cn('text-sm leading-relaxed break-words', className)}
       components={{ a: SafeLink, img: ImagePlaceholder, inlineCode: InlineCode, ...components }}

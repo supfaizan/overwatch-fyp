@@ -1,6 +1,8 @@
 @import "tailwindcss";
 /* enter/exit utilities (animate-in, fade-in-0...) for Radix popovers and dialogs */
 @import "tw-animate-css";
+/* the word fade-in Markdown's `reveal` uses while an answer streams */
+@import "streamdown/styles.css";
 @source inline("motion-safe:animate-grid-drift");
 /* Streamdown (chat answers) styles its markdown with utilities from its own bundle */
 @source "../node_modules/streamdown/dist/*.js";
@@ -112,4 +114,12 @@
 @utility bg-dot-grid {
   background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+/* streamed words appear at once for anyone who asks for less motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-sd-animate],
+  [data-sd-animate-marker]::marker {
+    animation: none;
+  }
 }

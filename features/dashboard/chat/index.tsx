@@ -12,35 +12,44 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/dropdown-menu';
 import Spinner from '@/shared/components/spinner';
+import { useSession } from '@/shared/session/store';
+import { useWorkspace } from '@/shared/workspaces/store';
 import { ChatCircleDots, ClockCounterClockwise, Plus, Trash, X } from '@phosphor-icons/react/ssr';
 import { useEffect, useRef, useState } from 'react';
+import { useWalkthrough } from '../hooks';
 import { useViewStore } from '../store';
+import AnswerDraft from './components/answer-draft';
 import ChatComposer from './components/chat-composer';
 import ChatMessage from './components/chat-message';
-import { useAsk, useConversation, useConversations, useDeleteConversation } from './hooks';
+import ClarifyingQuestion from './components/clarifying-question';
+import { useAskStream, useConversation, useConversations, useDeleteConversation } from './hooks';
+import { conversationKey, useChatSession } from './store';
 
 const CONVERSATION_NOT_FOUND = 'conversation_not_found';
+/** How close to the bottom counts as reading along, so a streaming answer is followed. */
+const FOLLOW_WITHIN_PX = 120;
 /** The backend's limit on open folders sent with a question. */
 const MAX_OPEN_FOLDERS = 10;
-/** The conversation last used per repo, so reopening the chat returns to it; memory only, gone on reload. */
-const lastConversation = new Map<string, string>();
 
 /** Questions about one repository, answered from its graph; a reference in a message selects that node. */
 export default function ChatPanel({ repo, onClose }: { repo: string; onClose: () => void }) {
-  const [conversationId, setConversation] = useState<string | null>(() => {
-    return lastConversation.get(repo) ?? null;
+  const userId = useSession((state) => {
+    return state.user?.id ?? '';
+  });
+  const workspaceId = useWorkspace((state) => {
+    return state.id ?? '';
+  });
+  const key = conversationKey(userId, workspaceId, repo);
+  const conversationId = useChatSession((state) => {
+    return state.current[key] ?? null;
   });
   const setConversationId = (id: string | null) => {
-    if (id) {
-      lastConversation.set(repo, id);
-    } else {
-      lastConversation.delete(repo);
-    }
-    setConversation(id);
+    useChatSession.getState().setCurrent(key, id);
   };
   const conversations = useConversations(repo);
   const conversation = useConversation(conversationId);
-  const ask = useAsk();
+  const ask = useAskStream();
+  const { play } = useWalkthrough(repo);
   const remove = useDeleteConversation(repo);
   const selected = useViewStore((state) => {
     return state.selected;
@@ -48,20 +57,49 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
   const end = useRef<HTMLDivElement>(null);
 
   const messages = conversation.data?.messages ?? [];
-  const asking = ask.isPending ? ask.variables : undefined;
+  const asking = ask.draft;
+
+  const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'end' });
-  }, [messages.length, asking]);
+  }, [messages.length, asking?.body, asking?.startedAt]);
 
+  // follow the answer as it's written, unless the reader has scrolled up to something else
+  const written = (asking?.thinking.length ?? 0) + (asking?.answer.length ?? 0);
+  useEffect(() => {
+    const box = scroller.current;
+    if (box && box.scrollHeight - box.scrollTop - box.clientHeight < FOLLOW_WITHIN_PX) {
+      end.current?.scrollIntoView({ block: 'end' });
+    }
+  }, [written]);
+
+  // the conversation this chat was on has expired or was deleted elsewhere: start a new one
+  const lost = conversation.error instanceof ApiError
+    && conversation.error.errorCode === CONVERSATION_NOT_FOUND;
+  useEffect(() => {
+    if (lost) {
+      useChatSession.getState().setCurrent(key, null);
+    }
+  }, [lost, key]);
+
+  // another conversation's walkthrough, and the step it left selected, have nothing to do with this one
+  const openConversation = (id: string | null) => {
+    const { walk, endWalk, select } = useViewStore.getState();
+    if (walk) {
+      endWalk();
+      select(null);
+    }
+    setConversationId(id);
+  };
   const startNew = () => {
-    setConversationId(null);
+    openConversation(null);
     ask.reset();
   };
 
   const send = async (question: string, mentionedNodeIds: string[]) => {
     try {
-      const result = await ask.mutateAsync({
+      const result = await ask.ask({
         repo_full_name: repo,
         question,
         conversation_id: conversationId ?? undefined,
@@ -71,6 +109,13 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
         open_folder_ids: useViewStore.getState().expanded.toReversed().slice(0, MAX_OPEN_FOLDERS),
       });
       setConversationId(result.conversation.id);
+      // an answer about a flow walks through it once by itself
+      play(
+        result.answer.id,
+        result.answer.steps.map((step) => {
+          return step.node_id;
+        }),
+      );
     } catch (error) {
       // expired or deleted elsewhere: the next question starts a new one
       if (error instanceof ApiError && error.errorCode === CONVERSATION_NOT_FOUND) {
@@ -79,6 +124,23 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
       throw error;
     }
   };
+
+  // a follow-up or an option picked from a question back is asked like a typed question
+  const askNext = (question: string) => {
+    void send(question, []).catch(() => {
+      // the error shows in the footer (`ask.error`), with the question kept
+      return undefined;
+    });
+  };
+  const latestAnswer = messages.findLast((message) => {
+    return message.role === 'assistant';
+  })?.id;
+  // a question back stays open over the input until it's answered or skipped
+  const [skipped, setSkipped] = useState<string | null>(null);
+  const last = messages.at(-1);
+  const questionBack = last?.role === 'assistant' && last.ask && last.id !== skipped && !asking
+    ? { id: last.id, ask: last.ask }
+    : null;
 
   return (
     <aside
@@ -104,7 +166,7 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
                     <DropdownMenuItem
                       key={item.id}
                       onSelect={() => {
-                        return setConversationId(item.id);
+                        return openConversation(item.id);
                       }}
                     >
                       <span className="truncate">{item.title}</span>
@@ -154,7 +216,7 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
         </Button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         {conversation.isError
           ? (
             <Banner
@@ -179,18 +241,24 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
           : (
             <ol className="flex flex-col gap-3">
               {messages.map((message) => {
-                return <ChatMessage key={message.id} message={message} repo={repo} />;
+                return (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    repo={repo}
+                    onAsk={message.id === latestAnswer ? askNext : undefined}
+                    pending={ask.pending}
+                  />
+                );
               })}
               {asking && (
                 <>
                   <li className="flex justify-end">
                     <p className="max-w-5/6 rounded-lg bg-fill-active px-3 py-2 text-sm break-words whitespace-pre-wrap">
-                      {asking.question}
+                      {asking.body.question}
                     </p>
                   </li>
-                  <li className="flex items-center gap-2 text-sm text-muted" aria-live="polite">
-                    <Spinner className="size-4" /> Reading the graph…
-                  </li>
+                  <AnswerDraft draft={asking} />
                 </>
               )}
             </ol>
@@ -199,7 +267,17 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
       </div>
 
       <footer className="flex flex-col gap-2 border-t border-border p-3">
-        {ask.isError && (
+        {questionBack && (
+          <ClarifyingQuestion
+            ask={questionBack.ask}
+            onPick={askNext}
+            onDismiss={() => {
+              return setSkipped(questionBack.id);
+            }}
+            disabled={ask.pending}
+          />
+        )}
+        {ask.error && (
           <Banner type="error" className="text-xs">
             {ask.error.message}
           </Banner>
@@ -210,7 +288,7 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
             <span className="font-mono">{selected.split(/[:/#]/).at(-1)}</span>
           </p>
         )}
-        <ChatComposer repo={repo} pending={ask.isPending} onSend={send} />
+        <ChatComposer repo={repo} pending={ask.pending} onSend={send} onStop={ask.stop} />
       </footer>
     </aside>
   );

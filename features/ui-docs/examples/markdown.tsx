@@ -14,3 +14,23 @@ const lines = order.items.filter((item) => item.components?.length);
 export function Default() {
   return <Markdown>{SAMPLE}</Markdown>;
 }
+
+export function Streaming() {
+  return (
+    <Markdown streaming>
+      {'Writing **this answer** as it arrives:\n\n- first point\n- seco'}
+    </Markdown>
+  );
+}
+
+export function RevealedWhileStreaming() {
+  return (
+    <Markdown streaming reveal>
+      {'Each new word **fades in** as the answer arrives, unless reduced motion is on.'}
+    </Markdown>
+  );
+}
+
+export function HighlightedCode() {
+  return <Markdown highlightCode>{SAMPLE}</Markdown>;
+}

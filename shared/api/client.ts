@@ -28,6 +28,12 @@ const RECOVERABLE = new Set<string>([
 http.interceptors.response.use(
   undefined,
   async (error: AxiosError<ApiEnvelope<null>>) => {
+    // a streamed request's error body arrives as a stream too; read it so its envelope is there
+    if (error.response?.data instanceof ReadableStream) {
+      error.response.data = await new Response(error.response.data).json().catch(() => {
+        return null;
+      });
+    }
     const request = error.config as
       | (InternalAxiosRequestConfig & { _retried?: boolean })
       | undefined;
@@ -88,5 +94,18 @@ export const api = {
   },
   delete: <T>(url: string, config?: AxiosRequestConfig) => {
     return request<T>({ ...config, method: 'DELETE', url });
+  },
+  /** POST, then read the response body as it arrives (server-sent events); errors and refresh as above. */
+  stream: async (url: string, body?: unknown, config?: AxiosRequestConfig) => {
+    const { data } = await http.request<ReadableStream<Uint8Array<ArrayBuffer>>>({
+      ...config,
+      method: 'POST',
+      url,
+      data: body,
+      // only the fetch adapter hands the body over before it has all arrived
+      adapter: 'fetch',
+      responseType: 'stream',
+    });
+    return data;
   },
 };

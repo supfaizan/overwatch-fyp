@@ -3,7 +3,7 @@
 import Button from '@/shared/components/button';
 import { TextArea } from '@/shared/components/input';
 import { cn } from '@/shared/lib/cn';
-import { PaperPlaneRight } from '@phosphor-icons/react/ssr';
+import { PaperPlaneRight, Stop } from '@phosphor-icons/react/ssr';
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { MIN_MENTION_TERM, useMentionCandidates } from '../hooks';
 import { keptMentions, mentionQuery } from '../lib';
@@ -17,12 +17,14 @@ const MENTION_SEARCH_DELAY_MS = 150;
 type ChatComposerProps = {
   repo: string;
   pending: boolean;
-  /** resolves once the answer is in; the draft is kept if it rejects */
+  /** resolves once the answer is in; the question comes back to the box if it rejects */
   onSend: (question: string, mentionedNodeIds: string[]) => Promise<unknown>;
+  /** stops the answer being written */
+  onStop: () => void;
 };
 
 /** The question box. `@` searches the graph's files and symbols; a picked one goes with the question. */
-export default function ChatComposer({ repo, pending, onSend }: ChatComposerProps) {
+export default function ChatComposer({ repo, pending, onSend, onStop }: ChatComposerProps) {
   const listId = useId();
   const input = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState('');
@@ -69,19 +71,24 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
     if (!question || pending) {
       return;
     }
+    const sent = { text, mentions };
+    // the question moves into the thread while it's answered
+    setText('');
+    setMentions([]);
     onSend(
       question,
       keptMentions(question, mentions).map((mention) => {
         return mention.nodeId;
       }),
-    ).then(
-      () => {
-        setText('');
-        setMentions([]);
-      },
-      // the panel shows the error; the draft stays so it can be resent
-      () => {},
-    );
+    ).catch(() => {
+      // the panel shows the error; the question comes back so it can be resent, unless a new one was started
+      setText((current) => {
+        return current || sent.text;
+      });
+      setMentions((current) => {
+        return current.length > 0 ? current : sent.mentions;
+      });
+    });
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -182,17 +189,31 @@ export default function ChatComposer({ repo, pending, onSend }: ChatComposerProp
         onKeyDown={onKeyDown}
       />
       {/* as tall as the box, so the two line up whatever its height */}
-      <Button
-        variant="primary"
-        iconOnly
-        type="submit"
-        aria-label="Send"
-        className="h-auto"
-        loading={pending}
-        disabled={!question}
-      >
-        <PaperPlaneRight />
-      </Button>
+      {pending
+        ? (
+          <Button
+            variant="secondary"
+            iconOnly
+            type="button"
+            aria-label="Stop the answer"
+            className="h-auto"
+            onClick={onStop}
+          >
+            <Stop weight="fill" />
+          </Button>
+        )
+        : (
+          <Button
+            variant="primary"
+            iconOnly
+            type="submit"
+            aria-label="Send"
+            className="h-auto"
+            disabled={!question}
+          >
+            <PaperPlaneRight />
+          </Button>
+        )}
     </form>
   );
 }

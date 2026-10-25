@@ -1,6 +1,6 @@
 /** The ids a repo's graph uses for things outside any directory (app/knowledge_graph/build/ids.py). */
-const EXTERNAL_MODULE = '__external__';
-const ROUTES_MODULE = '__routes__';
+export const EXTERNAL_MODULE = '__external__';
+export const ROUTES_MODULE = '__routes__';
 
 /**
  * The folders (and classes) that hold a node, outermost first: what to open for it to be drawn.
@@ -34,4 +34,21 @@ export function ancestorsOf(nodeId: string, repo: string): string[] {
     return `${prefix}${path}#${owners.slice(0, index + 1).join('.')}`;
   });
   return [...folders, prefix + path, ...classes];
+}
+
+/** The top-level module a node is in (itself, if it is one); null for the repository. */
+export function topModuleOf(nodeId: string): string | null {
+  // a repo's full name holds no `:`, so the first one ends it
+  const at = nodeId.indexOf(':');
+  if (at === -1) {
+    return null;
+  }
+  const rest = nodeId.slice(at + 1);
+  if (rest.startsWith('pkg:')) {
+    return EXTERNAL_MODULE;
+  }
+  if (rest.startsWith('route:')) {
+    return ROUTES_MODULE;
+  }
+  return rest.split(/[/#]/, 1)[0];
 }

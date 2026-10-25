@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ancestorsOf } from './ancestors';
+import { ancestorsOf, EXTERNAL_MODULE, topModuleOf } from './ancestors';
 
 const REPO = 'octocat/hello';
 
@@ -25,5 +25,18 @@ describe('ancestorsOf', () => {
 
   it('ignores another repo’s ids', () => {
     expect(ancestorsOf('someone/else:api/x.py', REPO)).toEqual([]);
+  });
+});
+
+describe('topModuleOf', () => {
+  it('names the top-level folder a node is in, or itself', () => {
+    expect(topModuleOf(`${REPO}:api/v1/users.py#UserService.get@2`)).toBe('api');
+    expect(topModuleOf(`${REPO}:api`)).toBe('api');
+    expect(topModuleOf(`${REPO}:main.py#run`)).toBe('main.py');
+  });
+
+  it('puts packages in the external module and gives the repository none', () => {
+    expect(topModuleOf(`${REPO}:pkg:npm/@scope/name`)).toBe(EXTERNAL_MODULE);
+    expect(topModuleOf(REPO)).toBeNull();
   });
 });

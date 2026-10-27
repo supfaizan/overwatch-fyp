@@ -21,6 +21,7 @@ const GROUPS = [
       { href: '/settings/repositories', label: 'Repositories' },
       { href: '/settings/integrations', label: 'Integrations' },
       { href: '/settings/work-item-types', label: 'Work item types' },
+      { href: '/settings/decisions', label: 'Decisions' },
       { href: '/settings/usage', label: 'Usage' },
       { href: '/settings/billing', label: 'Billing' },
     ],

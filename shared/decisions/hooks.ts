@@ -18,6 +18,7 @@ const keys = {
   one: (id: string) => {
     return [...queryKeys.decisions, 'one', id] as const;
   },
+  checks: [...queryKeys.decisions, 'checks'] as const,
 };
 
 export const useDecisions = (filters: DecisionFilters = {}) => {
@@ -120,6 +121,52 @@ export const useDismissSuggestion = () => {
       toast.success("Dismissed; it won't be suggested again.");
     },
     onError: (error) => {
+      return toast.error(error.message);
+    },
+  });
+};
+
+export const useCheckSettings = () => {
+  return useQuery({ queryKey: keys.checks, queryFn: decisionsApi.getCheckSettings });
+};
+
+export const useChangeCheckSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.changeCheckSettings,
+    onSuccess: (settings) => {
+      queryClient.setQueryData(keys.checks, settings);
+    },
+    onError: (error: ApiError) => {
+      return toast.error(error.message);
+    },
+  });
+};
+
+/** Check now: decisions and the last-check line refresh, with what it found. */
+export const useRunCheck = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.runCheck,
+    onSuccess: ({ checked, conflicts, capped }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.decisions });
+      if (capped) {
+        toast.warning("Today's checks ran out; the rest are read tomorrow.");
+      } else if (!checked) {
+        toast.success('Nothing changed since the last check.');
+      } else {
+        toast.success(
+          conflicts
+            ? `Found ${conflicts} ${
+              conflicts === 1 ? 'contradiction' : 'contradictions'
+            } to review.`
+            : `Read ${checked} changed ${
+              checked === 1 ? 'source' : 'sources'
+            }; nothing contradicts.`,
+        );
+      }
+    },
+    onError: (error: ApiError) => {
       return toast.error(error.message);
     },
   });

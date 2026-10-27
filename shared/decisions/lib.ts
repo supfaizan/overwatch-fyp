@@ -1,4 +1,5 @@
 import {
+  type CheckInterval,
   type Decision,
   DECISION_STATUS,
   type DecisionStatus,
@@ -23,6 +24,13 @@ export const STATUS_TAGS: Record<DecisionStatus, 'default' | 'primary' | 'succes
   accepted: 'success',
   rejected: 'danger',
   superseded: 'default',
+};
+
+export const CHECK_INTERVAL_LABELS: Record<CheckInterval, string> = {
+  30: 'Every 30 minutes',
+  60: 'Every hour',
+  720: 'Every 12 hours',
+  1440: 'Every 24 hours',
 };
 
 export const EVIDENCE_STATE_LABELS: Record<EvidenceState, string> = {

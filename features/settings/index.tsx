@@ -1,4 +1,5 @@
 export { default as BillingSection } from './components/billing-section';
+export { default as DecisionsSection } from './components/decisions-section';
 export { default as IntegrationsSection } from './components/integrations-section';
 export { default as MembersSection } from './components/members-section';
 export { default as PreferencesSection } from './components/preferences-section';

@@ -53,6 +53,7 @@ export const SETTINGS_PAGES: Page[] = [
     icon: PlugsConnected,
     color: 'text-success',
   },
+  { href: '/settings/decisions', label: 'Decisions', icon: Scales, color: 'text-accent-amber' },
   { href: '/settings/usage', label: 'Usage', icon: ChartBar, color: 'text-accent-blue' },
   { href: '/settings/billing', label: 'Billing', icon: CreditCard, color: 'text-accent-slate' },
 ];

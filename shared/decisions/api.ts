@@ -1,5 +1,7 @@
 import { api } from '@/shared/api/client';
 import type {
+  CheckResult,
+  CheckSettings,
   CreateDecision,
   Decision,
   DecisionFields,
@@ -47,4 +49,16 @@ export const suggestDecisions = (body: { kind: EvidenceKind; ref_id: string }) =
 /** "Not a decision": removes a suggestion waiting for review so it isn't suggested again. */
 export const dismissSuggestion = (id: string) => {
   return api.post<null>(`/decisions/${id}/dismiss`);
+};
+
+export const getCheckSettings = () => {
+  return api.get<CheckSettings>('/decisions/checks');
+};
+export const changeCheckSettings = (
+  body: Partial<Pick<CheckSettings, 'enabled' | 'interval_minutes'>>,
+) => {
+  return api.patch<CheckSettings>('/decisions/checks', body);
+};
+export const runCheck = () => {
+  return api.post<CheckResult>('/decisions/checks/run');
 };

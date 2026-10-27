@@ -7,6 +7,7 @@ import { Input } from '@/shared/components/input';
 import SegmentedButton from '@/shared/components/segmented-button';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
+import Tooltip from '@/shared/components/tooltip';
 import { useDecisions } from '@/shared/decisions/hooks';
 import {
   hasBrokenEvidence,
@@ -22,12 +23,13 @@ import RecordDecisionDialog from '@/shared/decisions/record-decision-dialog';
 import type { Decision } from '@/shared/decisions/types';
 import { timeAgo } from '@/shared/lib/time';
 import { useSession } from '@/shared/session/store';
-import { MagnifyingGlass, Plus, Quotes, Warning } from '@phosphor-icons/react/ssr';
+import { BookOpenText, MagnifyingGlass, Plus, Quotes, Warning } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import ChecksBar from './components/checks-bar';
+import { useUpdateOverview } from './hooks';
 
 export { default as DecisionView } from './components/decision-view';
 
@@ -52,6 +54,7 @@ export default function DecisionsInbox() {
   const [tab, setTab] = useState<InboxTab>(INBOX_TAB.needsYou);
   const [search, setSearch] = useState('');
   const [recording, setRecording] = useState(false);
+  const overview = useUpdateOverview();
 
   const today = localToday();
   const query = search.trim().toLowerCase();
@@ -78,15 +81,28 @@ export default function DecisionsInbox() {
               What the team agreed, and the passages in tickets and docs it rests on.
             </p>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => {
-              return setRecording(true);
-            }}
-          >
-            <Plus aria-hidden />
-            Record decision
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Tooltip content="A docs page of the accepted decisions by area, with their sources">
+              <Button
+                loading={overview.isPending}
+                onClick={() => {
+                  return overview.mutate();
+                }}
+              >
+                <BookOpenText aria-hidden />
+                Product overview
+              </Button>
+            </Tooltip>
+            <Button
+              variant="primary"
+              onClick={() => {
+                return setRecording(true);
+              }}
+            >
+              <Plus aria-hidden />
+              Record decision
+            </Button>
+          </div>
         </header>
         <ChecksBar />
         <div className="flex flex-wrap items-center justify-between gap-3">

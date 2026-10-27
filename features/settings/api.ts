@@ -10,6 +10,7 @@ import type {
   Member,
   SyncTarget,
   Target,
+  UsageSummary,
 } from './types';
 
 export const getConnectionStatus = () => {
@@ -92,4 +93,8 @@ export const resendInvite = ({ id, inviteId }: { id: string; inviteId: string })
 };
 export const revokeInvite = ({ id, inviteId }: { id: string; inviteId: string }) => {
   return api.delete<null>(`${workspace(id)}/invites/${inviteId}`);
+};
+
+export const getUsage = (days: number) => {
+  return api.get<UsageSummary>(`/usage?days=${days}`);
 };

@@ -14,6 +14,9 @@ const keys = {
   workspace: (id: string, part: 'members' | 'invites') => {
     return [...queryKeys.workspaces, id, part] as const;
   },
+  usage: (days: number) => {
+    return ['usage', days] as const;
+  },
 };
 const showError = (error: ApiError) => {
   return toast.error(error.message);
@@ -118,6 +121,14 @@ export const useMembers = (id: string) => {
     queryKey: keys.workspace(id, 'members'),
     queryFn: () => {
       return settingsApi.getMembers(id);
+    },
+  });
+};
+export const useUsage = (days: number) => {
+  return useQuery({
+    queryKey: keys.usage(days),
+    queryFn: () => {
+      return settingsApi.getUsage(days);
     },
   });
 };

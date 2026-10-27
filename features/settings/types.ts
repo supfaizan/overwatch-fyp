@@ -68,3 +68,24 @@ export type Invite = {
 
 /** `url` carries the token and is shown once; email invites have none, the link only goes to that inbox. */
 export type InviteCreated = Invite & { url: string | null };
+
+/** What a model call was made for, as AI usage is split by. */
+export const USAGE_FEATURE = { chat: 'chat' } as const;
+export type UsageFeature = (typeof USAGE_FEATURE)[keyof typeof USAGE_FEATURE];
+
+export type UsageTotals = {
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cached_tokens: number;
+  cost_usd: number;
+};
+
+/** The current workspace's AI usage over the last `days`, in total and by day, feature and member. */
+export type UsageSummary = {
+  days: number;
+  total: UsageTotals;
+  by_day: (UsageTotals & { day: string })[];
+  by_feature: (UsageTotals & { feature: UsageFeature })[];
+  by_member: (UsageTotals & { user_id: string })[];
+};

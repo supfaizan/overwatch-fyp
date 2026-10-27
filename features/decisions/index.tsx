@@ -10,6 +10,7 @@ import Tag from '@/shared/components/tag';
 import { useDecisions } from '@/shared/decisions/hooks';
 import {
   hasBrokenEvidence,
+  hasNewContradiction,
   INBOX_TAB,
   type InboxTab,
   inboxTab,
@@ -25,6 +26,8 @@ import { MagnifyingGlass, Plus, Quotes, Warning } from '@phosphor-icons/react/ss
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
+import ChecksBar from './components/checks-bar';
 
 export { default as DecisionView } from './components/decision-view';
 
@@ -85,6 +88,7 @@ export default function DecisionsInbox() {
             Record decision
           </Button>
         </header>
+        <ChecksBar />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SegmentedButton
             aria-label="Show"
@@ -174,10 +178,10 @@ function DecisionRow({ decision }: { decision: Decision }) {
             <Quotes aria-hidden />
             {decision.evidence.length} {decision.evidence.length === 1 ? 'passage' : 'passages'}
           </span>
-          {hasBrokenEvidence(decision) && (
+          {(hasBrokenEvidence(decision) || hasNewContradiction(decision)) && (
             <span className="flex items-center gap-1 text-warning-strong">
               <Warning aria-hidden />
-              Evidence changed
+              {hasNewContradiction(decision) ? 'New contradiction' : 'Evidence changed'}
             </span>
           )}
           <span>Updated {timeAgo(decision.updated_at)}</span>

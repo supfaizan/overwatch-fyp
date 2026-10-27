@@ -92,6 +92,9 @@ export const api = {
   patch: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => {
     return request<T>({ ...config, method: 'PATCH', url, data: body });
   },
+  put: <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => {
+    return request<T>({ ...config, method: 'PUT', url, data: body });
+  },
   delete: <T>(url: string, config?: AxiosRequestConfig) => {
     return request<T>({ ...config, method: 'DELETE', url });
   },

@@ -33,9 +33,12 @@ export type NewEvidence = {
   ref_id: string;
   quote: string;
   stance?: EvidenceStance;
+  /** why it supports or contradicts the decision, e.g. what an automatic check found */
+  note?: string | null;
 };
 
 export type Evidence = Required<NewEvidence> & {
+  note: string | null;
   id: string;
   title: string;
   external_url: string | null;
@@ -80,3 +83,6 @@ export type DecisionFields = {
 export type CreateDecision = DecisionFields & { status?: DecisionStatus; evidence?: NewEvidence[] };
 
 export type DecisionFilters = { status?: DecisionStatus; q?: string; ref_id?: string };
+
+/** Who automatic decision checks act as, on the evidence they add and in usage. */
+export const SYSTEM_USER = 'system';

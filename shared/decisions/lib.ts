@@ -4,6 +4,7 @@ import {
   type DecisionStatus,
   type Evidence,
   EVIDENCE_KIND,
+  EVIDENCE_STANCE,
   EVIDENCE_STATE,
   type EvidenceState,
 } from './types';
@@ -50,16 +51,28 @@ export function hasBrokenEvidence(decision: Decision): boolean {
   return decision.evidence.some(isBroken);
 }
 
+/** Whether a contradicting passage was added since the decision was last settled, e.g. by a check. */
+export function hasNewContradiction(decision: Decision): boolean {
+  const settledAt = decision.history.at(-1)?.at ?? decision.created_at;
+  return decision.evidence.some((evidence) => {
+    return evidence.stance === EVIDENCE_STANCE.contradicts && evidence.added_at > settledAt;
+  });
+}
+
 /**
  * Which inbox tab a decision sits in. Needs you: a proposal to settle, an open one this person owns
- * or whose review date (`today`, an ISO date) has come, or an accepted one whose evidence broke.
+ * or whose review date (`today`, an ISO date) has come, or an accepted one whose evidence broke or
+ * was contradicted since it was settled.
  */
 export function inboxTab(decision: Decision, userId: string | undefined, today: string): InboxTab {
   const { status } = decision;
   if (status === DECISION_STATUS.proposed) {
     return INBOX_TAB.needsYou;
   }
-  if (status === DECISION_STATUS.accepted && hasBrokenEvidence(decision)) {
+  if (
+    status === DECISION_STATUS.accepted
+    && (hasBrokenEvidence(decision) || hasNewContradiction(decision))
+  ) {
     return INBOX_TAB.needsYou;
   }
   if (DECIDED.includes(status)) {

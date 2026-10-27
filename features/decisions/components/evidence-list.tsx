@@ -5,7 +5,12 @@ import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
 import { useRemoveEvidence } from '@/shared/decisions/hooks';
 import { EVIDENCE_STATE_LABELS, evidenceHref, isBroken } from '@/shared/decisions/lib';
-import { type Decision, EVIDENCE_STANCE, EVIDENCE_STATE } from '@/shared/decisions/types';
+import {
+  type Decision,
+  EVIDENCE_STANCE,
+  EVIDENCE_STATE,
+  SYSTEM_USER,
+} from '@/shared/decisions/types';
 import { cn } from '@/shared/lib/cn';
 import { timeAgo } from '@/shared/lib/time';
 import { Trash, Warning } from '@phosphor-icons/react/ssr';
@@ -62,6 +67,7 @@ export default function EvidenceList({ decision }: { decision: Decision }) {
               <blockquote className="border-l-2 border-border-strong pl-3 text-sm whitespace-pre-wrap">
                 {evidence.quote}
               </blockquote>
+              {evidence.note && <p className="text-sm text-muted">{evidence.note}</p>}
               <p
                 className={cn(
                   'flex items-center gap-1 text-xs',
@@ -71,7 +77,8 @@ export default function EvidenceList({ decision }: { decision: Decision }) {
                 {broken && <Warning aria-hidden />}
                 {evidence.state !== EVIDENCE_STATE.current
                   && `${EVIDENCE_STATE_LABELS[evidence.state]} · `}
-                Quoted {timeAgo(evidence.added_at)}
+                {evidence.added_by === SYSTEM_USER ? 'Found by an automatic check' : 'Quoted'}{' '}
+                {timeAgo(evidence.added_at)}
               </p>
             </li>
           );

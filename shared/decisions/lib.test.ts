@@ -9,6 +9,7 @@ const evidence = (overrides: Partial<Evidence> = {}): Evidence => {
     ref_id: 'p1',
     quote: 'q',
     stance: 'supports',
+    note: null,
     title: 'PRD',
     external_url: null,
     board_id: null,
@@ -55,6 +56,34 @@ describe('inboxTab', () => {
         today,
       ),
     ).toBe('needs_you');
+  });
+
+  it('puts an accepted decision contradicted since it was settled in Needs you, until it is settled again', () => {
+    const contradicted = evidence({ stance: 'contradicts', added_at: '2026-10-20T00:00:00Z' });
+    const accepted = { status: 'accepted', by: 'u1', note: null } as const;
+
+    expect(
+      inboxTab(
+        decision({
+          status: 'accepted',
+          evidence: [contradicted],
+          history: [{ ...accepted, at: '2026-10-10T00:00:00Z' }],
+        }),
+        'me',
+        today,
+      ),
+    ).toBe('needs_you');
+    expect(
+      inboxTab(
+        decision({
+          status: 'accepted',
+          evidence: [contradicted],
+          history: [{ ...accepted, at: '2026-10-25T00:00:00Z' }],
+        }),
+        'me',
+        today,
+      ),
+    ).toBe('decided');
   });
 
   it('keeps other open decisions in Open and settled ones in Decided', () => {

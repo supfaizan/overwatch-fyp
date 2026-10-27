@@ -5,6 +5,7 @@ import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
 import SegmentedButton from '@/shared/components/segmented-button';
 import Skeleton from '@/shared/components/skeleton';
+import { SYSTEM_USER } from '@/shared/decisions/types';
 import { displayName } from '@/shared/session/lib';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { useState } from 'react';
@@ -22,6 +23,7 @@ const PERIODS = [
 const FEATURE_LABELS: Record<UsageFeature, string> = {
   chat: 'AI chat',
   decision_suggest: 'Decision suggestions',
+  decision_check: 'Decision checks',
 };
 
 type Row = { key: string; label: string; totals: UsageTotals };
@@ -75,7 +77,11 @@ function UsageDetails({ summary, workspaceId }: { summary: UsageSummary; workspa
     const member = members.data?.find((m) => {
       return m.user_id === userId;
     });
-    return member ? displayName(member) : 'Former member';
+    if (member) {
+      return displayName(member);
+    }
+    // the automatic decision checks, which no member runs
+    return userId === SYSTEM_USER ? 'Automatic checks' : 'Former member';
   };
 
   const { total } = summary;

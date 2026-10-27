@@ -6,6 +6,7 @@ export const queryKeys = {
   onboardingStatus: ['onboarding', 'status'] as const,
   github: ['github'] as const,
   connections: ['connections'] as const,
+  decisions: ['decisions'] as const,
   workItems: ['work-items'] as const,
   workItemTypes: ['work-item-types'] as const,
   workspaces: ['workspaces'] as const,

@@ -24,6 +24,18 @@ export function useCurrentWorkspace() {
   });
 }
 
+/** The current workspace's members; the same cache entry as Settings → Members. */
+export function useWorkspaceMembers() {
+  const workspaceId = useCurrentWorkspace()?.id ?? '';
+  return useQuery({
+    queryKey: [...queryKeys.workspaces, workspaceId, 'members'],
+    queryFn: () => {
+      return workspacesApi.getMembers(workspaceId);
+    },
+    enabled: Boolean(workspaceId),
+  });
+}
+
 /** Point every request at another workspace and refetch everything for it, from the dashboard. */
 export function useSwitchWorkspace() {
   const queryClient = useQueryClient();

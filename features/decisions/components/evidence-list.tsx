@@ -79,6 +79,8 @@ export default function EvidenceList({ decision }: { decision: Decision }) {
                   && `${EVIDENCE_STATE_LABELS[evidence.state]} · `}
                 {evidence.added_by === SYSTEM_USER ? 'Found by an automatic check' : 'Quoted'}{' '}
                 {timeAgo(evidence.added_at)}
+                {evidence.source_synced_at
+                  && ` · source synced ${timeAgo(evidence.source_synced_at)}`}
               </p>
             </li>
           );

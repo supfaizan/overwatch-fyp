@@ -48,6 +48,8 @@ export type Evidence = Required<NewEvidence> & {
   added_by: string;
   added_at: string;
   state: EvidenceState;
+  /** when the tracker or docs source it's mirrored from was last read, so `state` is as of then; null when written here */
+  source_synced_at: string | null;
 };
 
 export type HistoryEntry = { status: DecisionStatus; by: string; at: string; note: string | null };

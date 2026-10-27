@@ -17,6 +17,7 @@ const evidence = (overrides: Partial<Evidence> = {}): Evidence => {
     added_by: 'u1',
     added_at: '2026-10-01T00:00:00Z',
     state: 'current',
+    source_synced_at: null,
     ...overrides,
   };
 };

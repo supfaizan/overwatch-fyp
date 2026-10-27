@@ -1,11 +1,9 @@
 import {
   type CheckInterval,
   type Decision,
-  DECISION_STATUS,
   type DecisionStatus,
   type Evidence,
   EVIDENCE_KIND,
-  EVIDENCE_STANCE,
   EVIDENCE_STATE,
   type EvidenceState,
 } from './types';
@@ -40,15 +38,7 @@ export const EVIDENCE_STATE_LABELS: Record<EvidenceState, string> = {
   source_gone: 'Source deleted',
 };
 
-const DECIDED: DecisionStatus[] = [
-  DECISION_STATUS.accepted,
-  DECISION_STATUS.rejected,
-  DECISION_STATUS.superseded,
-];
 const BROKEN: EvidenceState[] = [EVIDENCE_STATE.quoteMissing, EVIDENCE_STATE.sourceGone];
-
-export const INBOX_TAB = { needsYou: 'needs_you', open: 'open', decided: 'decided' } as const;
-export type InboxTab = (typeof INBOX_TAB)[keyof typeof INBOX_TAB];
 
 /** Whether the evidence's source no longer says what it was quoted for. */
 export function isBroken(evidence: Evidence): boolean {
@@ -57,39 +47,6 @@ export function isBroken(evidence: Evidence): boolean {
 
 export function hasBrokenEvidence(decision: Decision): boolean {
   return decision.evidence.some(isBroken);
-}
-
-/** Whether a contradicting passage was added since the decision was last settled, e.g. by a check. */
-export function hasNewContradiction(decision: Decision): boolean {
-  const settledAt = decision.history.at(-1)?.at ?? decision.created_at;
-  return decision.evidence.some((evidence) => {
-    return evidence.stance === EVIDENCE_STANCE.contradicts && evidence.added_at > settledAt;
-  });
-}
-
-/**
- * Which inbox tab a decision sits in. Needs you: a proposal to settle, an open one this person owns
- * or whose review date (`today`, an ISO date) has come, or an accepted one whose evidence broke or
- * was contradicted since it was settled.
- */
-export function inboxTab(decision: Decision, userId: string | undefined, today: string): InboxTab {
-  const { status } = decision;
-  if (status === DECISION_STATUS.proposed) {
-    return INBOX_TAB.needsYou;
-  }
-  if (
-    status === DECISION_STATUS.accepted
-    && (hasBrokenEvidence(decision) || hasNewContradiction(decision))
-  ) {
-    return INBOX_TAB.needsYou;
-  }
-  if (DECIDED.includes(status)) {
-    return INBOX_TAB.decided;
-  }
-  const due = decision.review_by !== null && decision.review_by <= today;
-  return due || (userId !== undefined && decision.owner_id === userId)
-    ? INBOX_TAB.needsYou
-    : INBOX_TAB.open;
 }
 
 /** Today as an ISO date in the viewer's time zone, to compare review dates with. */

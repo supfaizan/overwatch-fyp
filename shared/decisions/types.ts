@@ -68,6 +68,8 @@ export type Decision = {
   superseded_by: string | null;
   evidence: Evidence[];
   history: HistoryEntry[];
+  /** accepted, but its evidence broke or was contradicted since it was settled: it's in Needs you */
+  needs_attention: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -84,7 +86,16 @@ export type DecisionFields = {
 
 export type CreateDecision = DecisionFields & { status?: DecisionStatus; evidence?: NewEvidence[] };
 
-export type DecisionFilters = { status?: DecisionStatus; q?: string; ref_id?: string };
+/** Where a decision sits in the inbox, for the member looking at it (worked out by the backend). */
+export const INBOX_TAB = { needsYou: 'needs_you', open: 'open', decided: 'decided' } as const;
+export type InboxTab = (typeof INBOX_TAB)[keyof typeof INBOX_TAB];
+
+export type InboxCounts = Record<InboxTab, number>;
+
+/** `today` is the viewer's ISO date, which review dates are compared with. */
+export type DecisionFilters = { tab?: InboxTab; today?: string; q?: string; ref_id?: string };
+
+export type DecisionPage = { decisions: Decision[]; total: number; offset: number };
 
 /** Who automatic decision checks act as, on the evidence they add and in usage. */
 export const SYSTEM_USER = 'system';

@@ -6,16 +6,37 @@ import type {
   Decision,
   DecisionFields,
   DecisionFilters,
+  DecisionPage,
   DecisionStatus,
   EvidenceKind,
+  InboxCounts,
   NewEvidence,
 } from './types';
 
-/** How many decisions a list loads; the inbox shows them all at once for now. */
+/** How many decisions a list beside an item or page (or a picker) loads. */
 export const LIST_LIMIT = 200;
+/** How many decisions the inbox loads at a time, as it's scrolled. */
+export const PAGE_SIZE = 30;
 
 export const getDecisions = (filters: DecisionFilters) => {
   return api.get<Decision[]>('/decisions', { params: { ...filters, limit: LIST_LIMIT } });
+};
+/** One page of the inbox, newest change first. */
+export const getDecisionPage = async (
+  filters: DecisionFilters,
+  offset: number,
+): Promise<DecisionPage> => {
+  const { data, meta } = await api.getWithMeta<Decision[]>('/decisions', {
+    params: { ...filters, offset, limit: PAGE_SIZE },
+  });
+  return {
+    decisions: data,
+    total: typeof meta.total === 'number' ? meta.total : data.length,
+    offset,
+  };
+};
+export const getInboxCounts = (today: string) => {
+  return api.get<InboxCounts>('/decisions/counts', { params: { today } });
 };
 export const getDecision = (id: string) => {
   return api.get<Decision>(`/decisions/${id}`);

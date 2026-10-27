@@ -2,11 +2,10 @@
 
 import type { ApiError } from '@/shared/api/envelope';
 import { queryKeys } from '@/shared/api/query-keys';
-import { useSession } from '@/shared/session/store';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as decisionsApi from './api';
-import { INBOX_TAB, inboxTab, localToday } from './lib';
+import { localToday } from './lib';
 import type { Decision, DecisionFilters } from './types';
 
 const SOURCE_UNCHANGED = 'source_unchanged';
@@ -17,6 +16,12 @@ const keys = {
   },
   one: (id: string) => {
     return [...queryKeys.decisions, 'one', id] as const;
+  },
+  pages: (filters: DecisionFilters) => {
+    return [...queryKeys.decisions, 'list', 'pages', filters] as const;
+  },
+  counts: (today: string) => {
+    return [...queryKeys.decisions, 'counts', today] as const;
   },
   checks: [...queryKeys.decisions, 'checks'] as const,
 };
@@ -30,16 +35,36 @@ export const useDecisions = (filters: DecisionFilters = {}) => {
   });
 };
 
-/** How many decisions are waiting on this person (the inbox's Needs you), for the sidebar. */
-export const useNeedsYouCount = () => {
-  const userId = useSession((state) => {
-    return state.user?.id;
+/** One inbox tab (or a search across all of them), a page at a time as it's scrolled. */
+export const useDecisionPages = (filters: DecisionFilters) => {
+  const query = useInfiniteQuery({
+    queryKey: keys.pages(filters),
+    queryFn: ({ pageParam }) => {
+      return decisionsApi.getDecisionPage(filters, pageParam);
+    },
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const loaded = last.offset + last.decisions.length;
+      return loaded < last.total ? loaded : undefined;
+    },
   });
-  const decisions = useDecisions();
+  return {
+    ...query,
+    decisions: query.data?.pages.flatMap((page) => {
+      return page.decisions;
+    }) ?? [],
+  };
+};
+
+/** How many decisions each inbox tab holds for this person (Needs you is also the sidebar's count). */
+export const useInboxCounts = () => {
   const today = localToday();
-  return decisions.data?.filter((decision) => {
-    return inboxTab(decision, userId, today) === INBOX_TAB.needsYou;
-  }).length ?? 0;
+  return useQuery({
+    queryKey: keys.counts(today),
+    queryFn: () => {
+      return decisionsApi.getInboxCounts(today);
+    },
+  });
 };
 
 export const useDecision = (id: string) => {
@@ -62,6 +87,7 @@ function useDecisionMutation<TArg>(
     onSuccess: (decision) => {
       queryClient.setQueryData(keys.one(decision.id), decision);
       void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'list'] });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'counts'] });
       if (success) {
         toast.success(success);
       }
@@ -118,6 +144,7 @@ export const useDismissSuggestion = () => {
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: keys.one(id) });
       void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'list'] });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'counts'] });
       toast.success("Dismissed; it won't be suggested again.");
     },
     onError: (error) => {

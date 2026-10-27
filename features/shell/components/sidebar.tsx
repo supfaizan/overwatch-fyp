@@ -4,7 +4,7 @@ import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import Kbd from '@/shared/components/kbd';
 import Tooltip from '@/shared/components/tooltip';
-import { useNeedsYouCount } from '@/shared/decisions/hooks';
+import { useInboxCounts } from '@/shared/decisions/hooks';
 import { cn } from '@/shared/lib/cn';
 import { displayName, handle } from '@/shared/session/lib';
 import { useSession } from '@/shared/session/store';
@@ -36,7 +36,7 @@ export default function Sidebar(
     return state.user;
   });
   const name = user ? displayName(user) : '';
-  const needsYou = useNeedsYouCount();
+  const needsYou = useInboxCounts().data?.needs_you ?? 0;
   // collapsed items are squares the size of the toggle, so every icon sits on the same line
   const item = cn(
     'flex h-8 shrink-0 items-center gap-2 rounded-md text-sm transition-colors focus-visible:outline-2 focus-visible:outline-primary [&>svg]:size-4 [&>svg]:shrink-0',

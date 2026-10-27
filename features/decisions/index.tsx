@@ -8,25 +8,15 @@ import SegmentedButton from '@/shared/components/segmented-button';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
-import { useDecisions } from '@/shared/decisions/hooks';
-import {
-  hasBrokenEvidence,
-  hasNewContradiction,
-  INBOX_TAB,
-  type InboxTab,
-  inboxTab,
-  localToday,
-  STATUS_LABELS,
-  STATUS_TAGS,
-} from '@/shared/decisions/lib';
+import { useDecisionPages, useInboxCounts } from '@/shared/decisions/hooks';
+import { hasBrokenEvidence, localToday, STATUS_LABELS, STATUS_TAGS } from '@/shared/decisions/lib';
 import RecordDecisionDialog from '@/shared/decisions/record-decision-dialog';
-import type { Decision } from '@/shared/decisions/types';
+import { type Decision, INBOX_TAB, type InboxTab } from '@/shared/decisions/types';
 import { timeAgo } from '@/shared/lib/time';
-import { useSession } from '@/shared/session/store';
 import { BookOpenText, MagnifyingGlass, Plus, Quotes, Warning } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import ChecksBar from './components/checks-bar';
 import { useUpdateOverview } from './hooks';
@@ -38,6 +28,7 @@ const TAB_LABELS: Record<InboxTab, string> = {
   open: 'Open',
   decided: 'Decided',
 };
+const SEARCH_DELAY_MS = 300;
 const EMPTY: Record<InboxTab, string> = {
   needs_you: 'Nothing is waiting on you.',
   open: 'No open decisions.',
@@ -47,29 +38,26 @@ const EMPTY: Record<InboxTab, string> = {
 /** The Decisions inbox: what needs a call from you, what's still open, and what was decided. */
 export default function DecisionsInbox() {
   const router = useRouter();
-  const userId = useSession((state) => {
-    return state.user?.id;
-  });
-  const decisions = useDecisions();
   const [tab, setTab] = useState<InboxTab>(INBOX_TAB.needsYou);
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
   const [recording, setRecording] = useState(false);
   const overview = useUpdateOverview();
-
-  const today = localToday();
-  const query = search.trim().toLowerCase();
-  const byTab = (wanted: InboxTab) => {
-    return (decisions.data ?? []).filter((decision) => {
-      return inboxTab(decision, userId, today) === wanted;
-    });
-  };
+  const counts = useInboxCounts();
   // a search looks through every tab
-  const shown = query
-    ? (decisions.data ?? []).filter((decision) => {
-      return `${decision.title} ${decision.statement} ${decision.area ?? ''}`.toLowerCase()
-        .includes(query);
-    })
-    : byTab(tab);
+  const decisions = useDecisionPages(
+    query ? { q: query } : { tab, today: localToday() },
+  );
+
+  useEffect(() => {
+    // search once typing pauses, not on every key
+    const timer = setTimeout(() => {
+      setQuery(search.trim());
+    }, SEARCH_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [search]);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -109,7 +97,7 @@ export default function DecisionsInbox() {
           <SegmentedButton
             aria-label="Show"
             options={Object.values(INBOX_TAB).map((value) => {
-              const count = byTab(value).length;
+              const count = counts.data?.[value];
               return {
                 value,
                 label: count ? `${TAB_LABELS[value]} (${count})` : TAB_LABELS[value],
@@ -147,14 +135,22 @@ export default function DecisionsInbox() {
             {decisions.error.message}
           </Banner>
         )}
-        {decisions.data && (shown.length
+        {decisions.isSuccess && (decisions.decisions.length
           ? (
             <Card className="p-0">
               <ul className="divide-y divide-border">
-                {shown.map((decision) => {
+                {decisions.decisions.map((decision) => {
                   return <DecisionRow key={decision.id} decision={decision} />;
                 })}
               </ul>
+              {decisions.hasNextPage && (
+                <LoadMore
+                  loading={decisions.isFetchingNextPage}
+                  onLoadMore={() => {
+                    return void decisions.fetchNextPage();
+                  }}
+                />
+              )}
             </Card>
           )
           : (
@@ -172,6 +168,35 @@ export default function DecisionsInbox() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+/** Loads the next page once it scrolls into view; a button too, for keyboards and screen readers. */
+function LoadMore({ loading, onLoadMore }: { loading: boolean; onLoadMore: () => void }) {
+  const sentinel = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loading || !sentinel.current) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        return entry.isIntersecting && onLoadMore();
+      },
+      { rootMargin: '0px 0px 200px 0px' },
+    );
+    observer.observe(sentinel.current);
+    return () => {
+      return observer.disconnect();
+    };
+  }, [loading, onLoadMore]);
+
+  return (
+    <div ref={sentinel} className="flex justify-center border-t border-border p-2">
+      <Button size="sm" variant="tertiary" loading={loading} onClick={onLoadMore}>
+        Load more
+      </Button>
     </div>
   );
 }
@@ -194,10 +219,10 @@ function DecisionRow({ decision }: { decision: Decision }) {
             <Quotes aria-hidden />
             {decision.evidence.length} {decision.evidence.length === 1 ? 'passage' : 'passages'}
           </span>
-          {(hasBrokenEvidence(decision) || hasNewContradiction(decision)) && (
+          {(hasBrokenEvidence(decision) || decision.needs_attention) && (
             <span className="flex items-center gap-1 text-warning-strong">
               <Warning aria-hidden />
-              {hasNewContradiction(decision) ? 'New contradiction' : 'Evidence changed'}
+              {hasBrokenEvidence(decision) ? 'Evidence changed' : 'New contradiction'}
             </span>
           )}
           <span>Updated {timeAgo(decision.updated_at)}</span>

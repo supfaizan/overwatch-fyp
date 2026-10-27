@@ -8,7 +8,8 @@ import * as decisionsApi from './api';
 import { localToday } from './lib';
 import type { Decision, DecisionFilters } from './types';
 
-const SOURCE_UNCHANGED = 'source_unchanged';
+// answers rather than failures: nothing new to read, or someone's run is already reading it
+const NOT_FAILURES = new Set(['source_unchanged', 'suggest_in_progress', 'check_in_progress']);
 
 const keys = {
   list: (filters: DecisionFilters) => {
@@ -129,10 +130,7 @@ export const useSuggestDecisions = () => {
       );
     },
     onError: (error: ApiError) => {
-      // nothing new to read is an answer, not a failure
-      return error.errorCode === SOURCE_UNCHANGED
-        ? toast(error.message)
-        : toast.error(error.message);
+      return NOT_FAILURES.has(error.errorCode) ? toast(error.message) : toast.error(error.message);
     },
   });
 };
@@ -194,7 +192,7 @@ export const useRunCheck = () => {
       }
     },
     onError: (error: ApiError) => {
-      return toast.error(error.message);
+      return NOT_FAILURES.has(error.errorCode) ? toast(error.message) : toast.error(error.message);
     },
   });
 };

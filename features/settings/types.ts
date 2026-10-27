@@ -31,6 +31,8 @@ export type Connection = {
   status: TrackerStatus;
   /** False when the grant can't write back (made before edits were): reconnect to edit. */
   can_write: boolean;
+  /** True when the grant lacks a scope the connector now asks for (a board's columns): reconnect. */
+  outdated: boolean;
   external_account: { id: string; name: string | null; url: string | null } | null;
   connected_at: string | null;
   targets: SyncTarget[];

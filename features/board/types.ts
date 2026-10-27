@@ -184,6 +184,8 @@ export type Tracker = {
   name: string;
   status: ConnectionStatus;
   can_write: boolean;
+  /** True when the grant lacks a scope the tracker now needs (a board's columns): reconnect. */
+  outdated: boolean;
   targets: SyncTarget[];
 };
 

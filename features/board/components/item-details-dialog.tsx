@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/compo
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
+import RelatedDecisions from '@/shared/decisions/related-decisions';
+import { EVIDENCE_KIND } from '@/shared/decisions/types';
 import { cn } from '@/shared/lib/cn';
 import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
 import { typeOf } from '@/shared/work-item-types/type-icon';
@@ -298,6 +300,16 @@ export default function ItemDetailsDialog(
               <dd>{dateTime.format(new Date(item.updated_at))}</dd>
             </dl>
 
+            <RelatedDecisions
+              source={{
+                kind: EVIDENCE_KIND.workItem,
+                refId: item.id,
+                title: `${item.key} ${item.title}`,
+              }}
+              readQuote={() => {
+                return window.getSelection()?.toString() ?? '';
+              }}
+            />
             <div className="flex flex-wrap gap-2">
               {tracker && item.external_url && (
                 <Button size="sm" asChild>

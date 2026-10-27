@@ -19,7 +19,10 @@ const PERIODS = [
   { value: '90', label: '90 days' },
 ];
 
-const FEATURE_LABELS: Record<UsageFeature, string> = { chat: 'AI chat' };
+const FEATURE_LABELS: Record<UsageFeature, string> = {
+  chat: 'AI chat',
+  decision_suggest: 'Decision suggestions',
+};
 
 type Row = { key: string; label: string; totals: UsageTotals };
 

@@ -67,7 +67,7 @@ export default function RecordDecisionDialog(
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title="Record decision"
-        description={source ? `From ${source.title}` : undefined}
+        description={source ? `From ${source.title || 'Untitled'}` : undefined}
         footer={
           <>
             <DialogClose asChild>

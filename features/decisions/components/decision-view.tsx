@@ -7,14 +7,25 @@ import Markdown from '@/shared/components/markdown';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
-import { useChangeStatus, useDecision, useUpdateDecision } from '@/shared/decisions/hooks';
+import {
+  useChangeStatus,
+  useDecision,
+  useDismissSuggestion,
+  useUpdateDecision,
+} from '@/shared/decisions/hooks';
 import { STATUS_LABELS, STATUS_TAGS } from '@/shared/decisions/lib';
-import { type Decision, DECISION_STATUS, type DecisionStatus } from '@/shared/decisions/types';
+import {
+  type Decision,
+  DECISION_ORIGIN,
+  DECISION_STATUS,
+  type DecisionStatus,
+} from '@/shared/decisions/types';
 import { timeAgo } from '@/shared/lib/time';
 import { displayName } from '@/shared/session/lib';
 import { useWorkspaceMembers } from '@/shared/workspaces/hooks';
 import { CaretLeft, PencilSimple, Sparkle } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
 import EditDecisionDialog from './edit-decision-dialog';
 import EvidenceList from './evidence-list';
@@ -62,7 +73,7 @@ function DecisionDetails({ decision }: { decision: Decision }) {
           <div className="flex flex-wrap items-center gap-2">
             <Tag variant={STATUS_TAGS[decision.status]}>{STATUS_LABELS[decision.status]}</Tag>
             {decision.area && <Tag>{decision.area}</Tag>}
-            {decision.origin === 'suggested' && (
+            {decision.origin === DECISION_ORIGIN.suggested && (
               <Tag variant="primary">
                 <Sparkle aria-hidden />
                 Suggested by AI
@@ -179,7 +190,12 @@ const ACTIONS: { status: DecisionStatus; label: string }[] = [
 
 /** Settling the decision: people move it, with an optional note on why. */
 function StatusActions({ decision }: { decision: Decision }) {
+  const router = useRouter();
   const change = useChangeStatus();
+  const dismiss = useDismissSuggestion();
+  // an AI suggestion waiting for review is dismissed rather than rejected, so it isn't kept
+  const reviewing = decision.origin === DECISION_ORIGIN.suggested
+    && decision.status === DECISION_STATUS.proposed;
   const [note, setNote] = useState('');
   const [superseding, setSuperseding] = useState(false);
 
@@ -208,7 +224,8 @@ function StatusActions({ decision }: { decision: Decision }) {
       />
       <div className="flex flex-wrap gap-2">
         {ACTIONS.filter((action) => {
-          return action.status !== decision.status;
+          return action.status !== decision.status
+            && !(reviewing && action.status === DECISION_STATUS.rejected);
         }).map((action) => {
           return (
             <Button
@@ -224,6 +241,22 @@ function StatusActions({ decision }: { decision: Decision }) {
             </Button>
           );
         })}
+        {reviewing && (
+          <Button
+            size="sm"
+            variant="tertiary"
+            loading={dismiss.isPending}
+            onClick={() => {
+              return dismiss.mutate(decision.id, {
+                onSuccess: () => {
+                  return router.push('/decisions');
+                },
+              });
+            }}
+          >
+            Not a decision
+          </Button>
+        )}
         {decision.status === DECISION_STATUS.accepted && (
           <Button
             size="sm"

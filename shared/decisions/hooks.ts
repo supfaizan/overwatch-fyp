@@ -9,6 +9,8 @@ import * as decisionsApi from './api';
 import { INBOX_TAB, inboxTab, localToday } from './lib';
 import type { Decision, DecisionFilters } from './types';
 
+const SOURCE_UNCHANGED = 'source_unchanged';
+
 const keys = {
   list: (filters: DecisionFilters) => {
     return [...queryKeys.decisions, 'list', filters] as const;
@@ -83,4 +85,42 @@ export const useAddEvidence = () => {
 };
 export const useRemoveEvidence = () => {
   return useDecisionMutation(decisionsApi.removeEvidence);
+};
+
+export const useSuggestDecisions = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.suggestDecisions,
+    onSuccess: (suggested) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.decisions });
+      toast.success(
+        suggested.length
+          ? `${suggested.length} suggested ${
+            suggested.length === 1 ? 'decision' : 'decisions'
+          } to review.`
+          : 'No new decisions found here.',
+      );
+    },
+    onError: (error: ApiError) => {
+      // nothing new to read is an answer, not a failure
+      return error.errorCode === SOURCE_UNCHANGED
+        ? toast(error.message)
+        : toast.error(error.message);
+    },
+  });
+};
+
+export const useDismissSuggestion = () => {
+  const queryClient = useQueryClient();
+  return useMutation<null, ApiError, string>({
+    mutationFn: decisionsApi.dismissSuggestion,
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: keys.one(id) });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'list'] });
+      toast.success("Dismissed; it won't be suggested again.");
+    },
+    onError: (error) => {
+      return toast.error(error.message);
+    },
+  });
 };

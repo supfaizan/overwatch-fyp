@@ -70,7 +70,7 @@ export type Invite = {
 export type InviteCreated = Invite & { url: string | null };
 
 /** What a model call was made for, as AI usage is split by. */
-export const USAGE_FEATURE = { chat: 'chat' } as const;
+export const USAGE_FEATURE = { chat: 'chat', decisionSuggest: 'decision_suggest' } as const;
 export type UsageFeature = (typeof USAGE_FEATURE)[keyof typeof USAGE_FEATURE];
 
 export type UsageTotals = {

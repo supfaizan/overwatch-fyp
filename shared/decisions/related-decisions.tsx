@@ -3,10 +3,11 @@
 import Button from '@/shared/components/button';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
-import { Plus, Warning } from '@phosphor-icons/react/ssr';
+import Tooltip from '@/shared/components/tooltip';
+import { Plus, Sparkle, Warning } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useDecisions } from './hooks';
+import { useDecisions, useSuggestDecisions } from './hooks';
 import { EVIDENCE_STATE_LABELS, isBroken, STATUS_LABELS, STATUS_TAGS } from './lib';
 import RecordDecisionDialog, { type DecisionSource } from './record-decision-dialog';
 
@@ -19,6 +20,7 @@ type RelatedDecisionsProps = {
 /** The decisions quoting an item or page, and a way to record one from it. */
 export default function RelatedDecisions({ source, readQuote }: RelatedDecisionsProps) {
   const decisions = useDecisions({ ref_id: source.refId });
+  const suggest = useSuggestDecisions();
   // a fresh dialog per open, holding the quote read as it opened
   const [recording, setRecording] = useState<{ key: number; quote: string } | null>(null);
 
@@ -26,22 +28,37 @@ export default function RelatedDecisions({ source, readQuote }: RelatedDecisions
     <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Decisions</h3>
-        <Button
-          size="sm"
-          variant="tertiary"
-          // mouse down, before the click moves focus and clears the selection being quoted
-          onMouseDown={() => {
-            setRecording({ key: Date.now(), quote: readQuote?.() ?? '' });
-          }}
-          onClick={() => {
-            setRecording((current) => {
-              return current ?? { key: Date.now(), quote: readQuote?.() ?? '' };
-            });
-          }}
-        >
-          <Plus aria-hidden />
-          Record
-        </Button>
+        <div className="flex gap-1">
+          <Tooltip content="The AI drafts the decisions this states, for you to review">
+            <Button
+              size="sm"
+              variant="tertiary"
+              loading={suggest.isPending}
+              onClick={() => {
+                return suggest.mutate({ kind: source.kind, ref_id: source.refId });
+              }}
+            >
+              <Sparkle aria-hidden />
+              Suggest
+            </Button>
+          </Tooltip>
+          <Button
+            size="sm"
+            variant="tertiary"
+            // mouse down, before the click moves focus and clears the selection being quoted
+            onMouseDown={() => {
+              setRecording({ key: Date.now(), quote: readQuote?.() ?? '' });
+            }}
+            onClick={() => {
+              setRecording((current) => {
+                return current ?? { key: Date.now(), quote: readQuote?.() ?? '' };
+              });
+            }}
+          >
+            <Plus aria-hidden />
+            Record
+          </Button>
+        </div>
       </div>
       {decisions.isPending && <Skeleton className="h-10 w-full" />}
       {decisions.isError && <p className="text-xs text-danger">{decisions.error.message}</p>}

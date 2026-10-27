@@ -5,6 +5,7 @@ import type {
   DecisionFields,
   DecisionFilters,
   DecisionStatus,
+  EvidenceKind,
   NewEvidence,
 } from './types';
 
@@ -38,4 +39,12 @@ export const addEvidence = ({ id, ...body }: NewEvidence & { id: string }) => {
 };
 export const removeEvidence = ({ id, evidenceId }: { id: string; evidenceId: string }) => {
   return api.delete<Decision>(`/decisions/${id}/evidence/${evidenceId}`);
+};
+/** The AI drafts the decisions an item or page states; they come back saved as proposals. */
+export const suggestDecisions = (body: { kind: EvidenceKind; ref_id: string }) => {
+  return api.post<Decision[]>('/decisions/suggest', body);
+};
+/** "Not a decision": removes a suggestion waiting for review so it isn't suggested again. */
+export const dismissSuggestion = (id: string) => {
+  return api.post<null>(`/decisions/${id}/dismiss`);
 };

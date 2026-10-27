@@ -42,7 +42,7 @@ export default function EvidenceList({ decision }: { decision: Decision }) {
                   href={evidenceHref(evidence)}
                   className="min-w-0 flex-1 truncate text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-primary"
                 >
-                  {evidence.title}
+                  {evidence.title || 'Untitled'}
                 </Link>
                 <Tooltip content="Remove passage">
                   <Button

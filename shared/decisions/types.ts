@@ -8,6 +8,10 @@ export const DECISION_STATUS = {
 } as const;
 export type DecisionStatus = (typeof DECISION_STATUS)[keyof typeof DECISION_STATUS];
 
+/** Who drafted a decision: a person, or the AI (then it waits as `proposed` until someone settles it). */
+export const DECISION_ORIGIN = { manual: 'manual', suggested: 'suggested' } as const;
+export type DecisionOrigin = (typeof DECISION_ORIGIN)[keyof typeof DECISION_ORIGIN];
+
 export const EVIDENCE_KIND = { workItem: 'work_item', document: 'document' } as const;
 export type EvidenceKind = (typeof EVIDENCE_KIND)[keyof typeof EVIDENCE_KIND];
 
@@ -52,7 +56,7 @@ export type Decision = {
   context_md: string | null;
   area: string | null;
   status: DecisionStatus;
-  origin: 'manual' | 'suggested';
+  origin: DecisionOrigin;
   owner_id: string | null;
   /** ISO date an open decision should be looked at again */
   review_by: string | null;

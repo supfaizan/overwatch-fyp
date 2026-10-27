@@ -38,17 +38,6 @@ export type Connection = {
   targets: SyncTarget[];
 };
 
-export type Member = {
-  user_id: string;
-  username: string | null;
-  github_login: string | null;
-  email: string | null;
-  name: string | null;
-  avatar_url: string | null;
-  role: Role;
-  joined_at: string;
-};
-
 export type InviteRole = Exclude<Role, typeof ROLE.owner>;
 
 /** Who may accept: anyone with the link, one GitHub account, or one email address (mailed the link). */

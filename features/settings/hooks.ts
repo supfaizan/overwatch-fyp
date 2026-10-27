@@ -11,7 +11,7 @@ const keys = {
   available: (provider: string) => {
     return [...queryKeys.connections, provider, 'available'] as const;
   },
-  workspace: (id: string, part: 'members' | 'invites') => {
+  workspace: (id: string, part: 'invites') => {
     return [...queryKeys.workspaces, id, part] as const;
   },
   usage: (days: number) => {
@@ -116,14 +116,6 @@ export function useStartAuthorization() {
   });
 }
 
-export const useMembers = (id: string) => {
-  return useQuery({
-    queryKey: keys.workspace(id, 'members'),
-    queryFn: () => {
-      return settingsApi.getMembers(id);
-    },
-  });
-};
 export const useUsage = (days: number) => {
   return useQuery({
     queryKey: keys.usage(days),

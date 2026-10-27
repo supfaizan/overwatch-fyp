@@ -7,9 +7,9 @@ import SegmentedButton from '@/shared/components/segmented-button';
 import Skeleton from '@/shared/components/skeleton';
 import { SYSTEM_USER } from '@/shared/decisions/types';
 import { displayName } from '@/shared/session/lib';
-import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { useWorkspaceMembers } from '@/shared/workspaces/hooks';
 import { useState } from 'react';
-import { useMembers, useUsage } from '../hooks';
+import { useUsage } from '../hooks';
 import { formatCost, formatTokens } from '../lib';
 import type { UsageFeature, UsageSummary, UsageTotals } from '../types';
 import { SettingsSection } from './settings-layout';
@@ -29,7 +29,6 @@ const FEATURE_LABELS: Record<UsageFeature, string> = {
 type Row = { key: string; label: string; totals: UsageTotals };
 
 export default function UsageSection() {
-  const workspace = useCurrentWorkspace();
   const [days, setDays] = useState('30');
   const usage = useUsage(Number(days));
 
@@ -65,14 +64,14 @@ export default function UsageSection() {
           {usage.error.message}
         </Banner>
       )}
-      {usage.data && workspace && <UsageDetails summary={usage.data} workspaceId={workspace.id} />}
+      {usage.data && <UsageDetails summary={usage.data} />}
     </SettingsSection>
   );
 }
 
-function UsageDetails({ summary, workspaceId }: { summary: UsageSummary; workspaceId: string }) {
+function UsageDetails({ summary }: { summary: UsageSummary }) {
   // names for the member rows; the usage itself doesn't wait for them
-  const members = useMembers(workspaceId);
+  const members = useWorkspaceMembers();
   const nameOf = (userId: string) => {
     const member = members.data?.find((m) => {
       return m.user_id === userId;

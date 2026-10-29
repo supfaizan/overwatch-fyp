@@ -52,7 +52,7 @@ export default function DecisionsInbox() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pt-4 pb-6">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-lg font-bold">Decisions</h1>

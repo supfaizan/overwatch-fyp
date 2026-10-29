@@ -40,7 +40,7 @@ export default function DecisionView({ id }: { id: string }) {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pt-4 pb-6">
         <Link
           href="/decisions"
           className="flex w-fit items-center gap-1 text-sm text-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"

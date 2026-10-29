@@ -9,6 +9,7 @@ import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { type Editor, EditorContent, type JSONContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { Expand, Panel } from '../blocks';
 import { isWebLink } from '../embeds';
@@ -126,9 +127,10 @@ type DocEditorProps = {
 export default function DocEditor(
   { initial, editable, onEditor, onChange, onImages, sourceName = 'its source' }: DocEditorProps,
 ) {
-  const handlers = useRef({ onEditor, onChange, onImages });
+  const router = useRouter();
+  const handlers = useRef({ onEditor, onChange, onImages, router });
   useEffect(() => {
-    handlers.current = { onEditor, onChange, onImages };
+    handlers.current = { onEditor, onChange, onImages, router };
   });
   const editor = useEditor({
     extensions: extensions(sourceName),
@@ -185,6 +187,22 @@ export default function DocEditor(
         return true;
       },
       handleDOMEvents: {
+        // a click on a link follows it, while editing too: one of ours in this tab, another site (or
+        // with ⌘/Ctrl held) in a new one; the click event itself, so read-only pages don't also follow it
+        click: (view, event) => {
+          const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+          const href = link && view.dom.contains(link) ? link.getAttribute('href') : null;
+          if (!href || event.button !== 0) {
+            return false;
+          }
+          event.preventDefault();
+          if (href.startsWith('/') && !href.startsWith('//') && !event.metaKey && !event.ctrlKey) {
+            handlers.current.router.push(href);
+          } else {
+            window.open(href, '_blank', 'noopener,noreferrer');
+          }
+          return true;
+        },
         // runs before the resize plugin's own mousedown: a drag on a column edge works with real widths,
         // an inner edge is dragged here (the table keeps its width), the last edge by the plugin
         mousedown: (view, event) => {

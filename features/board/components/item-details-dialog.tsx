@@ -3,6 +3,7 @@
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
+import { DatePicker } from '@/shared/components/date-picker';
 import { Dialog, DialogContent } from '@/shared/components/dialog';
 import { Input, TextArea } from '@/shared/components/input';
 import Markdown from '@/shared/components/markdown';
@@ -97,7 +98,7 @@ export default function ItemDetailsDialog(
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         // one height whatever it shows; each side scrolls inside it. A viewport height, as the overlay is a grid
-        className="flex h-[85dvh] max-w-6xl flex-col"
+        className="flex h-[90dvh] max-w-6xl flex-col"
         title={
           <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-muted">
             {item.parent?.key && <span>{item.parent.key} /</span>}
@@ -257,15 +258,13 @@ export default function ItemDetailsDialog(
                 />
               </Detail>
               <Detail label="Due date">
-                <Input
-                  key={item.due_date ?? ''}
+                <DatePicker
                   size="sm"
-                  type="date"
                   aria-label="Due date"
-                  defaultValue={item.due_date ?? ''}
+                  placeholder="None"
+                  value={item.due_date}
                   disabled={readOnly}
-                  onBlur={(e) => {
-                    const value = e.target.value || null;
+                  onChange={(value) => {
                     if (value !== item.due_date) {
                       save({ due_date: value });
                     }

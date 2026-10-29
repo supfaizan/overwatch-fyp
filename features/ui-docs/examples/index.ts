@@ -8,6 +8,7 @@ import * as checkbox from './checkbox';
 import * as command from './command';
 import * as confirmDialog from './confirm-dialog';
 import * as contextMenu from './context-menu';
+import * as datePicker from './date-picker';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
 import * as formField from './form-field';
@@ -41,6 +42,7 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   command,
   'confirm-dialog': confirmDialog,
   'context-menu': contextMenu,
+  'date-picker': datePicker,
   dialog,
   'dropdown-menu': dropdownMenu,
   'form-field': formField,

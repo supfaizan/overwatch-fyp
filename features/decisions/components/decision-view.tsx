@@ -2,6 +2,7 @@
 
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
+import { DatePicker } from '@/shared/components/date-picker';
 import { Input } from '@/shared/components/input';
 import Markdown from '@/shared/components/markdown';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
@@ -151,13 +152,13 @@ function DecisionDetails({ decision }: { decision: Decision }) {
           </Select>
         </Detail>
         <Detail label="Review by">
-          <Input
-            type="date"
+          <DatePicker
             size="sm"
             aria-label="Review by"
-            value={decision.review_by ?? ''}
-            onChange={(e) => {
-              return update.mutate({ id: decision.id, review_by: e.target.value || null });
+            placeholder="None"
+            value={decision.review_by}
+            onChange={(value) => {
+              return update.mutate({ id: decision.id, review_by: value });
             }}
           />
         </Detail>

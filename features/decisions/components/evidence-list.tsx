@@ -4,7 +4,7 @@ import Button from '@/shared/components/button';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
 import { useRemoveEvidence } from '@/shared/decisions/hooks';
-import { EVIDENCE_STATE_LABELS, evidenceHref, isBroken } from '@/shared/decisions/lib';
+import { EVIDENCE_STATE_LABELS, evidenceHref, isBroken, matchLabel } from '@/shared/decisions/lib';
 import {
   type Decision,
   EVIDENCE_STANCE,
@@ -77,8 +77,10 @@ export default function EvidenceList({ decision }: { decision: Decision }) {
                 {broken && <Warning aria-hidden />}
                 {evidence.state !== EVIDENCE_STATE.current
                   && `${EVIDENCE_STATE_LABELS[evidence.state]} · `}
-                {evidence.added_by === SYSTEM_USER ? 'Found by an automatic check' : 'Quoted'}{' '}
-                {timeAgo(evidence.added_at)}
+                {evidence.added_by === SYSTEM_USER || evidence.match
+                  ? 'Found by a check'
+                  : 'Quoted'}
+                {evidence.match && ` (${matchLabel(evidence.match)})`} {timeAgo(evidence.added_at)}
                 {evidence.source_synced_at
                   && ` · source synced ${timeAgo(evidence.source_synced_at)}`}
               </p>

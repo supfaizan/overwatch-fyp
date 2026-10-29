@@ -1,4 +1,5 @@
 import {
+  CHECK_MATCH,
   type CheckInterval,
   type Decision,
   type DecisionStatus,
@@ -37,6 +38,20 @@ export const EVIDENCE_STATE_LABELS: Record<EvidenceState, string> = {
   quote_missing: 'No longer in the source',
   source_gone: 'Source deleted',
 };
+
+/** Why an automatic check read the source, e.g. "mentions DEV-12". */
+export function matchLabel({ reason, detail }: NonNullable<Evidence['match']>): string {
+  switch (reason) {
+    case CHECK_MATCH.quoted:
+      return 'quoted by this decision';
+    case CHECK_MATCH.linked:
+      return detail ? `linked to ${detail}` : 'linked to a quoted item';
+    case CHECK_MATCH.mentioned:
+      return detail ? `mentions ${detail}` : 'mentions a quoted source';
+    case CHECK_MATCH.similar:
+      return 'similar in meaning';
+  }
+}
 
 const BROKEN: EvidenceState[] = [EVIDENCE_STATE.quoteMissing, EVIDENCE_STATE.sourceGone];
 

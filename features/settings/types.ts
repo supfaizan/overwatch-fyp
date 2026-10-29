@@ -63,6 +63,7 @@ export const USAGE_FEATURE = {
   chat: 'chat',
   decisionSuggest: 'decision_suggest',
   decisionCheck: 'decision_check',
+  embeddings: 'embeddings',
 } as const;
 export type UsageFeature = (typeof USAGE_FEATURE)[keyof typeof USAGE_FEATURE];
 

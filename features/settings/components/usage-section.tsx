@@ -24,6 +24,7 @@ const FEATURE_LABELS: Record<UsageFeature, string> = {
   chat: 'AI chat',
   decision_suggest: 'Decision suggestions',
   decision_check: 'Decision checks',
+  embeddings: 'Search by meaning',
 };
 
 type Row = { key: string; label: string; totals: UsageTotals };

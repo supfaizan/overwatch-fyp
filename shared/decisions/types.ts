@@ -27,6 +27,15 @@ export const EVIDENCE_STATE = {
 } as const;
 export type EvidenceState = (typeof EVIDENCE_STATE)[keyof typeof EVIDENCE_STATE];
 
+/** Why an automatic check read a source against a decision, strongest first. */
+export const CHECK_MATCH = {
+  quoted: 'quoted',
+  linked: 'linked',
+  mentioned: 'mentioned',
+  similar: 'similar',
+} as const;
+export type CheckMatch = (typeof CHECK_MATCH)[keyof typeof CHECK_MATCH];
+
 /** A passage from a board item or docs page; it must appear in that source as written. */
 export type NewEvidence = {
   kind: EvidenceKind;
@@ -50,6 +59,8 @@ export type Evidence = Required<NewEvidence> & {
   state: EvidenceState;
   /** when the tracker or docs source it's mirrored from was last read, so `state` is as of then; null when written here */
   source_synced_at: string | null;
+  /** set on evidence an automatic check added: why it read the source, and what it matched on (a key, a page, a 0..1 score) */
+  match: { reason: CheckMatch; detail: string | null } | null;
 };
 
 export type HistoryEntry = { status: DecisionStatus; by: string; at: string; note: string | null };

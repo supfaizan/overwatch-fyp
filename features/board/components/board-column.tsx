@@ -30,7 +30,7 @@ type BoardColumnProps = {
   loadingMore: boolean;
   onLoadMore: (columnId: string) => void;
   onOpen: (item: WorkItem) => void;
-  onMoveTo: (item: WorkItem, columnId: string) => void;
+  onMoveTo: (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => void;
   /** The address that opens the item, for "Copy link". */
   linkOf: (item: WorkItem) => string;
   /** While a card is dragged: where it may land in this column, or that it can't. */

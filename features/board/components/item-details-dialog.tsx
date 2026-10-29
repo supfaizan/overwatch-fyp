@@ -29,13 +29,13 @@ import {
   useComments,
   useDeleteComment,
   useDeleteWorkItem,
+  useMoveWorkItem,
   usePeople,
   usePriorities,
   useSetItemSprint,
   useUpdateComment,
   useUpdateWorkItem,
 } from '../hooks';
-import { COLOR_CLASSES, columnColor } from '../lib';
 import {
   type Board,
   BOARD_KIND,
@@ -47,7 +47,9 @@ import {
   type WorkItem,
   type WorkItemChanges,
 } from '../types';
+import ColumnsWorkflowDialog from './columns-workflow-dialog';
 import PriorityIcon from './priority-icon';
+import StatusMenu from './status-menu';
 
 // heavy, and only needed once someone edits
 const RichTextEditor = dynamic(() => {
@@ -72,20 +74,19 @@ type ItemDetailsDialogProps = {
   board: Board;
   sprints: Sprint[];
   trackerName: string | null;
-  /** Moves the card on the board, as a drag would. */
-  onMove: (item: WorkItem, columnId: string) => void;
 };
 
 /** A ticket, Jira-style: what it is on the left, its details on the right; each field saves on its own. */
 export default function ItemDetailsDialog(
-  { open, onOpenChange, item: initial, board, sprints, trackerName, onMove }:
-    ItemDetailsDialogProps,
+  { open, onOpenChange, item: initial, board, sprints, trackerName }: ItemDetailsDialogProps,
 ) {
   // what the server last said; each change answers with the item as it now is
   const [item, setItem] = useState(initial);
   const update = useUpdateWorkItem();
   const remove = useDeleteWorkItem();
   const setSprint = useSetItemSprint();
+  const move = useMoveWorkItem();
+  const [viewingWorkflow, setViewingWorkflow] = useState(false);
   const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
   const readOnly = !item.editable;
   const tracker = item.source !== NATIVE_SOURCE;
@@ -140,34 +141,43 @@ export default function ItemDetailsDialog(
 
           {/* bottom padding: the scroll area would clip the buttons' drop shadow */}
           <aside className="flex min-h-0 flex-col gap-4 pb-1.5 md:overflow-y-auto">
-            <Select
-              value={item.column_id ?? undefined}
-              onValueChange={(columnId) => {
-                onMove(item, columnId);
-                setItem({ ...item, column_id: columnId });
+            <StatusMenu
+              item={item}
+              board={board}
+              trackerName={trackerName}
+              pending={move.isPending}
+              onMove={(option) => {
+                // the dialog shows the item the server answers with (a tracker's status name, too)
+                return move.mutate(
+                  {
+                    boardId: board.id,
+                    id: item.id,
+                    move: {
+                      column_id: option.columnId,
+                      before_id: null,
+                      after_id: null,
+                      ...(option.statusId ? { status_id: option.statusId } : {}),
+                    },
+                    rank: Date.now() / 1000,
+                  },
+                  { onSuccess: setItem },
+                );
               }}
-              disabled={readOnly}
-            >
-              <SelectTrigger aria-label="Status" placeholder="Status" className="font-medium" />
-              <SelectContent>
-                {board.columns.map((column) => {
-                  return (
-                    <SelectItem key={column.id} value={column.id}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          aria-hidden
-                          className={cn(
-                            'size-2 rounded-full',
-                            COLOR_CLASSES[columnColor(column)].dot,
-                          )}
-                        />
-                        {column.name}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+              onViewWorkflow={isAdmin && !tracker
+                ? () => {
+                  return setViewingWorkflow(true);
+                }
+                : undefined}
+            />
+            {viewingWorkflow && (
+              <ColumnsWorkflowDialog
+                board={board}
+                initialTab="workflow"
+                onClose={() => {
+                  return setViewingWorkflow(false);
+                }}
+              />
+            )}
 
             <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">Details</h3>

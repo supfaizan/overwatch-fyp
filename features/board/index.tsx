@@ -796,7 +796,6 @@ export default function Board() {
             board={board}
             sprints={openSprints}
             trackerName={name}
-            onMove={moveTo}
           />
         )
         : creating

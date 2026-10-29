@@ -25,6 +25,7 @@ import {
   ArrowsClockwise,
   ArrowSquareOut,
   BookOpen,
+  ChatsCircle,
   Kanban,
   Plugs,
 } from '@phosphor-icons/react/ssr';
@@ -110,6 +111,7 @@ export default function IntegrationsSection({ outcome }: { outcome?: string }) {
 const PROVIDER_LOGOS: Record<string, string> = {
   [PROVIDER.jira]: INTEGRATION_LOGOS.jira,
   [PROVIDER.confluence]: INTEGRATION_LOGOS.confluence,
+  [PROVIDER.slack]: INTEGRATION_LOGOS.slack,
 };
 const LOGO_SIZE = 24;
 
@@ -225,7 +227,10 @@ const CATEGORY_COPY: Record<
     icon: ReactNode;
     label: string;
     target: string;
-    reconnect: string;
+    /** Whether its targets are synced (and so have a sync state); chat is pushed to us instead. */
+    syncs: boolean;
+    /** What reconnecting adds, for grants made before write-back; none where there's nothing to write. */
+    reconnect?: string;
     disconnect: string;
     targetLabel: (target: Target) => string;
   }
@@ -234,6 +239,7 @@ const CATEGORY_COPY: Record<
     icon: <Kanban />,
     label: 'Issue tracker',
     target: 'project',
+    syncs: true,
     reconnect: 'to edit, move and create its tickets from the board',
     disconnect:
       'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
@@ -245,11 +251,22 @@ const CATEGORY_COPY: Record<
     icon: <BookOpen />,
     label: 'Docs',
     target: 'space',
+    syncs: true,
     reconnect: 'to edit its pages in Docs',
     disconnect:
       'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
     targetLabel: (target) => {
       return [target.name ?? target.key, target.id].filter(Boolean).join(' · ');
+    },
+  },
+  [CONNECTOR_CATEGORY.chat]: {
+    icon: <ChatsCircle />,
+    label: 'Chat',
+    target: 'channel',
+    syncs: false,
+    disconnect: 'We stop reading its channels. You can reconnect at any time.',
+    targetLabel: (target) => {
+      return target.name ?? target.key;
     },
   },
 };
@@ -314,7 +331,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
       actions={isAdmin && (connected
         ? (
           <>
-            {targets.length > 0 && (
+            {copy.syncs && targets.length > 0 && (
               <Tooltip content="Sync now">
                 <Button
                   size="sm"
@@ -361,7 +378,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           </Button>
         ))}
     >
-      {isAdmin && connected && !can_write && (
+      {isAdmin && connected && !can_write && copy.reconnect && (
         <div className="border-t border-border p-4">
           <Banner
             type="warning"
@@ -387,23 +404,25 @@ function ConnectorCard({ connection }: { connection: Connection }) {
             return (
               <Item key={target.key}>
                 <span className="min-w-0 truncate">
-                  {category === CONNECTOR_CATEGORY.documents
-                    ? <span className="font-medium">{target.name ?? target.key}</span>
-                    : (
+                  {category === CONNECTOR_CATEGORY.workItems
+                    ? (
                       <>
                         <span className="font-medium">{target.key}</span>
                         {target.name && <span className="text-muted">{' · '}{target.name}</span>}
                       </>
-                    )}
+                    )
+                    : <span className="font-medium">{target.name ?? target.key}</span>}
                   {target.sync_error && (
                     <span className="text-danger">{' · '}{target.sync_error}</span>
                   )}
                 </span>
-                <SyncStatusIcon
-                  status={target.sync_status}
-                  lastSyncedAt={target.last_synced_at}
-                  error={target.sync_error}
-                />
+                {copy.syncs && (
+                  <SyncStatusIcon
+                    status={target.sync_status}
+                    lastSyncedAt={target.last_synced_at}
+                    error={target.sync_error}
+                  />
+                )}
               </Item>
             );
           })}
@@ -411,6 +430,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
             <AddTarget
               provider={provider}
               noun={copy.target}
+              action={copy.syncs ? 'sync' : 'watch'}
               label={copy.targetLabel}
               synced={targets.map((t) => {
                 return t.key;
@@ -424,9 +444,11 @@ function ConnectorCard({ connection }: { connection: Connection }) {
 }
 
 function AddTarget(
-  { provider, noun, label, synced }: {
+  { provider, noun, action, label, synced }: {
     provider: string;
     noun: string;
+    /** What adding it does, as in "Add a channel to watch". */
+    action: string;
     label: (target: Target) => string;
     synced: string[];
   },
@@ -457,8 +479,8 @@ function AddTarget(
         <SelectTrigger
           className="flex-1"
           size="sm"
-          aria-label={`${noun} to sync`}
-          placeholder={`Add a ${noun} to sync`}
+          aria-label={`${noun} to ${action}`}
+          placeholder={`Add a ${noun} to ${action}`}
         />
         <SelectContent>
           {options.map((option) => {

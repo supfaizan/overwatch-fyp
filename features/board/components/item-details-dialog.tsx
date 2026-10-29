@@ -138,7 +138,8 @@ export default function ItemDetailsDialog(
             <Comments itemId={item.id} disabled={readOnly} />
           </div>
 
-          <aside className="flex min-h-0 flex-col gap-4 md:overflow-y-auto">
+          {/* bottom padding: the scroll area would clip the buttons' drop shadow */}
+          <aside className="flex min-h-0 flex-col gap-4 pb-1.5 md:overflow-y-auto">
             <Select
               value={item.column_id ?? undefined}
               onValueChange={(columnId) => {

@@ -1,5 +1,6 @@
 import { api } from '@/shared/api/client';
 import { displayName } from '@/shared/session/lib';
+import * as workspacesApi from '@/shared/workspaces/api';
 import {
   type AllowedMoves,
   type Board,
@@ -188,17 +189,7 @@ export const getTrackerAssignees = (provider: string, targetKey: string) => {
 };
 
 export const getMembers = async (workspaceId: string): Promise<Person[]> => {
-  const members = await api.get<
-    {
-      user_id: string;
-      username: string | null;
-      github_login: string | null;
-      name: string | null;
-      avatar_url: string | null;
-    }[]
-  >(
-    `/workspaces/${workspaceId}/members`,
-  );
+  const members = await workspacesApi.getMembers(workspaceId);
   return members.map((m) => {
     return { id: m.user_id, name: displayName(m), avatar_url: m.avatar_url };
   });

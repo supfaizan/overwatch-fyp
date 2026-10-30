@@ -5,6 +5,8 @@ import Avatar from '@/shared/components/avatar';
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Skeleton from '@/shared/components/skeleton';
+import RelatedDecisions from '@/shared/decisions/related-decisions';
+import { EVIDENCE_KIND } from '@/shared/decisions/types';
 import { cn } from '@/shared/lib/cn';
 import { timeAgo } from '@/shared/lib/time';
 import { ArrowsClockwise, ArrowSquareOut, BookOpenText } from '@phosphor-icons/react/ssr';
@@ -247,6 +249,15 @@ export default function DocPage({ doc }: { doc: Document }) {
             }
           }}
           sourceName={sourceName(doc.source)}
+        />
+        <RelatedDecisions
+          source={{ kind: EVIDENCE_KIND.document, refId: doc.id, title: doc.title }}
+          readQuote={() => {
+            const state = editor.current?.state;
+            return state
+              ? state.doc.textBetween(state.selection.from, state.selection.to, ' ')
+              : '';
+          }}
         />
       </article>
     </div>

@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import * as avatar from './avatar';
 import * as banner from './banner';
+import * as barChart from './bar-chart';
 import * as brand from './brand';
 import * as button from './button';
 import * as card from './card';
@@ -8,10 +9,13 @@ import * as checkbox from './checkbox';
 import * as command from './command';
 import * as confirmDialog from './confirm-dialog';
 import * as contextMenu from './context-menu';
+import * as datePicker from './date-picker';
 import * as dialog from './dialog';
 import * as dropdownMenu from './dropdown-menu';
+import * as editableMarkdown from './editable-markdown';
 import * as formField from './form-field';
 import * as githubMark from './github-mark';
+import * as inlineTitleInput from './inline-title-input';
 import * as input from './input';
 import * as inputOtp from './input-otp';
 import * as kbd from './kbd';
@@ -34,6 +38,7 @@ import * as tooltip from './tooltip';
 export const examples: Record<string, Record<string, ComponentType>> = {
   avatar,
   banner,
+  'bar-chart': barChart,
   brand,
   button,
   card,
@@ -41,10 +46,13 @@ export const examples: Record<string, Record<string, ComponentType>> = {
   command,
   'confirm-dialog': confirmDialog,
   'context-menu': contextMenu,
+  'date-picker': datePicker,
   dialog,
   'dropdown-menu': dropdownMenu,
+  'editable-markdown': editableMarkdown,
   'form-field': formField,
   'github-mark': githubMark,
+  'inline-title-input': inlineTitleInput,
   input,
   'input-otp': inputOtp,
   kbd,

@@ -70,9 +70,13 @@ const newId = () => {
  * unless a column says where cards can go from it: "Can move to" chips, or a preset for the whole board.
  */
 export default function ColumnsWorkflowDialog(
-  { board, onClose }: { board: Board; onClose: () => void },
+  { board, initialTab = TAB.columns, onClose }: {
+    board: Board;
+    initialTab?: Tab;
+    onClose: () => void;
+  },
 ) {
-  const [tab, setTab] = useState<Tab>(TAB.columns);
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [columns, setColumns] = useState<DraftColumn[]>(() => {
     return board.columns.map((column) => {
       return {

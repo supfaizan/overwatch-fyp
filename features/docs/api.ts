@@ -1,4 +1,5 @@
 import { api } from '@/shared/api/client';
+import { sendUpload, type UploadTarget } from '@/shared/api/upload';
 import type {
   ArchivedDocument,
   ChildPage,
@@ -7,7 +8,6 @@ import type {
   CreateDocument,
   Document,
   LinkPreview,
-  UploadTarget,
 } from './types';
 
 /** How many of a folder's children load at a time. */
@@ -66,37 +66,6 @@ export const getArchived = async (offset: number) => {
   return { items: data, total: typeof meta.total === 'number' ? meta.total : data.length, offset };
 };
 
-/** Sends a file the way the backend described, so a storage provider change never touches this. */
-async function send(target: UploadTarget, file: File) {
-  if (target.via_api) {
-    await api.request({
-      method: target.method,
-      url: target.url,
-      data: file,
-      headers: target.headers,
-    });
-    return;
-  }
-  const fields = Object.entries(target.fields);
-  let body: BodyInit = file;
-  if (fields.length) {
-    const form = new FormData();
-    fields.forEach(([name, value]) => {
-      return form.append(name, value);
-    });
-    form.append('file', file); // last: form uploads (S3) ignore fields after the file
-    body = form;
-  }
-  const response = await fetch(target.url, {
-    method: target.method,
-    headers: target.headers,
-    body,
-  });
-  if (!response.ok) {
-    throw new Error("Couldn't upload the image. Try again.");
-  }
-}
-
 /** Uploads an image into a page and returns its link: straight to storage, then the backend checks what arrived. */
 export async function uploadImage(
   pageId: string,
@@ -110,6 +79,6 @@ export async function uploadImage(
       size: file.size,
     },
   );
-  await send(upload, file);
+  await sendUpload(upload, file);
   return api.post<{ id: string; url: string }>(`/attachments/${id}/complete`, {});
 }

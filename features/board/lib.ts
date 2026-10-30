@@ -472,6 +472,7 @@ export function movesFrom(
             status_id: null,
             status: null,
             transition_name: null,
+            required_fields: [],
           };
         }),
     );
@@ -510,10 +511,79 @@ export function movesFrom(
         status_id: transition.to,
         status: status?.name ?? null,
         transition_name: transition.name,
+        // the stored workflow doesn't say; the live answer does
+        required_fields: [],
       });
     }
   }
   return byColumn(targets);
+}
+
+/** One row of a status menu, like Jira's "Peer Review → In Review": where the move goes, and its own name when that differs. */
+export type StatusOption = {
+  columnId: string;
+  statusId: string | null;
+  label: string;
+  transitionName: string | null;
+  color: ColumnColor;
+  /** what the tracker needs for the move; such a move is made in the tracker */
+  requiredFields: string[];
+};
+
+/** A status's color: its column's, with its own name's rule (a "Blocked" status in an in-progress column is red). */
+function statusColor(column: Column, status: string): ColumnColor {
+  return columnColor({ ...column, name: status });
+}
+
+/** The color of the status an item is in, also when no column holds it. */
+export function itemStatusColor(columns: Column[], item: WorkItem): ColumnColor {
+  const column = columns.find((candidate) => {
+    return candidate.id === item.column_id;
+  });
+  return column
+    ? statusColor(column, item.status ?? column.name)
+    : columnColor({ id: '', name: item.status ?? '', status_category: item.status_category });
+}
+
+/**
+ * Where an item can move, for its status menu: `targets` (from `movesFrom`, or the live moves), or
+ * every other column when nothing says (null).
+ */
+export function statusOptions(
+  columns: Column[],
+  item: WorkItem,
+  targets: MoveTarget[] | null,
+): StatusOption[] {
+  const all = targets ?? columns.filter((column) => {
+    return column.id !== item.column_id;
+  }).map((column) => {
+    return {
+      column_id: column.id,
+      status_id: null,
+      status: null,
+      transition_name: null,
+      required_fields: [],
+    };
+  });
+  return all.flatMap((target) => {
+    const column = columns.find((candidate) => {
+      return candidate.id === target.column_id;
+    });
+    if (!column) {
+      return [];
+    }
+    const label = target.status ?? column.name;
+    return [{
+      columnId: column.id,
+      statusId: target.status_id,
+      label,
+      transitionName: target.transition_name && target.transition_name !== label
+        ? target.transition_name
+        : null,
+      color: statusColor(column, label),
+      requiredFields: target.required_fields,
+    }];
+  });
 }
 
 /** What a column offers a card being dragged over it: nothing to say (its own column, or any move goes), its landing spots, or no way in. */

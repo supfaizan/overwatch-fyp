@@ -148,6 +148,8 @@ export type MoveTarget = {
   status_id: string | null;
   status: string | null;
   transition_name: string | null;
+  /** fields the tracker's screen for the move requires; such a move is made in the tracker */
+  required_fields: string[];
 };
 
 /** Where an item can move: `open` boards allow any column; `live` is the tracker's answer for the item now. */
@@ -184,6 +186,8 @@ export type Tracker = {
   name: string;
   status: ConnectionStatus;
   can_write: boolean;
+  /** True when the grant lacks a scope the tracker now needs (a board's columns): reconnect. */
+  outdated: boolean;
   targets: SyncTarget[];
 };
 

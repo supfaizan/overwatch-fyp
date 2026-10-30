@@ -1,15 +1,16 @@
 import { api } from '@/shared/api/client';
 import type { ConnectedRepo } from '@/shared/repos/types';
-import type { Workspace } from '@/shared/workspaces/types';
+import type { Role, Workspace } from '@/shared/workspaces/types';
 import type {
   Connection,
   ConnectionStatus,
   Invite,
   InviteCreated,
   InviteRole,
-  Member,
   SyncTarget,
   Target,
+  UsageLimit,
+  UsageSummary,
 } from './types';
 
 export const getConnectionStatus = () => {
@@ -58,11 +59,8 @@ export const deleteWorkspace = (id: string) => {
   return api.delete<null>(workspace(id));
 };
 
-export const getMembers = (id: string) => {
-  return api.get<Member[]>(`${workspace(id)}/members`);
-};
 export const updateMember = (
-  { id, userId, role }: { id: string; userId: string; role: Member['role'] },
+  { id, userId, role }: { id: string; userId: string; role: Role },
 ) => {
   return api.patch<null>(`${workspace(id)}/members/${userId}`, { role });
 };
@@ -92,4 +90,13 @@ export const resendInvite = ({ id, inviteId }: { id: string; inviteId: string })
 };
 export const revokeInvite = ({ id, inviteId }: { id: string; inviteId: string }) => {
   return api.delete<null>(`${workspace(id)}/invites/${inviteId}`);
+};
+
+export const getUsage = (days: number, timeZone: string) => {
+  const params = new URLSearchParams({ days: String(days), tz: timeZone });
+  return api.get<UsageSummary>(`/usage?${params}`);
+};
+
+export const getUsageLimits = () => {
+  return api.get<{ limits: UsageLimit[] }>('/usage/limits');
 };

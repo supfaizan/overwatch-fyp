@@ -103,6 +103,7 @@ import {
   NATIVE_SOURCE,
   type Sprint,
   SPRINT_STATE,
+  type Tracker,
   type WorkItem,
 } from './types';
 
@@ -620,6 +621,7 @@ export default function Board() {
           Connect Jira to see its tickets here alongside the items you create here.
         </Banner>
       )}
+      <ReconnectNotice board={board} trackers={trackers.data} />
       <ColumnOffer board={board} trackerName={trackerName(trackers.data, board.source)} />
       {scrum && view === VIEW.board && shownSprint && (
         <p className="-mt-2 text-xs text-muted">
@@ -794,7 +796,6 @@ export default function Board() {
             board={board}
             sprints={openSprints}
             trackerName={name}
-            onMove={moveTo}
           />
         )
         : creating
@@ -819,6 +820,30 @@ function trackerName(trackers: { provider: string; name: string }[], source: str
   return trackers.find((tracker) => {
     return tracker.provider === source;
   })?.name ?? source;
+}
+
+/** Tells an admin when the tracker's grant is too old to read this board's columns and sprints. */
+function ReconnectNotice({ board, trackers }: { board: BoardType; trackers: Tracker[] }) {
+  const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
+  const tracker = trackers.find((each) => {
+    return each.provider === board.source;
+  });
+  if (!isAdmin || !board.target_key || !tracker?.outdated) {
+    return null;
+  }
+
+  return (
+    <Banner
+      type="warning"
+      action={
+        <Button size="sm" asChild>
+          <Link href="/settings/integrations">Reconnect</Link>
+        </Button>
+      }
+    >
+      Reconnect {tracker.name} to import its columns and sprints for {board.name}.
+    </Banner>
+  );
 }
 
 /** Asks an admin, once per set of tracker columns, whether this board should use them. */

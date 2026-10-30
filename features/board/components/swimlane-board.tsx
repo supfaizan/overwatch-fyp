@@ -49,7 +49,7 @@ type SwimlaneBoardProps = {
   cells: Record<string, CellState>;
   onLoadMore: (cell: string) => void;
   onOpen: (item: WorkItem) => void;
-  onMoveTo: (item: WorkItem, columnId: string) => void;
+  onMoveTo: (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => void;
   /** The address that opens the item, for "Copy link". */
   linkOf: (item: WorkItem) => string;
   /** a card dropped at `index` of a lane's column; a different lane means a different assignee (or priority) */
@@ -209,7 +209,7 @@ type CellProps = {
   columns: Column[];
   color: ColumnColor;
   onOpen: (item: WorkItem) => void;
-  onMoveTo: (item: WorkItem, columnId: string) => void;
+  onMoveTo: (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => void;
   /** The address that opens the item, for "Copy link". */
   linkOf: (item: WorkItem) => string;
   /** a card being dragged can't go to this column */

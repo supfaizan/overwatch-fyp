@@ -99,10 +99,19 @@ type CommandDialogProps = {
   title: string;
   /** The `CommandInput` and `CommandList`. */
   children: ReactNode;
+  /** The highlighted item's `value`, to control it, e.g. to highlight results that load after typing. */
+  value?: string;
+  /** Called with the highlighted item's `value` as it changes. */
+  onValueChange?: (value: string) => void;
 };
 
-/** A `Command` in a modal, near the top of the screen, for a ⌘K palette. Esc or a click outside closes it. */
-export function CommandDialog({ open, onOpenChange, title, children }: CommandDialogProps) {
+/**
+ * A `Command` in a modal, near the top of the screen, for a ⌘K palette. Esc or a click outside closes it.
+ * - Items fetched as you type arrive after cmdk picks the first match; control `value` to highlight them so Enter opens one.
+ */
+export function CommandDialog(
+  { open, onOpenChange, title, children, value, onValueChange }: CommandDialogProps,
+) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
@@ -115,7 +124,7 @@ export function CommandDialog({ open, onOpenChange, title, children }: CommandDi
           )}
         >
           <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
-          <Command>{children}</Command>
+          <Command value={value} onValueChange={onValueChange}>{children}</Command>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

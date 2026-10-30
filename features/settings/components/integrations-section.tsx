@@ -226,6 +226,8 @@ const CATEGORY_COPY: Record<
     label: string;
     target: string;
     reconnect: string;
+    /** why to reconnect a grant that can write but predates something newer */
+    outdated: string;
     disconnect: string;
     targetLabel: (target: Target) => string;
   }
@@ -235,6 +237,7 @@ const CATEGORY_COPY: Record<
     label: 'Issue tracker',
     target: 'project',
     reconnect: 'to edit, move and create its tickets from the board',
+    outdated: "to import its boards' columns and sprints",
     disconnect:
       'Ticket sync stops. Tickets already imported are kept, so reconnecting picks up where you left off.',
     targetLabel: (target) => {
@@ -246,6 +249,7 @@ const CATEGORY_COPY: Record<
     label: 'Docs',
     target: 'space',
     reconnect: 'to edit its pages in Docs',
+    outdated: 'to keep its spaces syncing fully',
     disconnect:
       'Page sync stops. Pages already imported stay in Docs, read-only, until you reconnect.',
     targetLabel: (target) => {
@@ -285,7 +289,8 @@ function Connectors() {
 }
 
 function ConnectorCard({ connection }: { connection: Connection }) {
-  const { provider, name, category, status, can_write, external_account, targets } = connection;
+  const { provider, name, category, status, can_write, outdated, external_account, targets } =
+    connection;
   const copy = CATEGORY_COPY[category];
   const connect = useStartAuthorization();
   const disconnect = useDisconnect(name);
@@ -361,7 +366,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           </Button>
         ))}
     >
-      {isAdmin && connected && !can_write && (
+      {isAdmin && connected && (!can_write || outdated) && (
         <div className="border-t border-border p-4">
           <Banner
             type="warning"
@@ -377,7 +382,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
               </Button>
             }
           >
-            Reconnect {name} {copy.reconnect}.
+            Reconnect {name} {can_write ? copy.outdated : copy.reconnect}.
           </Banner>
         </div>
       )}

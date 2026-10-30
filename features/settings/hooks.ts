@@ -11,9 +11,13 @@ const keys = {
   available: (provider: string) => {
     return [...queryKeys.connections, provider, 'available'] as const;
   },
-  workspace: (id: string, part: 'members' | 'invites') => {
+  workspace: (id: string, part: 'invites') => {
     return [...queryKeys.workspaces, id, part] as const;
   },
+  usage: (days: number, timeZone: string) => {
+    return ['usage', days, timeZone] as const;
+  },
+  usageLimits: ['usage', 'limits'] as const,
 };
 const showError = (error: ApiError) => {
   return toast.error(error.message);
@@ -113,12 +117,25 @@ export function useStartAuthorization() {
   });
 }
 
-export const useMembers = (id: string) => {
+/** Usage over the last `days`, its days counted in the browser's time zone. */
+export const useUsage = (days: number) => {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return useQuery({
-    queryKey: keys.workspace(id, 'members'),
+    queryKey: keys.usage(days, timeZone),
     queryFn: () => {
-      return settingsApi.getMembers(id);
+      return settingsApi.getUsage(days, timeZone);
     },
+  });
+};
+
+// limits move as people use the AI; a minute is fresh enough for a settings page
+const LIMITS_REFRESH_MS = 60_000;
+
+export const useUsageLimits = () => {
+  return useQuery({
+    queryKey: keys.usageLimits,
+    queryFn: settingsApi.getUsageLimits,
+    refetchInterval: LIMITS_REFRESH_MS,
   });
 };
 export const useInvites = (id: string, enabled: boolean) => {

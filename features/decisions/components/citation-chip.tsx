@@ -6,7 +6,13 @@ import { sourceCardId } from './sources-evidence';
 
 /** A citation in a decision's background, like [S1]: clicking it brings its source's card into view. */
 export default function CitationChip(
-  { source, onPoint }: { source: DecisionSource; onPoint: (sourceId: string | null) => void },
+  { source, onPoint, onJump }: {
+    source: DecisionSource;
+    /** Hovered or focused: its card is highlighted meanwhile. */
+    onPoint: (sourceId: string | null) => void;
+    /** Clicked: its card was scrolled to. */
+    onJump: (sourceId: string) => void;
+  },
 ) {
   const point = () => {
     return onPoint(source.id);
@@ -25,8 +31,9 @@ export default function CitationChip(
           const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           document.getElementById(sourceCardId(source.id))?.scrollIntoView({
             behavior: reduced ? 'auto' : 'smooth',
-            block: 'nearest',
+            block: 'center',
           });
+          onJump(source.id);
         }}
         onMouseEnter={point}
         onMouseLeave={unpoint}

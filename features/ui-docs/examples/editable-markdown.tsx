@@ -41,6 +41,19 @@ export function WithNotice() {
   );
 }
 
+export function FullHeight() {
+  const [value, setValue] = useState<string | null>(
+    Array.from({ length: 6 }, (_, i) => {
+      return `### Part ${i + 1}\n\nShown in full: the page scrolls, not the section.`;
+    }).join('\n\n'),
+  );
+  return (
+    <div className="w-[32rem]">
+      <EditableMarkdown label="Background" value={value} onSave={setValue} fullHeight />
+    </div>
+  );
+}
+
 export function Disabled() {
   return <EditableMarkdown label="Summary" value={null} disabled onSave={() => {}} />;
 }

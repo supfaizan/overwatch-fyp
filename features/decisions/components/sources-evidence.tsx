@@ -97,7 +97,8 @@ function SourceCard(
       className={cn(
         'flex scroll-mt-4 flex-col gap-3 rounded-lg border p-3 transition-shadow',
         broken ? 'border-warning/50' : 'border-border',
-        highlighted && 'ring-2 ring-primary',
+        // inset: the scrolling column clips anything drawn outside the card
+        highlighted && 'border-primary ring-1 ring-primary ring-inset',
       )}
     >
       <div className="flex items-center gap-2">

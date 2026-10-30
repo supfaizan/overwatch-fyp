@@ -39,6 +39,8 @@ type EditableMarkdownProps = {
   renderValue?: (value: string) => ReactNode;
   /** A warning under the editor about the draft, e.g. what saving it loses. */
   notice?: (draft: string) => ReactNode;
+  /** Shows all the text instead of scrolling it inside the section, e.g. when it's a page's main content. @default false */
+  fullHeight?: boolean;
 };
 
 /**
@@ -46,7 +48,8 @@ type EditableMarkdownProps = {
  * ticket's description.
  * - Saves only on Save (or ⌘/Ctrl+Enter); Cancel or Esc drops the draft.
  * - Clicking a link or selecting text doesn't start editing.
- * - Long text scrolls inside the section, so what's below stays in reach.
+ * - Long text scrolls inside the section, so what's below stays in reach; `fullHeight` shows it all.
+ * - Editing keeps the text where it was, on the same soft fill it shows on hover.
  */
 export default function EditableMarkdown(
   {
@@ -60,6 +63,7 @@ export default function EditableMarkdown(
     emptyLabel = `No ${label.toLowerCase()}.`,
     renderValue,
     notice,
+    fullHeight = false,
   }: EditableMarkdownProps,
 ) {
   const [editing, setEditing] = useState(false);
@@ -75,6 +79,7 @@ export default function EditableMarkdown(
   const cancel = () => {
     return setEditing(false);
   };
+  const height = !fullHeight && 'max-h-[45dvh]';
 
   return (
     <section className="flex flex-col gap-2">
@@ -91,7 +96,11 @@ export default function EditableMarkdown(
           <>
             <RichTextEditor
               aria-label={label}
-              className="max-h-[45dvh] shrink-0"
+              // the read view's box, filled: no white field to jump to
+              className={cn(
+                'shrink-0 border-transparent bg-fill-hover hover:border-transparent focus-within:border-transparent',
+                height,
+              )}
               value={draft}
               onChange={setDraft}
               onSubmit={saveDraft}
@@ -111,7 +120,8 @@ export default function EditableMarkdown(
           // a click on the text edits it, unless it's on a link or selecting
           <div
             className={cn(
-              'max-h-[45dvh] shrink-0 overflow-y-auto rounded-md',
+              'shrink-0 overflow-y-auto rounded-md border border-transparent px-3 py-2 transition-colors',
+              height,
               !disabled && 'cursor-text hover:bg-fill-hover',
             )}
             onClick={(event) => {

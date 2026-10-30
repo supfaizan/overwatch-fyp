@@ -49,7 +49,7 @@ function TypingLine(
                   src={person.avatarUrl}
                   name={person.name}
                   size="sm"
-                  className="size-4 text-[8px] ring-2 ring-surface"
+                  className="size-4 text-[8px] ring-2 ring-background"
                 />
               );
             })}
@@ -175,7 +175,7 @@ export default function DiscussionPane({ decisionId }: { decisionId: string }) {
   return (
     <section
       aria-label="Discussion"
-      className="flex h-full min-h-0 flex-col rounded-lg border border-border bg-surface"
+      className="flex h-full min-h-0 flex-col rounded-lg border border-border"
     >
       <header className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
         <div className="flex flex-col">

@@ -70,9 +70,13 @@ export function localToday(): string {
 }
 
 /** Where a piece of evidence opens in the app: its page, or its item on the board it's on. */
-export function evidenceHref(evidence: Evidence): string {
+/** Where the app opens the quoted source; null for a chat conversation, which only opens at its source. */
+export function evidenceHref(evidence: Evidence): string | null {
   if (evidence.kind === EVIDENCE_KIND.document) {
     return `/documents/${evidence.ref_id}`;
+  }
+  if (evidence.kind === EVIDENCE_KIND.chatThread) {
+    return null;
   }
   // the board's address params (features/board): which board, and which item is open
   const params = new URLSearchParams({

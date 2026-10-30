@@ -5,6 +5,8 @@ import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
 import { DatePicker } from '@/shared/components/date-picker';
 import { Dialog, DialogContent } from '@/shared/components/dialog';
+import EditableMarkdown from '@/shared/components/editable-markdown';
+import InlineTitleInput from '@/shared/components/inline-title-input';
 import { Input, TextArea } from '@/shared/components/input';
 import Markdown from '@/shared/components/markdown';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
@@ -20,8 +22,7 @@ import TypeSelect from '@/shared/work-item-types/type-select';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
-import { ArrowSquareOut, PencilSimple, Trash } from '@phosphor-icons/react/ssr';
-import dynamic from 'next/dynamic';
+import { ArrowSquareOut, Trash } from '@phosphor-icons/react/ssr';
 import { type ReactNode, useState } from 'react';
 import {
   useAddComment,
@@ -50,16 +51,6 @@ import {
 import ColumnsWorkflowDialog from './columns-workflow-dialog';
 import PriorityIcon from './priority-icon';
 import StatusMenu from './status-menu';
-
-// heavy, and only needed once someone edits
-const RichTextEditor = dynamic(() => {
-  return import('@/shared/components/rich-text-editor');
-}, {
-  ssr: false,
-  loading: () => {
-    return <Skeleton className="h-32 w-full" />;
-  },
-});
 
 /** How the backend shows media embedded in a Jira description; they can't be written back from here. */
 const JIRA_ATTACHMENT = '_[attachment in Jira]_';
@@ -119,19 +110,31 @@ export default function ItemDetailsDialog(
       >
         <div className="grid h-full gap-6 overflow-y-auto md:grid-cols-3 md:grid-rows-1 md:overflow-hidden">
           <div className="flex min-h-0 min-w-0 flex-col gap-6 md:col-span-2 md:overflow-y-auto md:pr-2">
-            <TitleField
+            <InlineTitleInput
               value={item.title}
               disabled={readOnly}
               onSave={(title) => {
                 return save({ title });
               }}
             />
-            <DescriptionField
-              item={item}
+            <EditableMarkdown
+              label="Description"
+              // the Markdown, so editing starts from the formatting as shown
+              value={item.description_md ?? item.description}
               disabled={readOnly}
               saving={update.isPending}
+              placeholder="Describe the work… Markdown shortcuts work."
+              addLabel="Add a description…"
               onSave={(description) => {
                 return save({ description });
+              }}
+              notice={(draft) => {
+                return draft.includes(JIRA_ATTACHMENT) && (
+                  <p className="text-xs text-warning-strong">
+                    Saving removes the attachments embedded in this description; they stay attached
+                    to the ticket in Jira.
+                  </p>
+                );
               }}
             />
             {item.subtasks.length > 0 && <Linked title="Subtasks" items={item.subtasks} />}
@@ -365,139 +368,6 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
       <span className="col-span-2 text-xs text-muted">{label}</span>
       <div className="col-span-3 min-w-0">{children}</div>
     </div>
-  );
-}
-
-function TitleField(
-  { value, disabled, onSave }: {
-    value: string;
-    disabled: boolean;
-    onSave: (title: string) => void;
-  },
-) {
-  const [draft, setDraft] = useState(value);
-  const commit = () => {
-    const title = draft.trim();
-    if (title && title !== value) {
-      onSave(title);
-    } else {
-      setDraft(value);
-    }
-  };
-  return (
-    <input
-      aria-label="Title"
-      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-xl font-semibold outline-none hover:border-border focus:border-primary disabled:hover:border-transparent"
-      value={draft}
-      maxLength={255}
-      disabled={disabled}
-      onChange={(e) => {
-        return setDraft(e.target.value);
-      }}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        return e.key === 'Enter' && e.currentTarget.blur();
-      }}
-    />
-  );
-}
-
-function DescriptionField(
-  { item, disabled, saving, onSave }: {
-    item: WorkItem;
-    disabled: boolean;
-    saving: boolean;
-    onSave: (description: string | null) => void;
-  },
-) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(item.description ?? '');
-  const shown = item.description_md ?? item.description;
-  const startEdit = () => {
-    // the Markdown, so editing starts from the formatting as shown
-    setDraft(shown ?? '');
-    setEditing(true);
-  };
-  const saveDraft = () => {
-    onSave(draft.trim() || null);
-    setEditing(false);
-  };
-
-  return (
-    <section className="flex flex-col gap-2">
-      <header className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold">Description</h3>
-        {!disabled && !editing && (
-          <Button size="sm" variant="tertiary" onClick={startEdit}>
-            <PencilSimple /> Edit
-          </Button>
-        )}
-      </header>
-      {editing
-        ? (
-          <>
-            <RichTextEditor
-              aria-label="Description"
-              className="max-h-[45dvh] shrink-0"
-              value={draft}
-              onChange={setDraft}
-              onSubmit={saveDraft}
-              onCancel={() => {
-                return setEditing(false);
-              }}
-              placeholder="Describe the work… Markdown shortcuts work."
-              autoFocus
-            />
-            {draft.includes(JIRA_ATTACHMENT) && (
-              <p className="text-xs text-warning-strong">
-                Saving removes the attachments embedded in this description; they stay attached to
-                the ticket in Jira.
-              </p>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  return setEditing(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>
-            </div>
-          </>
-        )
-        : shown
-        ? (
-          // long descriptions scroll here, leaving room for the comments; a click on the text edits it
-          <div
-            className={cn(
-              'max-h-[45dvh] shrink-0 overflow-y-auto rounded-md',
-              !disabled && 'cursor-text hover:bg-fill-hover',
-            )}
-            onClick={(event) => {
-              const selecting = Boolean(window.getSelection()?.toString());
-              const onLink = event.target instanceof Element && event.target.closest('a');
-              if (!disabled && !selecting && !onLink) {
-                startEdit();
-              }
-            }}
-          >
-            <Markdown>{shown}</Markdown>
-          </div>
-        )
-        : disabled
-        ? <p className="text-sm text-muted">No description.</p>
-        : (
-          <button
-            type="button"
-            className="rounded-md px-2 py-3 text-left text-sm text-muted hover:bg-fill-hover hover:text-foreground"
-            onClick={startEdit}
-          >
-            Add a description…
-          </button>
-        )}
-    </section>
   );
 }
 

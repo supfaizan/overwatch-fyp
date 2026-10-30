@@ -81,15 +81,6 @@ export type ArchivedDocument = {
   source: string;
 };
 
-/** How to send a file, exactly as the backend says: a signed form (`fields`), a signed PUT (`headers`), or our API. */
-export type UploadTarget = {
-  method: string;
-  url: string;
-  fields: Record<string, string>;
-  headers: Record<string, string>;
-  via_api: boolean;
-};
-
 /** What's known about a link; any of it may be missing, and its card falls back to the address. */
 export type LinkPreview = {
   url: string;

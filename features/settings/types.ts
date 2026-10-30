@@ -75,11 +75,33 @@ export type UsageTotals = {
   cost_usd: number;
 };
 
-/** The current workspace's AI usage over the last `days`, in total and by day, feature and member. */
+/** One day's usage, with its calls per feature and per member for charting either way. */
+export type DailyUsage = UsageTotals & {
+  /** `YYYY-MM-DD` in `UsageSummary.time_zone`. */
+  day: string;
+  calls_by_feature: Partial<Record<UsageFeature, number>>;
+  calls_by_member: Record<string, number>;
+};
+
+/** The current workspace's AI usage over the last `days` (today included), in total and by day, feature and member. */
 export type UsageSummary = {
   days: number;
+  /** The IANA time zone the days are counted in. */
+  time_zone: string;
   total: UsageTotals;
-  by_day: (UsageTotals & { day: string })[];
+  /** Days with usage only, newest first. */
+  by_day: DailyUsage[];
   by_feature: (UsageTotals & { feature: UsageFeature })[];
   by_member: (UsageTotals & { user_id: string })[];
 };
+
+/** A limit on how much the AI may be used; each counts in its own unit (questions, runs, sources). */
+export const USAGE_LIMIT_KIND = {
+  chatQuestions: 'chat_questions',
+  memberChatQuestions: 'member_chat_questions',
+  decisionSuggestions: 'decision_suggestions',
+  decisionChecks: 'decision_checks',
+} as const;
+export type UsageLimitKind = (typeof USAGE_LIMIT_KIND)[keyof typeof USAGE_LIMIT_KIND];
+
+export type UsageLimit = { kind: UsageLimitKind; used: number; limit: number; resets_at: string };

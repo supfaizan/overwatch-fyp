@@ -9,6 +9,7 @@ import type {
   InviteRole,
   SyncTarget,
   Target,
+  UsageLimit,
   UsageSummary,
 } from './types';
 
@@ -91,6 +92,11 @@ export const revokeInvite = ({ id, inviteId }: { id: string; inviteId: string })
   return api.delete<null>(`${workspace(id)}/invites/${inviteId}`);
 };
 
-export const getUsage = (days: number) => {
-  return api.get<UsageSummary>(`/usage?days=${days}`);
+export const getUsage = (days: number, timeZone: string) => {
+  const params = new URLSearchParams({ days: String(days), tz: timeZone });
+  return api.get<UsageSummary>(`/usage?${params}`);
+};
+
+export const getUsageLimits = () => {
+  return api.get<{ limits: UsageLimit[] }>('/usage/limits');
 };

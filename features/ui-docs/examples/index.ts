@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import * as avatar from './avatar';
 import * as banner from './banner';
+import * as barChart from './bar-chart';
 import * as brand from './brand';
 import * as button from './button';
 import * as card from './card';
@@ -37,6 +38,7 @@ import * as tooltip from './tooltip';
 export const examples: Record<string, Record<string, ComponentType>> = {
   avatar,
   banner,
+  'bar-chart': barChart,
   brand,
   button,
   card,

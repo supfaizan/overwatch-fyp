@@ -10,3 +10,6 @@ export const INTEGRATION_LOGOS = {
   jira: '/integrations/jira.png',
   slack: '/integrations/slack.webp',
 } as const;
+
+/** The `source` of items and pages made here rather than mirrored from an integration. */
+export const NATIVE_SOURCE = 'native';

@@ -11,6 +11,7 @@ import {
   groupByColumn,
   hiddenByDefault,
   itemLink,
+  itemStatusColor,
   laneDropTarget,
   mergePages,
   moveItem,
@@ -22,6 +23,7 @@ import {
   presetOf,
   priorityLevel,
   sectionDrop,
+  statusOptions,
   unreachableColumns,
   zoneId,
 } from './lib';
@@ -406,6 +408,7 @@ describe('movesFrom and dropHint', () => {
         status_id: '3',
         status: 'In Review',
         transition_name: 'In Review',
+        required_fields: [],
       }],
     };
     expect(dropHint(movesFrom(tracker, card, live), card, trackerColumns[2], trackerColumns))
@@ -445,6 +448,67 @@ describe('movesFrom and dropHint', () => {
         }),
       }, task),
     ).toBeNull();
+  });
+
+  it('lists a status menu’s moves, named like Jira’s only where the name says more', () => {
+    const flat = (moves: ReturnType<typeof movesFrom>) => {
+      return moves ? [...moves.values()].flat() : null;
+    };
+    expect(statusOptions(trackerColumns, card, flat(movesFrom(tracker, card)))).toEqual([
+      {
+        columnId: 'c-doing',
+        statusId: '2',
+        label: 'In Progress',
+        transitionName: 'Start',
+        color: 'blue',
+        requiredFields: [],
+      },
+      // its own name colors it: a blocked status is red in an in-progress column
+      {
+        columnId: 'c-doing',
+        statusId: '4',
+        label: 'Blocked',
+        transitionName: 'Park',
+        color: 'red',
+        requiredFields: [],
+      },
+    ]);
+    const live = [{
+      column_id: 'c-review',
+      status_id: '3',
+      status: 'In Review',
+      transition_name: 'In Review',
+      required_fields: ['Reviewer'],
+    }];
+    expect(statusOptions(trackerColumns, card, live)).toEqual([{
+      columnId: 'c-review',
+      statusId: '3',
+      label: 'In Review',
+      transitionName: null,
+      color: 'purple',
+      requiredFields: ['Reviewer'],
+    }]);
+  });
+
+  it('lists every other column when nothing limits the moves', () => {
+    expect(
+      statusOptions(trackerColumns, card, null).map((option) => {
+        return [option.label, option.statusId];
+      }),
+    ).toEqual([['Doing', null], ['Review', null]]);
+  });
+
+  it('colors an item’s status, also when no column holds it', () => {
+    expect(itemStatusColor(trackerColumns, { ...card, column_id: 'c-doing', status: 'Blocked' }))
+      .toBe('red');
+    expect(
+      itemStatusColor(trackerColumns, {
+        ...card,
+        column_id: null,
+        status: 'Shipped',
+        status_category: 'done',
+      }),
+    ).toBe('green');
   });
 
   it('round-trips a drop zone id', () => {

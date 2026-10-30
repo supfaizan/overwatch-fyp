@@ -1,6 +1,7 @@
 import type { Icon } from '@phosphor-icons/react';
 import {
   Buildings,
+  ChartBar,
   CreditCard,
   Files,
   GearSix,
@@ -8,6 +9,7 @@ import {
   Kanban,
   Palette,
   PlugsConnected,
+  Scales,
   SquaresFour,
   UserCircle,
   UsersThree,
@@ -15,11 +17,15 @@ import {
 
 type Page = { href: string; label: string; icon: Icon; color: string };
 
+/** Shows a count of the decisions waiting on you beside it. */
+export const DECISIONS_HREF = '/decisions';
+
 /** Each page keeps its colour wherever its icon appears (sidebar, ⌘K). */
 export const PAGES: Page[] = [
   { href: '/dashboard', label: 'Dashboard', icon: SquaresFour, color: 'text-accent-blue' },
   { href: '/board', label: 'Board', icon: Kanban, color: 'text-accent-orange' },
   { href: '/documents', label: 'Docs', icon: Files, color: 'text-accent-purple' },
+  { href: DECISIONS_HREF, label: 'Decisions', icon: Scales, color: 'text-accent-amber' },
 ];
 
 export const SETTINGS_ICON = { icon: GearSix, color: 'text-accent-slate' };
@@ -47,5 +53,7 @@ export const SETTINGS_PAGES: Page[] = [
     icon: PlugsConnected,
     color: 'text-success',
   },
+  { href: '/settings/decisions', label: 'Decisions', icon: Scales, color: 'text-accent-amber' },
+  { href: '/settings/usage', label: 'Usage', icon: ChartBar, color: 'text-accent-blue' },
   { href: '/settings/billing', label: 'Billing', icon: CreditCard, color: 'text-accent-slate' },
 ];

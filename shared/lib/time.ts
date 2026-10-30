@@ -22,3 +22,17 @@ export function timeAgo(iso: string, now = Date.now()): string {
   }
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(iso));
 }
+
+/** A `YYYY-MM-DD` day as a local-midnight Date; `new Date('YYYY-MM-DD')` would parse it as UTC. */
+export function fromIsoDay(day: string): Date {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(year, month - 1, date);
+}
+
+/** A Date's local calendar day as `YYYY-MM-DD`. */
+export function toIsoDay(date: Date): string {
+  const pad = (value: number) => {
+    return String(value).padStart(2, '0');
+  };
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

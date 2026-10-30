@@ -46,6 +46,14 @@ export type NewEvidence = {
   note?: string | null;
 };
 
+/** A source a decision rests on; `kind` and `ref_id` are null for one it cites without quoting that no longer links. */
+export type DecisionSource = {
+  id: string;
+  kind: EvidenceKind | null;
+  ref_id: string | null;
+  title: string;
+};
+
 export type Evidence = Required<NewEvidence> & {
   note: string | null;
   id: string;
@@ -78,6 +86,8 @@ export type Decision = {
   review_by: string | null;
   superseded_by: string | null;
   evidence: Evidence[];
+  /** the items and pages it rests on, numbered so its background can cite them as [S1]; S1 first */
+  sources: DecisionSource[];
   history: HistoryEntry[];
   /** accepted, but its evidence broke or was contradicted since it was settled: it's in Needs you */
   needs_attention: boolean;

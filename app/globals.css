@@ -41,6 +41,14 @@
   --color-accent-amber: #d99a00;
   --color-accent-slate: #5f6b7a;
 
+  /* chart series, in fixed order; checked for colour-blind separation on surface (dark steps below) */
+  --color-chart-1: #1d72e8;
+  --color-chart-2: #e8590c;
+  --color-chart-3: #7c4dff;
+  --color-chart-4: #d99a00;
+  /* the series that folds the rest into "Other" */
+  --color-chart-other: #5f6b7a;
+
   /* PostHog's raised "chrome" edge; pair with a shadow color, e.g. `shadow-chrome shadow-primary-strong` */
   --shadow-chrome: 0 4px 0 #000;
   --shadow-chrome-hover: 0 5px 0 #000;
@@ -108,6 +116,12 @@
   --color-accent-purple: #a78bfa;
   --color-accent-amber: #f5c542;
   --color-accent-slate: #9aa6b5;
+  /* darker than the accents: chart fills need a narrower lightness band than icons */
+  --color-chart-1: #4b93f5;
+  --color-chart-2: #e2651f;
+  --color-chart-3: #9575f0;
+  --color-chart-4: #b98a12;
+  --color-chart-other: #9aa6b5;
 }
 
 /* the app canvas's dotted backdrop, for pages that echo it (sign-in, 404) */

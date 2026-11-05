@@ -21,6 +21,8 @@ const GROUPS = [
       { href: '/settings/repositories', label: 'Repositories' },
       { href: '/settings/integrations', label: 'Integrations' },
       { href: '/settings/work-item-types', label: 'Work item types' },
+      { href: '/settings/decisions', label: 'Decisions' },
+      { href: '/settings/usage', label: 'Usage' },
       { href: '/settings/billing', label: 'Billing' },
     ],
   },
@@ -32,7 +34,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 md:flex-row md:gap-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pt-4 md:flex-row md:gap-8">
         <nav
           aria-label="Settings"
           className="flex shrink-0 gap-1 overflow-x-auto border-b border-border pb-2 md:w-48 md:flex-col md:gap-4 md:overflow-visible md:border-r md:border-b-0 md:self-start md:pr-4"

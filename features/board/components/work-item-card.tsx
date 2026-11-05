@@ -23,11 +23,11 @@ import TypeIcon, { typeOf } from '@/shared/work-item-types/type-icon';
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Copy, DotsThree, LinkSimple, Lock } from '@phosphor-icons/react/ssr';
+import { ArrowRight, Copy, DotsThree, LinkSimple, Lock } from '@phosphor-icons/react/ssr';
 import { memo, useState } from 'react';
 import { toast } from 'sonner';
 import { useItemMoves, usePrefetchMoves } from '../hooks';
-import { COLOR_CLASSES, columnColor } from '../lib';
+import { COLOR_CLASSES, statusOptions } from '../lib';
 import { type Column, COLUMN_COLOR, type ColumnColor, type WorkItem } from '../types';
 import PriorityIcon from './priority-icon';
 
@@ -38,7 +38,7 @@ type WorkItemCardProps = {
   color?: ColumnColor;
   onOpen: (item: WorkItem) => void;
   /** Keyboard- and screen-reader-friendly alternative to dragging. */
-  onMoveTo: (item: WorkItem, columnId: string) => void;
+  onMoveTo: (item: WorkItem, columnId: string, index?: number, statusId?: string | null) => void;
   /** The address that opens the item, for "Copy link". */
   linkOf: (item: WorkItem) => string;
 };
@@ -114,23 +114,23 @@ export const CardBody = memo(
           {item.editable && (
             <>
               <Label>Move to</Label>
-              {columns.filter((column) => {
-                return column.id !== item.column_id;
-              }).map((column) => {
-                // until the moves are read, every column is offered; the server checks the move either way
-                const blocked = moves.data && moves.data.basis !== 'open'
-                  && !moves.data.targets.some((target) => {
-                    return target.column_id === column.id;
-                  });
+              {/* until the moves are read, every column is offered; the server checks the move either way */}
+              {statusOptions(
+                columns,
+                item,
+                moves.data && moves.data.basis !== 'open' ? moves.data.targets : null,
+              ).map((option) => {
                 return (
                   <Item
-                    key={column.id}
-                    disabled={Boolean(blocked)}
+                    key={`${option.columnId}|${option.statusId ?? ''}`}
+                    disabled={option.requiredFields.length > 0}
                     onSelect={() => {
-                      return onMoveTo(item, column.id);
+                      return onMoveTo(item, option.columnId, undefined, option.statusId);
                     }}
                   >
-                    <Tag className={COLOR_CLASSES[columnColor(column)].tag}>{column.name}</Tag>
+                    {option.transitionName && <span>{option.transitionName}</span>}
+                    {option.transitionName && <ArrowRight aria-hidden />}
+                    <Tag className={COLOR_CLASSES[option.color].tag}>{option.label}</Tag>
                   </Item>
                 );
               })}

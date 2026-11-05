@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/shared/components/button';
+import { DatePicker } from '@/shared/components/date-picker';
 import { Dialog, DialogClose, DialogContent } from '@/shared/components/dialog';
 import { Input, TextArea } from '@/shared/components/input';
 import { type FormEvent, useState } from 'react';
@@ -87,22 +88,20 @@ export default function SprintDialog(
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-xs text-muted">
               Starts
-              <Input
-                type="date"
-                value={start}
-                onChange={(e) => {
-                  return setStart(e.target.value);
+              <DatePicker
+                value={start || null}
+                onChange={(value) => {
+                  return setStart(value ?? '');
                 }}
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted">
               Ends
-              <Input
-                type="date"
-                value={end}
+              <DatePicker
+                value={end || null}
                 min={start || undefined}
-                onChange={(e) => {
-                  return setEnd(e.target.value);
+                onChange={(value) => {
+                  return setEnd(value ?? '');
                 }}
               />
             </label>

@@ -3,13 +3,18 @@
 import Avatar from '@/shared/components/avatar';
 import Button from '@/shared/components/button';
 import ConfirmDialog from '@/shared/components/confirm-dialog';
+import { DatePicker } from '@/shared/components/date-picker';
 import { Dialog, DialogContent } from '@/shared/components/dialog';
+import EditableMarkdown from '@/shared/components/editable-markdown';
+import InlineTitleInput from '@/shared/components/inline-title-input';
 import { Input, TextArea } from '@/shared/components/input';
 import Markdown from '@/shared/components/markdown';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
+import RelatedDecisions from '@/shared/decisions/related-decisions';
+import { EVIDENCE_KIND } from '@/shared/decisions/types';
 import { cn } from '@/shared/lib/cn';
 import { useWorkItemTypes } from '@/shared/work-item-types/hooks';
 import { typeOf } from '@/shared/work-item-types/type-icon';
@@ -17,8 +22,7 @@ import TypeSelect from '@/shared/work-item-types/type-select';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
 import { ROLE } from '@/shared/workspaces/types';
-import { ArrowSquareOut, PencilSimple, Trash } from '@phosphor-icons/react/ssr';
-import dynamic from 'next/dynamic';
+import { ArrowSquareOut, Trash } from '@phosphor-icons/react/ssr';
 import { type ReactNode, useState } from 'react';
 import {
   useAddComment,
@@ -26,13 +30,13 @@ import {
   useComments,
   useDeleteComment,
   useDeleteWorkItem,
+  useMoveWorkItem,
   usePeople,
   usePriorities,
   useSetItemSprint,
   useUpdateComment,
   useUpdateWorkItem,
 } from '../hooks';
-import { COLOR_CLASSES, columnColor } from '../lib';
 import {
   type Board,
   BOARD_KIND,
@@ -44,17 +48,9 @@ import {
   type WorkItem,
   type WorkItemChanges,
 } from '../types';
+import ColumnsWorkflowDialog from './columns-workflow-dialog';
 import PriorityIcon from './priority-icon';
-
-// heavy, and only needed once someone edits
-const RichTextEditor = dynamic(() => {
-  return import('@/shared/components/rich-text-editor');
-}, {
-  ssr: false,
-  loading: () => {
-    return <Skeleton className="h-32 w-full" />;
-  },
-});
+import StatusMenu from './status-menu';
 
 /** How the backend shows media embedded in a Jira description; they can't be written back from here. */
 const JIRA_ATTACHMENT = '_[attachment in Jira]_';
@@ -69,20 +65,19 @@ type ItemDetailsDialogProps = {
   board: Board;
   sprints: Sprint[];
   trackerName: string | null;
-  /** Moves the card on the board, as a drag would. */
-  onMove: (item: WorkItem, columnId: string) => void;
 };
 
 /** A ticket, Jira-style: what it is on the left, its details on the right; each field saves on its own. */
 export default function ItemDetailsDialog(
-  { open, onOpenChange, item: initial, board, sprints, trackerName, onMove }:
-    ItemDetailsDialogProps,
+  { open, onOpenChange, item: initial, board, sprints, trackerName }: ItemDetailsDialogProps,
 ) {
   // what the server last said; each change answers with the item as it now is
   const [item, setItem] = useState(initial);
   const update = useUpdateWorkItem();
   const remove = useDeleteWorkItem();
   const setSprint = useSetItemSprint();
+  const move = useMoveWorkItem();
+  const [viewingWorkflow, setViewingWorkflow] = useState(false);
   const isAdmin = hasRole(useCurrentWorkspace()?.role, ROLE.admin);
   const readOnly = !item.editable;
   const tracker = item.source !== NATIVE_SOURCE;
@@ -95,7 +90,7 @@ export default function ItemDetailsDialog(
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         // one height whatever it shows; each side scrolls inside it. A viewport height, as the overlay is a grid
-        className="flex h-[85dvh] max-w-6xl flex-col"
+        className="flex h-[90dvh] max-w-6xl flex-col"
         title={
           <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-muted">
             {item.parent?.key && <span>{item.parent.key} /</span>}
@@ -115,19 +110,31 @@ export default function ItemDetailsDialog(
       >
         <div className="grid h-full gap-6 overflow-y-auto md:grid-cols-3 md:grid-rows-1 md:overflow-hidden">
           <div className="flex min-h-0 min-w-0 flex-col gap-6 md:col-span-2 md:overflow-y-auto md:pr-2">
-            <TitleField
+            <InlineTitleInput
               value={item.title}
               disabled={readOnly}
               onSave={(title) => {
                 return save({ title });
               }}
             />
-            <DescriptionField
-              item={item}
+            <EditableMarkdown
+              label="Description"
+              // the Markdown, so editing starts from the formatting as shown
+              value={item.description_md ?? item.description}
               disabled={readOnly}
               saving={update.isPending}
+              placeholder="Describe the work… Markdown shortcuts work."
+              addLabel="Add a description…"
               onSave={(description) => {
                 return save({ description });
+              }}
+              notice={(draft) => {
+                return draft.includes(JIRA_ATTACHMENT) && (
+                  <p className="text-xs text-warning-strong">
+                    Saving removes the attachments embedded in this description; they stay attached
+                    to the ticket in Jira.
+                  </p>
+                );
               }}
             />
             {item.subtasks.length > 0 && <Linked title="Subtasks" items={item.subtasks} />}
@@ -135,35 +142,45 @@ export default function ItemDetailsDialog(
             <Comments itemId={item.id} disabled={readOnly} />
           </div>
 
-          <aside className="flex min-h-0 flex-col gap-4 md:overflow-y-auto">
-            <Select
-              value={item.column_id ?? undefined}
-              onValueChange={(columnId) => {
-                onMove(item, columnId);
-                setItem({ ...item, column_id: columnId });
+          {/* bottom padding: the scroll area would clip the buttons' drop shadow */}
+          <aside className="flex min-h-0 flex-col gap-4 pb-1.5 md:overflow-y-auto">
+            <StatusMenu
+              item={item}
+              board={board}
+              trackerName={trackerName}
+              pending={move.isPending}
+              onMove={(option) => {
+                // the dialog shows the item the server answers with (a tracker's status name, too)
+                return move.mutate(
+                  {
+                    boardId: board.id,
+                    id: item.id,
+                    move: {
+                      column_id: option.columnId,
+                      before_id: null,
+                      after_id: null,
+                      ...(option.statusId ? { status_id: option.statusId } : {}),
+                    },
+                    rank: Date.now() / 1000,
+                  },
+                  { onSuccess: setItem },
+                );
               }}
-              disabled={readOnly}
-            >
-              <SelectTrigger aria-label="Status" placeholder="Status" className="font-medium" />
-              <SelectContent>
-                {board.columns.map((column) => {
-                  return (
-                    <SelectItem key={column.id} value={column.id}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          aria-hidden
-                          className={cn(
-                            'size-2 rounded-full',
-                            COLOR_CLASSES[columnColor(column)].dot,
-                          )}
-                        />
-                        {column.name}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+              onViewWorkflow={isAdmin && !tracker
+                ? () => {
+                  return setViewingWorkflow(true);
+                }
+                : undefined}
+            />
+            {viewingWorkflow && (
+              <ColumnsWorkflowDialog
+                board={board}
+                initialTab="workflow"
+                onClose={() => {
+                  return setViewingWorkflow(false);
+                }}
+              />
+            )}
 
             <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <h3 className="text-sm font-semibold">Details</h3>
@@ -255,15 +272,13 @@ export default function ItemDetailsDialog(
                 />
               </Detail>
               <Detail label="Due date">
-                <Input
-                  key={item.due_date ?? ''}
+                <DatePicker
                   size="sm"
-                  type="date"
                   aria-label="Due date"
-                  defaultValue={item.due_date ?? ''}
+                  placeholder="None"
+                  value={item.due_date}
                   disabled={readOnly}
-                  onBlur={(e) => {
-                    const value = e.target.value || null;
+                  onChange={(value) => {
                     if (value !== item.due_date) {
                       save({ due_date: value });
                     }
@@ -298,6 +313,16 @@ export default function ItemDetailsDialog(
               <dd>{dateTime.format(new Date(item.updated_at))}</dd>
             </dl>
 
+            <RelatedDecisions
+              source={{
+                kind: EVIDENCE_KIND.workItem,
+                refId: item.id,
+                title: `${item.key} ${item.title}`,
+              }}
+              readQuote={() => {
+                return window.getSelection()?.toString() ?? '';
+              }}
+            />
             <div className="flex flex-wrap gap-2">
               {tracker && item.external_url && (
                 <Button size="sm" asChild>
@@ -343,139 +368,6 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
       <span className="col-span-2 text-xs text-muted">{label}</span>
       <div className="col-span-3 min-w-0">{children}</div>
     </div>
-  );
-}
-
-function TitleField(
-  { value, disabled, onSave }: {
-    value: string;
-    disabled: boolean;
-    onSave: (title: string) => void;
-  },
-) {
-  const [draft, setDraft] = useState(value);
-  const commit = () => {
-    const title = draft.trim();
-    if (title && title !== value) {
-      onSave(title);
-    } else {
-      setDraft(value);
-    }
-  };
-  return (
-    <input
-      aria-label="Title"
-      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-xl font-semibold outline-none hover:border-border focus:border-primary disabled:hover:border-transparent"
-      value={draft}
-      maxLength={255}
-      disabled={disabled}
-      onChange={(e) => {
-        return setDraft(e.target.value);
-      }}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        return e.key === 'Enter' && e.currentTarget.blur();
-      }}
-    />
-  );
-}
-
-function DescriptionField(
-  { item, disabled, saving, onSave }: {
-    item: WorkItem;
-    disabled: boolean;
-    saving: boolean;
-    onSave: (description: string | null) => void;
-  },
-) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(item.description ?? '');
-  const shown = item.description_md ?? item.description;
-  const startEdit = () => {
-    // the Markdown, so editing starts from the formatting as shown
-    setDraft(shown ?? '');
-    setEditing(true);
-  };
-  const saveDraft = () => {
-    onSave(draft.trim() || null);
-    setEditing(false);
-  };
-
-  return (
-    <section className="flex flex-col gap-2">
-      <header className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold">Description</h3>
-        {!disabled && !editing && (
-          <Button size="sm" variant="tertiary" onClick={startEdit}>
-            <PencilSimple /> Edit
-          </Button>
-        )}
-      </header>
-      {editing
-        ? (
-          <>
-            <RichTextEditor
-              aria-label="Description"
-              className="max-h-[45dvh] shrink-0"
-              value={draft}
-              onChange={setDraft}
-              onSubmit={saveDraft}
-              onCancel={() => {
-                return setEditing(false);
-              }}
-              placeholder="Describe the work… Markdown shortcuts work."
-              autoFocus
-            />
-            {draft.includes(JIRA_ATTACHMENT) && (
-              <p className="text-xs text-warning-strong">
-                Saving removes the attachments embedded in this description; they stay attached to
-                the ticket in Jira.
-              </p>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  return setEditing(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" variant="primary" loading={saving} onClick={saveDraft}>Save</Button>
-            </div>
-          </>
-        )
-        : shown
-        ? (
-          // long descriptions scroll here, leaving room for the comments; a click on the text edits it
-          <div
-            className={cn(
-              'max-h-[45dvh] shrink-0 overflow-y-auto rounded-md',
-              !disabled && 'cursor-text hover:bg-fill-hover',
-            )}
-            onClick={(event) => {
-              const selecting = Boolean(window.getSelection()?.toString());
-              const onLink = event.target instanceof Element && event.target.closest('a');
-              if (!disabled && !selecting && !onLink) {
-                startEdit();
-              }
-            }}
-          >
-            <Markdown>{shown}</Markdown>
-          </div>
-        )
-        : disabled
-        ? <p className="text-sm text-muted">No description.</p>
-        : (
-          <button
-            type="button"
-            className="rounded-md px-2 py-3 text-left text-sm text-muted hover:bg-fill-hover hover:text-foreground"
-            onClick={startEdit}
-          >
-            Add a description…
-          </button>
-        )}
-    </section>
   );
 }
 

@@ -1,0 +1,198 @@
+'use client';
+
+import type { ApiError } from '@/shared/api/envelope';
+import { queryKeys } from '@/shared/api/query-keys';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import * as decisionsApi from './api';
+import { localToday } from './lib';
+import type { Decision, DecisionFilters } from './types';
+
+// answers rather than failures: nothing new to read, or someone's run is already reading it
+const NOT_FAILURES = new Set(['source_unchanged', 'suggest_in_progress', 'check_in_progress']);
+
+const keys = {
+  list: (filters: DecisionFilters) => {
+    return [...queryKeys.decisions, 'list', filters] as const;
+  },
+  one: (id: string) => {
+    return [...queryKeys.decisions, 'one', id] as const;
+  },
+  pages: (filters: DecisionFilters) => {
+    return [...queryKeys.decisions, 'list', 'pages', filters] as const;
+  },
+  counts: (today: string) => {
+    return [...queryKeys.decisions, 'counts', today] as const;
+  },
+  checks: [...queryKeys.decisions, 'checks'] as const,
+};
+
+export const useDecisions = (filters: DecisionFilters = {}) => {
+  return useQuery({
+    queryKey: keys.list(filters),
+    queryFn: () => {
+      return decisionsApi.getDecisions(filters);
+    },
+  });
+};
+
+/** One inbox tab (or a search across all of them), a page at a time as it's scrolled. */
+export const useDecisionPages = (filters: DecisionFilters) => {
+  const query = useInfiniteQuery({
+    queryKey: keys.pages(filters),
+    queryFn: ({ pageParam }) => {
+      return decisionsApi.getDecisionPage(filters, pageParam);
+    },
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const loaded = last.offset + last.decisions.length;
+      return loaded < last.total ? loaded : undefined;
+    },
+  });
+  return {
+    ...query,
+    decisions: query.data?.pages.flatMap((page) => {
+      return page.decisions;
+    }) ?? [],
+  };
+};
+
+/** How many decisions each inbox tab holds for this person (Needs you is also the sidebar's count). */
+export const useInboxCounts = () => {
+  const today = localToday();
+  return useQuery({
+    queryKey: keys.counts(today),
+    queryFn: () => {
+      return decisionsApi.getInboxCounts(today);
+    },
+  });
+};
+
+export const useDecision = (id: string) => {
+  return useQuery({
+    queryKey: keys.one(id),
+    queryFn: () => {
+      return decisionsApi.getDecision(id);
+    },
+  });
+};
+
+/** Any change to a decision: the changed one is shown at once and every list refetches. */
+function useDecisionMutation<TArg>(
+  mutationFn: (arg: TArg) => Promise<Decision>,
+  success?: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<Decision, ApiError, TArg>({
+    mutationFn,
+    onSuccess: (decision) => {
+      queryClient.setQueryData(keys.one(decision.id), decision);
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'list'] });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'counts'] });
+      if (success) {
+        toast.success(success);
+      }
+    },
+    onError: (error) => {
+      return toast.error(error.message);
+    },
+  });
+}
+
+export const useCreateDecision = () => {
+  return useDecisionMutation(decisionsApi.createDecision, 'Decision recorded.');
+};
+export const useUpdateDecision = () => {
+  return useDecisionMutation(decisionsApi.updateDecision);
+};
+export const useChangeStatus = () => {
+  return useDecisionMutation(decisionsApi.changeStatus);
+};
+export const useAddEvidence = () => {
+  return useDecisionMutation(decisionsApi.addEvidence, 'Passage added.');
+};
+export const useRemoveEvidence = () => {
+  return useDecisionMutation(decisionsApi.removeEvidence);
+};
+
+export const useSuggestDecisions = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.suggestDecisions,
+    onSuccess: (suggested) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.decisions });
+      toast.success(
+        suggested.length
+          ? `${suggested.length} suggested ${
+            suggested.length === 1 ? 'decision' : 'decisions'
+          } to review.`
+          : 'No new decisions found here.',
+      );
+    },
+    onError: (error: ApiError) => {
+      return NOT_FAILURES.has(error.errorCode) ? toast(error.message) : toast.error(error.message);
+    },
+  });
+};
+
+export const useDismissSuggestion = () => {
+  const queryClient = useQueryClient();
+  return useMutation<null, ApiError, string>({
+    mutationFn: decisionsApi.dismissSuggestion,
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: keys.one(id) });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'list'] });
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.decisions, 'counts'] });
+      toast.success("Dismissed; it won't be suggested again.");
+    },
+    onError: (error) => {
+      return toast.error(error.message);
+    },
+  });
+};
+
+export const useCheckSettings = () => {
+  return useQuery({ queryKey: keys.checks, queryFn: decisionsApi.getCheckSettings });
+};
+
+export const useChangeCheckSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.changeCheckSettings,
+    onSuccess: (settings) => {
+      queryClient.setQueryData(keys.checks, settings);
+    },
+    onError: (error: ApiError) => {
+      return toast.error(error.message);
+    },
+  });
+};
+
+/** Check now: decisions and the last-check line refresh, with what it found. */
+export const useRunCheck = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: decisionsApi.runCheck,
+    onSuccess: ({ checked, conflicts, capped }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.decisions });
+      if (capped) {
+        toast.warning("Today's checks ran out; the rest are read tomorrow.");
+      } else if (!checked) {
+        toast.success('Nothing changed since the last check.');
+      } else {
+        toast.success(
+          conflicts
+            ? `Found ${conflicts} ${
+              conflicts === 1 ? 'contradiction' : 'contradictions'
+            } to review.`
+            : `Read ${checked} changed ${
+              checked === 1 ? 'source' : 'sources'
+            }; nothing contradicts.`,
+        );
+      }
+    },
+    onError: (error: ApiError) => {
+      return NOT_FAILURES.has(error.errorCode) ? toast(error.message) : toast.error(error.message);
+    },
+  });
+};

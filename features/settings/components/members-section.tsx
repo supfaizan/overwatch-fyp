@@ -13,22 +13,21 @@ import Tooltip from '@/shared/components/tooltip';
 import { timeAgo } from '@/shared/lib/time';
 import { displayName, handle } from '@/shared/session/lib';
 import { useSession } from '@/shared/session/store';
-import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { useCurrentWorkspace, useWorkspaceMembers } from '@/shared/workspaces/hooks';
 import { hasRole } from '@/shared/workspaces/lib';
-import { ROLE, type Role, type Workspace } from '@/shared/workspaces/types';
+import { ROLE, type Role, type Workspace, type WorkspaceMember } from '@/shared/workspaces/types';
 import { Copy, EnvelopeSimple, LinkSimple, UserMinus, X } from '@phosphor-icons/react/ssr';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 import {
   useCreateInvite,
   useInvites,
-  useMembers,
   useRemoveMember,
   useResendInvite,
   useRevokeInvite,
   useUpdateMember,
 } from '../hooks';
-import { type Invite, INVITE_KIND, type InviteKind, type InviteRole, type Member } from '../types';
+import { type Invite, INVITE_KIND, type InviteKind, type InviteRole } from '../types';
 import { SettingsSection } from './settings-layout';
 
 const ROLE_LABELS: Record<Role, string> = { owner: 'Owner', admin: 'Admin', member: 'Member' };
@@ -52,7 +51,7 @@ export default function MembersSection() {
 }
 
 function MemberList({ workspace }: { workspace: Workspace }) {
-  const members = useMembers(workspace.id);
+  const members = useWorkspaceMembers();
 
   if (members.isPending) {
     return <Skeleton className="h-32 w-full" />;
@@ -87,7 +86,7 @@ function MemberList({ workspace }: { workspace: Workspace }) {
   );
 }
 
-function MemberRow({ workspace, member }: { workspace: Workspace; member: Member }) {
+function MemberRow({ workspace, member }: { workspace: Workspace; member: WorkspaceMember }) {
   const userId = useSession((state) => {
     return state.user?.id;
   });

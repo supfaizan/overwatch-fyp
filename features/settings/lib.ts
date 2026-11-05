@@ -1,4 +1,11 @@
+import type { Role } from '@/shared/workspaces/types';
 import type { UsageSummary } from './types';
+
+export const ROLE_LABELS: Record<Role, string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  member: 'Member',
+};
 
 const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 
@@ -7,19 +14,13 @@ export const formatTokens = (count: number) => {
   return compact.format(count);
 };
 
-/** Dollars to the cent, or to four places below a cent so small calls don't read as free. */
+/** Dollars to the cent; anything above zero but under a cent reads "<$0.01" rather than free. */
 export const formatCost = (usd: number) => {
-  const digits = usd > 0 && usd < 0.01 ? 4 : 2;
-  return `$${usd.toFixed(digits)}`;
+  return usd > 0 && usd < 0.01 ? '<$0.01' : `$${usd.toFixed(2)}`;
 };
 
 /** A bar in the usage chart: one day, or one week on long periods; `start`/`end` are `YYYY-MM-DD`. */
-export type UsageBucket = {
-  start: string;
-  end: string;
-  byFeature: Record<string, number>;
-  byMember: Record<string, number>;
-};
+export type UsageBucket = { start: string; end: string; actions: number };
 
 // past a month, one bar per day is too thin to read
 const WEEKLY_AFTER_DAYS = 31;
@@ -35,20 +36,14 @@ export const localDay = (date: Date) => {
   return date.toLocaleDateString('en-CA');
 };
 
-const addCounts = (into: Record<string, number>, counts: Record<string, number | undefined>) => {
-  for (const [key, count] of Object.entries(counts)) {
-    into[key] = (into[key] ?? 0) + (count ?? 0);
-  }
-};
-
 /**
  * The summary's days as chart bars, oldest first: every day of the period including ones with no
  * usage, grouped into weeks (ending today) past a month. `today` is in the browser's time zone, as
  * the summary's days are.
  */
 export function usageBuckets(summary: UsageSummary, today: Date): UsageBucket[] {
-  const byDay = new Map(summary.by_day.map((day) => {
-    return [day.day, day];
+  const actionsOn = new Map(summary.by_day.map((day) => {
+    return [day.day, day.actions];
   }));
   // noon, so stepping back a day never lands on the wrong date across a DST change
   const noon = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
@@ -62,20 +57,13 @@ export function usageBuckets(summary: UsageSummary, today: Date): UsageBucket[] 
   // grouped from today backwards, so the last bar is always a full week ending today
   for (let end = days.length; end > 0; end -= size) {
     const chunk = days.slice(Math.max(0, end - size), end);
-    const bucket: UsageBucket = {
+    buckets.unshift({
       start: chunk[0],
       end: chunk.at(-1) ?? chunk[0],
-      byFeature: {},
-      byMember: {},
-    };
-    for (const day of chunk) {
-      const usage = byDay.get(day);
-      if (usage) {
-        addCounts(bucket.byFeature, usage.calls_by_feature);
-        addCounts(bucket.byMember, usage.calls_by_member);
-      }
-    }
-    buckets.unshift(bucket);
+      actions: chunk.reduce((sum, day) => {
+        return sum + (actionsOn.get(day) ?? 0);
+      }, 0),
+    });
   }
   return buckets;
 }
@@ -86,4 +74,12 @@ export function meterTone(used: number, limit: number): 'ok' | 'warning' | 'full
     return 'full';
   }
   return used / limit >= 0.8 ? 'warning' : 'ok';
+}
+
+/** How many of a meter's `ticks` to fill: rounded down, so a tick only fills once it's earned. */
+export function filledTicks(used: number, limit: number, ticks: number): number {
+  if (limit <= 0) {
+    return ticks;
+  }
+  return Math.min(ticks, Math.floor((used / limit) * ticks));
 }

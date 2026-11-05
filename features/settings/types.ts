@@ -58,16 +58,10 @@ export type Invite = {
 /** `url` carries the token and is shown once; email invites have none, the link only goes to that inbox. */
 export type InviteCreated = Invite & { url: string | null };
 
-/** What a model call was made for, as AI usage is split by. */
-export const USAGE_FEATURE = {
-  chat: 'chat',
-  decisionSuggest: 'decision_suggest',
-  decisionCheck: 'decision_check',
-  embeddings: 'embeddings',
-} as const;
-export type UsageFeature = (typeof USAGE_FEATURE)[keyof typeof USAGE_FEATURE];
-
 export type UsageTotals = {
+  /** What was taken from the monthly allowance: chat questions, suggestion runs, sources checked. */
+  actions: number;
+  /** Model calls, embeddings included; one action may make several. */
   calls: number;
   prompt_tokens: number;
   completion_tokens: number;
@@ -75,15 +69,12 @@ export type UsageTotals = {
   cost_usd: number;
 };
 
-/** One day's usage, with its calls per feature and per member for charting either way. */
 export type DailyUsage = UsageTotals & {
   /** `YYYY-MM-DD` in `UsageSummary.time_zone`. */
   day: string;
-  calls_by_feature: Partial<Record<UsageFeature, number>>;
-  calls_by_member: Record<string, number>;
 };
 
-/** The current workspace's AI usage over the last `days` (today included), in total and by day, feature and member. */
+/** The current workspace's AI usage over the last `days` (today included), in total and by day and member. */
 export type UsageSummary = {
   days: number;
   /** The IANA time zone the days are counted in. */
@@ -91,12 +82,12 @@ export type UsageSummary = {
   total: UsageTotals;
   /** Days with usage only, newest first. */
   by_day: DailyUsage[];
-  by_feature: (UsageTotals & { feature: UsageFeature })[];
   by_member: (UsageTotals & { user_id: string })[];
 };
 
 /** A limit on how much the AI may be used; each counts in its own unit (questions, runs, sources). */
 export const USAGE_LIMIT_KIND = {
+  aiActions: 'ai_actions',
   chatQuestions: 'chat_questions',
   memberChatQuestions: 'member_chat_questions',
   decisionSuggestions: 'decision_suggestions',

@@ -1,3 +1,4 @@
+import { safeDestination } from '@/features/auth/redirect';
 import { WAITLIST_ACTIVE } from '@/shared/lib/env';
 import { LEGAL_PATHS } from '@/shared/lib/routes';
 import { SESSION_HINT_COOKIE } from '@/shared/session/constants';
@@ -16,6 +17,9 @@ const PUBLIC_PATHS = new Set([
   '/auth/complete',
   '/invite',
 ]);
+const AUTH_PATHS = new Set(['/sign-in', '/sign-up']);
+// the dashboard sends anyone not done with onboarding there
+const HOME = '/dashboard';
 // /invite/<token>: links sent before tokens moved into the fragment
 const PUBLIC_PREFIXES = ['/invite/'];
 
@@ -32,7 +36,13 @@ export function proxy(request: NextRequest) {
     || PUBLIC_PREFIXES.some((prefix) => {
       return pathname.startsWith(prefix);
     });
-  if (isPublic || request.cookies.has(SESSION_HINT_COOKIE)) {
+  const hinted = request.cookies.has(SESSION_HINT_COOKIE);
+  // signed in already: skip the auth pages; a stale hint is cleared by the app, which then sends the user back here
+  if (hinted && AUTH_PATHS.has(pathname)) {
+    const from = request.nextUrl.searchParams.get('from');
+    return NextResponse.redirect(new URL(from ? safeDestination(from) : HOME, request.url));
+  }
+  if (isPublic || hinted) {
     return NextResponse.next();
   }
 

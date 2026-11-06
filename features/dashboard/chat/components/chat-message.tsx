@@ -6,26 +6,21 @@ import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
 import { ChatCircleDots, FileText, Info, Path, Scales, Ticket } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
-import { type ComponentProps, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useWalkthrough } from '../../hooks';
 import { ancestorsOf } from '../../lib/ancestors';
 import { prefersReducedMotion } from '../../lib/motion';
 import { stepName } from '../../lib/walkthrough';
 import { useViewStore } from '../../store';
 import {
+  type AnswerBlock,
   answerBlocks,
   answerMarkdown,
   CHIP_RE,
-  lineRange,
   questionSegments,
   safeImageSrc,
 } from '../lib';
-import type {
-  ChatMessage as Message,
-  CodeCitation as Citation,
-  NodeRef,
-  RecordRef,
-} from '../types';
+import type { ChatMessage as Message, NodeRef, RecordRef } from '../types';
 import Callout from './callout';
 import CodeCitation from './code-citation';
 import FollowUps from './follow-ups';
@@ -152,8 +147,6 @@ function Answer({ message, repo }: ChatMessageProps) {
       return [record.ref, record];
     }));
   }, [message]);
-  // the citation whose chip or card is pointed at, so the pair lights up together
-  const [active, setActive] = useState<string | null>(null);
   const components = useMemo(
     () => {
       return {
@@ -175,16 +168,6 @@ function Answer({ message, repo }: ChatMessageProps) {
           if (node) {
             return <NodeChip node={node} repo={repo} />;
           }
-          const citation = ref ? citations.get(ref) : undefined;
-          if (citation) {
-            return (
-              <CitationChip
-                citation={citation}
-                cardId={`${message.id}-${citation.ref}`}
-                onPoint={setActive}
-              />
-            );
-          }
           const record = ref ? records.get(ref) : undefined;
           if (record) {
             return <RecordChip record={record} />;
@@ -193,26 +176,43 @@ function Answer({ message, repo }: ChatMessageProps) {
         },
       };
     },
-    [byRef, citations, records, message.id, repo],
+    [byRef, records, repo],
   );
 
-  // code a step shows sits in that step, not again below
-  const loose = message.citations.filter((citation) => {
-    return !message.steps.some((step) => {
-      return step.citation_ref === citation.ref;
+  // code shows where it's cited; a step's own code sits in that step, not again in the summary
+  const render = (blocks: AnswerBlock[], skip: Set<string | null>) => {
+    return blocks.map((block, index) => {
+      if (block.type === 'code') {
+        const citation = citations.get(block.ref);
+        return citation && !skip.has(block.ref)
+          ? <CodeCitation key={index} repo={repo} citation={citation} />
+          : null;
+      }
+      const text = (
+        <Markdown key={index} components={components} highlightCode>{block.text}</Markdown>
+      );
+      return block.type === 'callout'
+        ? <Callout key={index} kind={block.kind}>{text}</Callout>
+        : text;
     });
+  };
+  const stepRefs = new Set(message.steps.map((step) => {
+    return step.citation_ref;
+  }));
+  // only stale data cites code its text never mentions; it still shows, last
+  const mentioned = [
+    message.text,
+    ...message.steps.map((step) => {
+      return `${step.text} [${step.citation_ref}]`;
+    }),
+  ].join(' ');
+  const unplaced = message.citations.filter((citation) => {
+    return !mentioned.includes(`[${citation.ref}]`);
   });
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-surface px-3.5 py-3 text-sm leading-relaxed break-words">
-      {answerBlocks(markdown).map((block, index) => {
-        const text = (
-          <Markdown key={index} components={components} highlightCode>{block.text}</Markdown>
-        );
-        return block.type === 'callout'
-          ? <Callout key={index} kind={block.kind}>{text}</Callout>
-          : text;
-      })}
+    <div className="flex w-full flex-col gap-3 text-sm leading-relaxed break-words">
+      {render(answerBlocks(markdown), stepRefs)}
       {message.ask && (
         // its options open over the chat input; the answer keeps the question itself
         <p className="flex items-center gap-1.5 font-medium">
@@ -221,31 +221,19 @@ function Answer({ message, repo }: ChatMessageProps) {
         </p>
       )}
       {message.steps.length > 0 && (
-        <Steps message={message} repo={repo} activeCitation={active}>
-          {(text) => {
+        <Steps message={message} repo={repo}>
+          {(text, own) => {
             return (
-              <Markdown components={components} highlightCode>
-                {answerMarkdown(message, text)}
-              </Markdown>
+              <div className="flex flex-col gap-2">
+                {render(answerBlocks(answerMarkdown(message, text)), new Set([own]))}
+              </div>
             );
           }}
         </Steps>
       )}
-      {loose.length > 0 && (
-        <section aria-label="Cited code" className="flex flex-col gap-2">
-          {loose.map((citation) => {
-            return (
-              <CodeCitation
-                key={citation.ref}
-                id={`${message.id}-${citation.ref}`}
-                repo={repo}
-                citation={citation}
-                active={active === citation.ref}
-              />
-            );
-          })}
-        </section>
-      )}
+      {unplaced.map((citation) => {
+        return <CodeCitation key={citation.ref} repo={repo} citation={citation} />;
+      })}
     </div>
   );
 }
@@ -255,10 +243,9 @@ function Answer({ message, repo }: ChatMessageProps) {
  * on the diagram is lit and kept in view; picking a step shows it there and pauses.
  */
 function Steps(
-  { message, repo, activeCitation, children }: ChatMessageProps & {
-    activeCitation: string | null;
-    /** a step's text, rendered like the rest of the answer */
-    children: (text: string) => ReactNode;
+  { message, repo, children }: ChatMessageProps & {
+    /** a step's text, rendered like the rest of the answer, leaving out the step's own code */
+    children: (text: string, own: string | null) => ReactNode;
   },
 ) {
   const { play } = useWalkthrough(repo);
@@ -326,59 +313,12 @@ function Steps(
               </span>
               <span className="min-w-0 truncate font-mono text-xs font-medium">{name}</span>
             </button>
-            {step.text && children(step.text)}
-            {citation && (
-              <CodeCitation
-                id={`${message.id}-${citation.ref}`}
-                repo={repo}
-                citation={citation}
-                active={activeCitation === citation.ref}
-              />
-            )}
+            {step.text && children(step.text, step.citation_ref)}
+            {citation && <CodeCitation repo={repo} citation={citation} />}
           </li>
         );
       })}
     </ol>
-  );
-}
-
-/** An inline code citation, numbered like its card below the answer; clicking it brings the card into view. */
-function CitationChip(
-  { citation, cardId, onPoint }: {
-    citation: Citation;
-    cardId: string;
-    onPoint: (ref: string | null) => void;
-  },
-) {
-  return (
-    <Tooltip content={`${citation.path}:${lineRange(citation)}`}>
-      <a
-        href={`#${cardId}`}
-        aria-label={`Code ${citation.ref.slice(1)}: ${citation.path}, line ${lineRange(citation)}`}
-        className="mx-0.5 inline-flex h-4 min-w-4 -translate-y-px items-center justify-center rounded-full border border-border-strong bg-background px-1 align-middle font-mono text-[0.7rem] leading-none font-medium text-muted no-underline transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
-        onClick={(event) => {
-          event.preventDefault();
-          document.getElementById(cardId)?.scrollIntoView({
-            behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-            block: 'nearest',
-          });
-        }}
-        onMouseEnter={() => {
-          return onPoint(citation.ref);
-        }}
-        onMouseLeave={() => {
-          return onPoint(null);
-        }}
-        onFocus={() => {
-          return onPoint(citation.ref);
-        }}
-        onBlur={() => {
-          return onPoint(null);
-        }}
-      >
-        {citation.ref.slice(1)}
-      </a>
-    </Tooltip>
   );
 }
 

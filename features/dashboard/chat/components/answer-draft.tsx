@@ -36,8 +36,12 @@ export default function AnswerDraft({ draft }: { draft: AskDraft }) {
       {draft.looking.length > 0 && <Lookups looking={draft.looking} answering={answering} />}
       {answering
         ? (
-          <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-surface px-3.5 py-3 text-sm leading-relaxed break-words">
+          <div className="flex w-full flex-col gap-3 text-sm leading-relaxed break-words">
             {answerBlocks(draftMarkdown(draft.answer)).map((block, index, blocks) => {
+              // a draft's citations are stripped, so it has no code blocks
+              if (block.type === 'code') {
+                return null;
+              }
               const text = (
                 <Markdown key={index} highlightCode streaming={index === blocks.length - 1} reveal>
                   {block.text}

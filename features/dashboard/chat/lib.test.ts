@@ -4,6 +4,7 @@ import {
   answerBlocks,
   answerMarkdown,
   draftMarkdown,
+  githubFileUrl,
   githubLineUrl,
   keptMentions,
   lineRange,
@@ -209,6 +210,12 @@ describe('code citations', () => {
     );
   });
 
+  it('link a whole file on GitHub at a commit', () => {
+    expect(githubFileUrl('acme/api', 'abc', 'docs/a b.md')).toBe(
+      'https://github.com/acme/api/blob/abc/docs/a%20b.md',
+    );
+  });
+
   it('label one line or a range', () => {
     expect(lineRange(citation('c1', 7, 7))).toBe('7');
     expect(lineRange(citation('c1'))).toBe('42–58');
@@ -284,6 +291,51 @@ describe('answerBlocks', () => {
 
   it('leaves plain quotes, unknown kinds and quotes inside code as Markdown', () => {
     const text = '> just a quote\n\n> [!DANGER]\n> no\n\n```\n> [!TIP]\n```';
+
+    expect(answerBlocks(text)).toEqual([{ type: 'markdown', text }]);
+  });
+
+  const cited = (text: string) => {
+    return answerBlocks(
+      answerMarkdown(message('assistant', text, [], [citation('c1'), citation('c2', 70, 75)])),
+    );
+  };
+
+  it('shows cited code after the paragraph citing it, in order, without the reference', () => {
+    expect(cited('It rejects tokens [c1], then logs in [c2].\n\nAfter.')).toEqual([
+      { type: 'markdown', text: 'It rejects tokens, then logs in.' },
+      { type: 'code', ref: 'c1' },
+      { type: 'code', ref: 'c2' },
+      { type: 'markdown', text: 'After.' },
+    ]);
+  });
+
+  it('shows code after the list item citing it, with its nested items, keeping the numbering', () => {
+    expect(cited('1. Checks [c1].\n   - nested\n2. Logs in.')).toEqual([
+      { type: 'markdown', text: '1. Checks.\n   - nested' },
+      { type: 'code', ref: 'c1' },
+      { type: 'markdown', text: '2. Logs in.' },
+    ]);
+  });
+
+  it('shows code once, where it is first cited', () => {
+    expect(cited('Checks [c1].\n\nAgain [c1].')).toEqual([
+      { type: 'markdown', text: 'Checks.' },
+      { type: 'code', ref: 'c1' },
+      { type: 'markdown', text: 'Again.' },
+    ]);
+  });
+
+  it('shows code cited in a callout after the callout', () => {
+    expect(cited('> [!NOTE]\n> Careful [c1].\n\nAfter.')).toEqual([
+      { type: 'callout', kind: 'note', text: 'Careful.' },
+      { type: 'code', ref: 'c1' },
+      { type: 'markdown', text: 'After.' },
+    ]);
+  });
+
+  it('leaves code chips inside fenced code alone', () => {
+    const text = '```\n`⟦c1⟧`\n```';
 
     expect(answerBlocks(text)).toEqual([{ type: 'markdown', text }]);
   });

@@ -162,16 +162,22 @@ export function safeImageSrc(src: unknown): string | null {
   }
 }
 
+/** Where a file is on GitHub, pinned to a commit. */
+export function githubFileUrl(repo: string, commitSha: string, path: string) {
+  return `https://github.com/${repo}/blob/${commitSha}/${
+    path.split('/').map(encodeURIComponent).join('/')
+  }`;
+}
+
 /** Where a citation's lines are on GitHub, pinned to the commit they were read at. */
 export function githubLineUrl(
   repo: string,
   citation: Pick<CodeCitation, 'commit_sha' | 'path' | 'start_line' | 'end_line'>,
 ) {
-  const path = citation.path.split('/').map(encodeURIComponent).join('/');
   const lines = citation.start_line === citation.end_line
     ? `L${citation.start_line}`
     : `L${citation.start_line}-L${citation.end_line}`;
-  return `https://github.com/${repo}/blob/${citation.commit_sha}/${path}#${lines}`;
+  return `${githubFileUrl(repo, citation.commit_sha, citation.path)}#${lines}`;
 }
 
 /** `42` or `42–58`, for a citation's label. */
@@ -242,17 +248,21 @@ export function draftMarkdown(text: string): string {
 const CALLOUT_KIND = { note: 'NOTE', tip: 'TIP', warning: 'WARNING' } as const;
 export type CalloutKind = keyof typeof CALLOUT_KIND;
 
-/** An answer cut into what renders as Markdown and what renders as a callout. */
-type AnswerBlock =
+/** An answer cut into what renders as Markdown, as a callout and as the code it cites. */
+export type AnswerBlock =
   | { type: 'markdown'; text: string }
-  | { type: 'callout'; kind: CalloutKind; text: string };
+  | { type: 'callout'; kind: CalloutKind; text: string }
+  | { type: 'code'; ref: string };
 
 const CALLOUT_START_RE = /^[ \t]*>[ \t]*\[!(NOTE|TIP|WARNING)\][ \t]*$/;
 const QUOTE_LINE_RE = /^[ \t]*>[ \t]?/;
+const CODE_CHIP_RE = /[ \t]*`⟦(c\d+)⟧`/g;
+const TOP_ITEM_RE = /^(?:[-*+]|\d+[.)])[ \t]/;
 
 /**
  * Markdown split around its callouts: a `> [!KIND]` line and the quote lines after it become one
- * callout, without the `> `. Quotes inside fenced code are code, not callouts.
+ * callout, without the `> `. Quotes inside fenced code are code, not callouts. A code citation leaves
+ * the text and shows after the paragraph, top-level list item or callout that first cites it.
  */
 export function answerBlocks(markdown: string): AnswerBlock[] {
   const kinds = new Map<string, CalloutKind>(
@@ -264,6 +274,9 @@ export function answerBlocks(markdown: string): AnswerBlock[] {
   let prose: string[] = [];
   let callout: { kind: CalloutKind; lines: string[] } | null = null;
   let fenced = false;
+  const seen = new Set<string>();
+  let cited: string[] = [];
+  let afterBlank = false;
   const flush = () => {
     if (callout) {
       blocks.push({ type: 'callout', kind: callout.kind, text: callout.lines.join('\n').trim() });
@@ -273,11 +286,30 @@ export function answerBlocks(markdown: string): AnswerBlock[] {
       blocks.push({ type: 'markdown', text: prose.join('\n').trim() });
     }
     prose = [];
+    for (const ref of cited) {
+      blocks.push({ type: 'code', ref });
+    }
+    cited = [];
   };
-  for (const line of markdown.split('\n')) {
-    if (line.trimStart().startsWith('```')) {
+  for (const raw of markdown.split('\n')) {
+    // indented lines belong to the item above, so its code waits until the item ends
+    if (
+      !fenced && !callout && cited.length > 0
+      && (TOP_ITEM_RE.test(raw) || (afterBlank && /^\S/.test(raw)))
+    ) {
+      flush();
+    }
+    afterBlank = !raw.trim();
+    if (raw.trimStart().startsWith('```')) {
       fenced = !fenced;
     }
+    const line = fenced ? raw : raw.replace(CODE_CHIP_RE, (_match, ref: string) => {
+      if (!seen.has(ref)) {
+        seen.add(ref);
+        cited.push(ref);
+      }
+      return '';
+    });
     const start = fenced ? null : CALLOUT_START_RE.exec(line);
     if (start) {
       flush();

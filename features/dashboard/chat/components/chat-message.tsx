@@ -163,6 +163,12 @@ function Answer({ message, repo }: ChatMessageProps) {
         img: ({ src, alt }: ComponentProps<'img'>) => {
           return <SafeImage src={src} alt={alt} />;
         },
+        h1: SectionLabel,
+        h2: SectionLabel,
+        h3: SectionLabel,
+        h4: SectionLabel,
+        h5: SectionLabel,
+        h6: SectionLabel,
         inlineCode: ({ children, ...props }: ComponentProps<'code'>) => {
           const ref = CHIP_RE.exec(String(children))?.[1] ?? null;
           const node = byRef.get(ref);
@@ -374,6 +380,11 @@ function CitationChip(
       </a>
     </Tooltip>
   );
+}
+
+/** A heading in an answer reads as a bold label: the panel is too narrow for heading sizes. */
+function SectionLabel({ children }: { children?: ReactNode }) {
+  return <p className="font-semibold">{children}</p>;
 }
 
 const RECORD_ICONS = { work_item: Ticket, document: FileText, decision: Scales };

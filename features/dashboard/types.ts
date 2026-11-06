@@ -31,7 +31,11 @@ export type ViewNode = {
   label: NodeLabel;
   /** finer than the label: `module` / `external` / `routes`, or a symbol's `function` / `class` */
   kind: string | null;
+  /** a file's path, or the file a symbol is defined in */
   path: string | null;
+  /** where a symbol sits in its file */
+  start_line: number | null;
+  end_line: number | null;
   depth: number;
   file_count: number;
   definition_count: number;

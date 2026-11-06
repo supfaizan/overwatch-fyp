@@ -12,6 +12,8 @@ const node = (id: string, label: ViewNode['label'], parent: string | null): View
     label,
     kind: null,
     path: null,
+    start_line: null,
+    end_line: null,
     depth: 0,
     file_count: 0,
     definition_count: 0,

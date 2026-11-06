@@ -61,6 +61,13 @@ Data flow: `hooks.ts useGraphView` fetches the raw `GraphView` (React Query, key
 - `FitToContent` fits to where nodes are heading (not mid-glide positions), once per set of nodes, so it never yanks a viewport the user moved.
 - Switching Graph ↔ Tree re-lays out without a glide.
 
+### Reading a file (both views)
+
+- Clicking a File node selects it and opens the whole file in `chat/components/source-viewer.tsx`, at the indexed commit (`graph_version`). Clicking a Symbol opens its file with its lines marked; the API sends `path`, `start_line` and `end_line` for symbols.
+- Resting on such a node for `PREFETCH_DWELL_MS` prefetches the file (`usePrefetchSource`), sharing the chat's per-commit cache.
+- Double-click no longer opens files or symbols on the diagram (a click reads them); their caret still does. Folders still open on double-click.
+- Known: a habitual double-click on a file opens the viewer and the second click lands on its overlay. Keyboard Enter on a node only selects (React Flow never calls `onNodeClick`).
+
 ## Practices to keep
 
 - Follow `AGENTS.md`: feature-owned code stays in `features/dashboard`; no cross-feature imports; Tailwind tokens from `app/globals.css` (colours here use `--color-accent-*`, `--color-success`, `--color-primary`, `--color-muted`); no new dependencies without approval.
@@ -92,7 +99,7 @@ Data flow: `hooks.ts useGraphView` fetches the raw `GraphView` (React Query, key
 
 - **One model call.** A flow question's answer is the walkthrough. The prompt (`overwatch-BE/app/query/prompts/answer.md`, loaded by `app/query/service.py` with `$name` placeholders filled from constants) asks for a short summary, a `STEPS:` line, then `1. [n4] what happens there [s3:42-58]` lines. `app/query/grounding.py` `_split_steps` cuts them out after the usual reference and code checks: a step's node is its first `[nX]`, its code the first `[cN]`; a line without a known node joins the step before; consecutive steps on one node merge; fewer than 2 steps leaves the text as a normal list (minus the bare `STEPS:` line); at most 12.
 - **Stored on the message** as `steps: [{ref, node_id, text, citation_ref}]` (Mongo, no migration; older messages load with `[]`). Follow-ups see the steps as names (`steps_markdown` + `plain_text`). Code citations are no longer capped (a citation still shows at most 60 lines).
-- **Frontend:** `chat/components/chat-message.tsx` renders the summary, then `Steps` (numbered cards: node name, text, the step's code card) and the remaining "Cited code". The walk in `store.ts` carries `answerId`, so the card for the step on the canvas is lit and scrolled into view; clicking a card jumps there and pauses (`startWalk(..., answerId, cursor)` when another answer's walk is showing). `chat/index.tsx` auto-plays a new answer's steps once; "Walk through" replays with no network call. `hooks.ts useWalkthrough(repo).play(answerId, nodeIds, cursor?)` is synchronous.
+- **Frontend:** `chat/components/chat-message.tsx` renders the summary, then `Steps` (numbered cards: node name, text, the step's code card); code cards sit after the paragraph or bullet that first cites them (`answerBlocks` in `chat/lib.ts`), with no numbers or trailing list. The walk in `store.ts` carries `answerId`, so the card for the step on the canvas is lit and scrolled into view; clicking a card jumps there and pauses (`startWalk(..., answerId, cursor)` when another answer's walk is showing). `chat/index.tsx` auto-plays a new answer's steps once; "Walk through" replays with no network call. `hooks.ts useWalkthrough(repo).play(answerId, nodeIds, cursor?)` is synchronous.
 - **Each step** goes through the normal focus path with `follow: true`: open the folders holding it (unless that passes `max_expanded`; then a closed folder stands in), select it, and pan only if it's off the middle or zoomed out past `FOLLOW_ZOOM`. The player waits for `focusRequest` to settle before moving on.
 - **Look:** walked steps full strength, upcoming at half, everything else receded; the current step has the selection ring and a filled badge. The path follows relationship lines or a dashed line where there's none.
 - **Stopping:** opening/closing a folder, selecting or clicking the canvas pauses; Esc or × ends; switching repo clears it.

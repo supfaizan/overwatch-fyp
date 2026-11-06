@@ -1,7 +1,13 @@
 'use client';
 
 import { ApiError } from '@/shared/api/envelope';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import * as chatApi from './api';
@@ -177,9 +183,8 @@ export const useMentionCandidates = (repo: string, term: string | null) => {
   });
 };
 
-/** A cited file as of the commit it was cited at; a commit never changes, so it's fetched once. */
-export const useSource = (repo: string, path: string, commitSha: string) => {
-  return useQuery({
+const sourceQuery = (repo: string, path: string, commitSha: string) => {
+  return queryOptions({
     queryKey: keys.source(repo, path, commitSha),
     queryFn: () => {
       return chatApi.getSource(repo, path, commitSha);
@@ -187,6 +192,22 @@ export const useSource = (repo: string, path: string, commitSha: string) => {
     staleTime: Infinity,
     retry: false,
   });
+};
+
+/** A file as of a commit; a commit never changes, so it's fetched once. */
+export const useSource = (repo: string, path: string, commitSha: string) => {
+  return useQuery(sourceQuery(repo, path, commitSha));
+};
+
+/** Starts fetching a file before it's opened, e.g. while its node is pointed at. */
+export const usePrefetchSource = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (repo: string, path: string, commitSha: string) => {
+      void queryClient.prefetchQuery(sourceQuery(repo, path, commitSha));
+    },
+    [queryClient],
+  );
 };
 
 /** Create what an answer drafted, with the asker's edits; the conversation is read again to show the result. */

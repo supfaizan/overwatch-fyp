@@ -22,7 +22,9 @@ import Spinner from '@/shared/components/spinner';
 import { isRunning, JOB_STATUS } from '@/shared/lib/job-status';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { type ReactNode, useEffect, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import SourceViewer from '../chat/components/source-viewer';
+import { usePrefetchSource } from '../chat/hooks';
 import { useGraphView } from '../hooks';
 import { edgeStyle, FOCUS_STROKE, TREE_STROKE } from '../lib/appearance';
 import { DIAGRAM, type Diagram, startsOf, toCanvas } from '../lib/canvas';
@@ -59,6 +61,26 @@ const DENSE = 60;
 /** relationships at rest are present but quiet, so the folder tree reads first; quieter in the web, where they cross more */
 const AT_REST_OPACITY = { [DIAGRAM.tree]: 0.22, [DIAGRAM.graph]: 0.12 };
 
+/** how long the pointer rests on a file before it's fetched, so sweeping across the diagram fetches nothing */
+const PREFETCH_DWELL_MS = 150;
+
+type Source = { path: string; lines?: { start: number; end: number } };
+
+/** What clicking a node opens to read: a file whole, or a symbol's file at its lines. */
+function sourceOf(node: CanvasNode): Source | null {
+  if (node.type !== 'graphNode' || !node.data.path) {
+    return null;
+  }
+  const { label, path, start_line, end_line } = node.data;
+  if (label === 'File') {
+    return { path };
+  }
+  if (label === 'Symbol' && start_line !== null && end_line !== null) {
+    return { path, lines: { start: start_line, end: end_line } };
+  }
+  return null;
+}
+
 export default function DiagramCanvas({ repo, diagram }: { repo: string; diagram: Diagram }) {
   const { data: view, isPending, isError, error, refetch, isPlaceholderData } = useGraphView(repo);
   const hovered = useViewStore((state) => {
@@ -75,6 +97,11 @@ export default function DiagramCanvas({ repo, diagram }: { repo: string; diagram
   });
   const { open, hover, select } = useViewStore.getState();
   const { resolvedTheme } = useTheme();
+  const prefetchSource = usePrefetchSource();
+  const dwell = useRef(0);
+  // kept while it closes, so the dialog can animate out
+  const [reading, setReading] = useState<Source & { open: boolean } | null>(null);
+  const commit = view?.graph_version ?? null;
 
   const { getNodes } = useReactFlow<CanvasNode, Edge>();
   const drawnAs = useRef(diagram);
@@ -220,6 +247,7 @@ export default function DiagramCanvas({ repo, diagram }: { repo: string; diagram
   useEffect(() => {
     return () => {
       cancelAnimationFrame(glide.current);
+      window.clearTimeout(dwell.current);
     };
   }, []);
 
@@ -291,17 +319,33 @@ export default function DiagramCanvas({ repo, diagram }: { repo: string; diagram
           nodeTypes={nodeTypes[diagram]}
           edgeTypes={edgeTypes}
           onNodeClick={(_, node) => {
-            return node.type === 'graphNode' && select(node.id);
+            if (node.type !== 'graphNode') {
+              return;
+            }
+            select(node.id);
+            const source = sourceOf(node);
+            if (source && commit) {
+              setReading({ ...source, open: true });
+            }
           }}
+          // a click already opens what can be read; its caret still opens it on the diagram
           onNodeDoubleClick={(_, node) => {
-            return node.type === 'graphNode' && node.data.expandable && !node.data.expanded
-              && open(node.id);
+            return node.type === 'graphNode' && !sourceOf(node) && node.data.expandable
+              && !node.data.expanded && open(node.id);
           }}
           onNodeMouseEnter={(_, node) => {
-            return hover(node.id);
+            hover(node.id);
+            window.clearTimeout(dwell.current);
+            const source = sourceOf(node);
+            if (source && commit) {
+              dwell.current = window.setTimeout(() => {
+                prefetchSource(repo, source.path, commit);
+              }, PREFETCH_DWELL_MS);
+            }
           }}
           onNodeMouseLeave={() => {
-            return hover(null);
+            window.clearTimeout(dwell.current);
+            hover(null);
           }}
           // a node that moved out from under the pointer (a folder opening) never hears it leave; this
           // also fires over nodes, which sit inside the pane, so only the bare pane counts
@@ -341,6 +385,18 @@ export default function DiagramCanvas({ repo, diagram }: { repo: string; diagram
       </WalkMarksContext>
       <EdgeLegend view={data.view} edges={data.edges} focused={focusId !== null} />
       {walk && <WalkPlayer repo={repo} />}
+      {reading && commit && (
+        <SourceViewer
+          repo={repo}
+          path={reading.path}
+          commitSha={commit}
+          lines={reading.lines}
+          open={reading.open}
+          onOpenChange={(isOpen) => {
+            setReading({ ...reading, open: isOpen });
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ const keys = {
     return ['usage', days, timeZone] as const;
   },
   usageLimits: ['usage', 'limits'] as const,
+  slackDigest: [...queryKeys.connections, 'slack', 'digest'] as const,
 };
 const showError = (error: ApiError) => {
   return toast.error(error.message);
@@ -197,4 +198,19 @@ export const useResendInvite = () => {
       return `Invite sent again to ${invite.email}.`;
     },
   );
+};
+
+export const useSlackDigest = () => {
+  return useQuery({ queryKey: keys.slackDigest, queryFn: settingsApi.getSlackDigest });
+};
+
+export const useUpdateSlackDigest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.updateSlackDigest,
+    onSuccess: (digest) => {
+      queryClient.setQueryData(keys.slackDigest, digest);
+    },
+    onError: showError,
+  });
 };

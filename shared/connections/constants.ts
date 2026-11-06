@@ -1,9 +1,13 @@
 // mirrors the backend connectors (app/connectors)
 
-export const PROVIDER = { jira: 'jira', confluence: 'confluence' } as const;
+export const PROVIDER = { jira: 'jira', confluence: 'confluence', slack: 'slack' } as const;
 
-/** What a connector mirrors: tracker tickets (board) or pages (docs). */
-export const CONNECTOR_CATEGORY = { workItems: 'work_items', documents: 'documents' } as const;
+/** What a connector brings in: tracker tickets (board), pages (docs), or chat it listens to. */
+export const CONNECTOR_CATEGORY = {
+  workItems: 'work_items',
+  documents: 'documents',
+  chat: 'chat',
+} as const;
 export type ConnectorCategory = (typeof CONNECTOR_CATEGORY)[keyof typeof CONNECTOR_CATEGORY];
 
 /** A tracker connection's state, as `GET /connections` reports it. */

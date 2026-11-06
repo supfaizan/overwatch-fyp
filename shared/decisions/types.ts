@@ -12,7 +12,12 @@ export type DecisionStatus = (typeof DECISION_STATUS)[keyof typeof DECISION_STAT
 export const DECISION_ORIGIN = { manual: 'manual', suggested: 'suggested' } as const;
 export type DecisionOrigin = (typeof DECISION_ORIGIN)[keyof typeof DECISION_ORIGIN];
 
-export const EVIDENCE_KIND = { workItem: 'work_item', document: 'document' } as const;
+/** What evidence quotes: a board item, a docs page, or a chat conversation (a Slack thread, opened in Slack). */
+export const EVIDENCE_KIND = {
+  workItem: 'work_item',
+  document: 'document',
+  chatThread: 'chat_thread',
+} as const;
 export type EvidenceKind = (typeof EVIDENCE_KIND)[keyof typeof EVIDENCE_KIND];
 
 export const EVIDENCE_STANCE = { supports: 'supports', contradicts: 'contradicts' } as const;

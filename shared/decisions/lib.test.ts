@@ -29,6 +29,10 @@ describe('evidenceHref', () => {
     expect(evidenceHref(evidence({ kind: 'work_item', board_id: 'b1', item_key: 'KAN-4' })))
       .toBe('/board?board=b1&item=KAN-4');
   });
+
+  it('has no in-app page for a chat conversation', () => {
+    expect(evidenceHref(evidence({ kind: 'chat_thread' }))).toBeNull();
+  });
 });
 
 describe('matchLabel', () => {

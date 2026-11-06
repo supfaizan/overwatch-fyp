@@ -119,7 +119,8 @@ export default function BoardColumn(
               list.current = node;
             }}
             className={cn(
-              'flex max-h-176 min-h-24 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 transition-colors',
+              // pb-3: the cards' 4px chrome edge takes no layout space, so the last one needs room below it
+              'flex max-h-176 min-h-24 flex-col gap-2 overflow-y-auto rounded-lg bg-fill-hover p-2 pb-3 transition-colors',
               isOver && 'bg-fill-active ring-2 ring-primary',
               hint?.allowed === false && 'opacity-40',
             )}

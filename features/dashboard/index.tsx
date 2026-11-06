@@ -147,17 +147,18 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-full flex-col gap-2">
-      <header className="flex items-center gap-2">
-        <h1 className="flex-1 truncate font-mono text-sm font-medium">{repoName}</h1>
+      {/* top-aligned: the Ask button's raised edge hangs below its box, level with the switch's bottom */}
+      <header className="flex items-start gap-2">
+        <h1 className="flex-1 self-center truncate font-mono text-sm font-medium">{repoName}</h1>
         <SegmentedButton
           aria-label="Diagram"
-          size="sm"
           options={DIAGRAM_OPTIONS}
           value={diagram}
           onValueChange={setDiagram}
         />
         <Button
           size="sm"
+          className="text-sm"
           variant={chatOpen ? 'secondary' : 'primary'}
           aria-pressed={chatOpen}
           onClick={() => {

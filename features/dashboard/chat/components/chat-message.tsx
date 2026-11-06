@@ -4,7 +4,8 @@ import Button from '@/shared/components/button';
 import Markdown, { InlineCode } from '@/shared/components/markdown';
 import Tooltip from '@/shared/components/tooltip';
 import { cn } from '@/shared/lib/cn';
-import { ChatCircleDots, Info, Path } from '@phosphor-icons/react/ssr';
+import { ChatCircleDots, FileText, Info, Path, Scales, Ticket } from '@phosphor-icons/react/ssr';
+import Link from 'next/link';
 import { type ComponentProps, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useWalkthrough } from '../../hooks';
 import { ancestorsOf } from '../../lib/ancestors';
@@ -19,10 +20,16 @@ import {
   questionSegments,
   safeImageSrc,
 } from '../lib';
-import type { ChatMessage as Message, CodeCitation as Citation, NodeRef } from '../types';
+import type {
+  ChatMessage as Message,
+  CodeCitation as Citation,
+  NodeRef,
+  RecordRef,
+} from '../types';
 import Callout from './callout';
 import CodeCitation from './code-citation';
 import FollowUps from './follow-ups';
+import ProposalCard from './proposal-card';
 
 type ChatMessageProps = { message: Message; repo: string };
 
@@ -58,10 +65,24 @@ export default function ChatMessage(
         : <Answer message={message} repo={repo} />}
       {!message.grounded && !fromUser && (
         <span className="flex items-center gap-1 px-1 text-xs text-muted">
-          <Info aria-hidden /> Answers only say what the indexed graph shows.
+          <Info aria-hidden /> Answers only say what the indexed graph and the workspace show.
         </span>
       )}
       {message.steps.length > 0 && <WalkThrough message={message} repo={repo} />}
+      {message.proposals.map((proposal) => {
+        return <ProposalCard key={proposal.id} proposal={proposal} />;
+      })}
+      {message.actions.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {message.actions.map((action) => {
+            return (
+              <Button key={action.kind} size="sm" variant="secondary" asChild>
+                <Link href={action.href}>{action.label}</Link>
+              </Button>
+            );
+          })}
+        </div>
+      )}
       {onAsk && message.follow_ups.length > 0 && (
         <FollowUps questions={message.follow_ups} onPick={onAsk} disabled={pending} />
       )}
@@ -126,6 +147,11 @@ function Answer({ message, repo }: ChatMessageProps) {
       return [citation.ref, citation];
     }));
   }, [message]);
+  const records = useMemo(() => {
+    return new Map(message.records.map((record) => {
+      return [record.ref, record];
+    }));
+  }, [message]);
   // the citation whose chip or card is pointed at, so the pair lights up together
   const [active, setActive] = useState<string | null>(null);
   const components = useMemo(
@@ -153,11 +179,15 @@ function Answer({ message, repo }: ChatMessageProps) {
               />
             );
           }
+          const record = ref ? records.get(ref) : undefined;
+          if (record) {
+            return <RecordChip record={record} />;
+          }
           return <InlineCode {...props}>{children}</InlineCode>;
         },
       };
     },
-    [byRef, citations, message.id, repo],
+    [byRef, citations, records, message.id, repo],
   );
 
   // code a step shows sits in that step, not again below
@@ -342,6 +372,24 @@ function CitationChip(
       >
         {citation.ref.slice(1)}
       </a>
+    </Tooltip>
+  );
+}
+
+const RECORD_ICONS = { work_item: Ticket, document: FileText, decision: Scales };
+
+/** A ticket, page or decision an answer cites; opens it where the app shows it. */
+function RecordChip({ record }: { record: RecordRef }) {
+  const Icon = RECORD_ICONS[record.kind];
+  return (
+    <Tooltip content={record.status ? `${record.title} · ${record.status}` : record.title}>
+      <Link
+        href={record.href}
+        className="inline-flex items-center gap-1 rounded px-1 font-medium text-primary no-underline transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        <Icon className="size-3.5 shrink-0" aria-hidden />
+        {record.key ?? record.title}
+      </Link>
     </Tooltip>
   );
 }

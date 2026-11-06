@@ -4,10 +4,10 @@ import type { AskResult, ChatMessage, CodeCitation, Mention, NodeRef } from './t
 export type Segment = { type: 'text'; text: string } | { type: 'node'; node: NodeRef };
 
 /**
- * A cited node (`n4`) or code citation (`c1`) in an answer's markdown becomes an inline code span
- * holding this, which renders as a chip.
+ * A cited node (`n4`), code citation (`c1`) or workspace record (`r1`) in an answer's markdown becomes
+ * an inline code span holding this, which renders as a chip.
  */
-export const CHIP_RE = /^⟦([nc]\d+)⟧$/;
+export const CHIP_RE = /^⟦([ncr]\d+)⟧$/;
 const chip = (ref: string) => {
   return `\`⟦${ref}⟧\``;
 };
@@ -15,10 +15,10 @@ const chip = (ref: string) => {
 const FENCE_RE = /(```[\s\S]*?(?:```|$))/;
 
 /**
- * Markdown from an answer (its text, or one of its steps) with its `[nX]` references and `[cN]` code
- * citations turned into chips. The model writes `login [n4]` (or `` `login` [n4] ``, `**login** [n4]`);
- * the name already there becomes the chip, so it reads once. A code citation stays where it is, as a
- * chip of its own.
+ * Markdown from an answer (its text, or one of its steps) with its `[nX]` references, `[cN]` code
+ * citations and `[rN]` records turned into chips. The model writes `login [n4]` or `DEV-12 [r1]` (or
+ * `` `login` [n4] ``, `**login** [n4]`); the name already there becomes the chip, so it reads once. A
+ * code citation stays where it is, as a chip of its own.
  */
 export function answerMarkdown(message: ChatMessage, text = message.text): string {
   const names = new Map<string, string>(
@@ -28,6 +28,9 @@ export function answerMarkdown(message: ChatMessage, text = message.text): strin
   );
   for (const citation of message.citations) {
     names.set(citation.ref, '');
+  }
+  for (const record of message.records) {
+    names.set(record.ref, record.key ?? record.title);
   }
   return text
     .split(FENCE_RE)
@@ -40,7 +43,7 @@ export function answerMarkdown(message: ChatMessage, text = message.text): strin
 function chipRefs(text: string, names: Map<string, string>): string {
   let out = '';
   let last = 0;
-  for (const match of text.matchAll(/[ \t]?\[([nc]\d+)\]/g)) {
+  for (const match of text.matchAll(/[ \t]?\[([ncr]\d+)\]/g)) {
     let before = out + text.slice(last, match.index);
     last = match.index + match[0].length;
     const name = names.get(match[1]);

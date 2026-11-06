@@ -31,8 +31,14 @@ const FOLLOW_WITHIN_PX = 120;
 /** The backend's limit on open folders sent with a question. */
 const MAX_OPEN_FOLDERS = 10;
 
-/** Questions about one repository, answered from its graph; a reference in a message selects that node. */
-export default function ChatPanel({ repo, onClose }: { repo: string; onClose: () => void }) {
+/**
+ * Questions about one repository and the workspace, answered from its graph and tickets; a reference
+ * in a message selects that node. With no `repo` it answers from the workspace alone. No `onClose`,
+ * no close button.
+ */
+export default function ChatPanel(
+  { repo, onClose }: { repo: string | null; onClose?: () => void },
+) {
   const userId = useSession((state) => {
     return state.user?.id ?? '';
   });
@@ -49,7 +55,8 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
   const conversations = useConversations(repo);
   const conversation = useConversation(conversationId);
   const ask = useAskStream();
-  const { play } = useWalkthrough(repo);
+  // without a repo an answer has no steps, so nothing is walked through
+  const { play } = useWalkthrough(repo ?? '');
   const remove = useDeleteConversation(repo);
   const selected = useViewStore((state) => {
     return state.selected;
@@ -57,6 +64,7 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
   const end = useRef<HTMLDivElement>(null);
 
   const messages = conversation.data?.messages ?? [];
+  const title = repo ? 'Ask about this repository' : 'Ask about this workspace';
   const asking = ask.draft;
 
   const scroller = useRef<HTMLDivElement>(null);
@@ -100,7 +108,7 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
   const send = async (question: string, mentionedNodeIds: string[]) => {
     try {
       const result = await ask.ask({
-        repo_full_name: repo,
+        repo_full_name: repo ?? undefined,
         question,
         conversation_id: conversationId ?? undefined,
         focused_node_id: selected ?? undefined,
@@ -144,12 +152,12 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
 
   return (
     <aside
-      aria-label="Ask about this repository"
+      aria-label={title}
       className="flex h-full min-h-0 flex-col border-l border-border bg-background"
     >
       <header className="flex items-center gap-1 border-b border-border px-3 py-2">
         <h2 className="flex-1 truncate text-sm font-medium">
-          {conversation.data?.title ?? 'Ask about this repository'}
+          {conversation.data?.title ?? title}
         </h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -211,9 +219,11 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
         >
           <Plus />
         </Button>
-        <Button variant="tertiary" size="sm" iconOnly aria-label="Close" onClick={onClose}>
-          <X />
-        </Button>
+        {onClose && (
+          <Button variant="tertiary" size="sm" iconOnly aria-label="Close" onClick={onClose}>
+            <X />
+          </Button>
+        )}
       </header>
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
@@ -233,8 +243,9 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted">
               <ChatCircleDots className="size-6" aria-hidden />
               <p className="max-w-64">
-                Ask how the code fits together, like “What does the api module depend on?”. Answers
-                come from the indexed graph only.
+                {repo
+                  ? 'Ask how the code fits together, like “What does the api module depend on?”, or about its tickets. Answers come from the indexed graph and the workspace only.'
+                  : 'Ask about the tickets on your boards, like “What’s left in the current sprint?”. Connect a repository to ask about its code too.'}
               </p>
             </div>
           )
@@ -245,7 +256,8 @@ export default function ChatPanel({ repo, onClose }: { repo: string; onClose: ()
                   <ChatMessage
                     key={message.id}
                     message={message}
-                    repo={repo}
+                    // a conversation without a repo cites no code or nodes
+                    repo={repo ?? ''}
                     onAsk={message.id === latestAnswer ? askNext : undefined}
                     pending={ask.pending}
                   />

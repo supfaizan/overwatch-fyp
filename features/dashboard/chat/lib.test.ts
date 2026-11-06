@@ -12,7 +12,7 @@ import {
   questionSegments,
   safeImageSrc,
 } from './lib';
-import type { ChatMessage, CodeCitation, NodeRef } from './types';
+import type { ChatMessage, CodeCitation, NodeRef, RecordRef } from './types';
 
 const node = (name: string, ref: string | null = null): NodeRef => {
   return {
@@ -27,6 +27,7 @@ const message = (
   text: string,
   nodes: NodeRef[],
   citations: CodeCitation[] = [],
+  records: RecordRef[] = [],
 ): ChatMessage => {
   return {
     id: '1',
@@ -37,6 +38,9 @@ const message = (
     steps: [],
     follow_ups: [],
     ask: null,
+    records,
+    actions: [],
+    proposals: [],
     grounded: true,
     created_at: '',
   };
@@ -63,6 +67,24 @@ describe('answerMarkdown', () => {
     expect(answerMarkdown(answer, 'hands off to verify [n2] [c1], not [n9]')).toBe(
       'hands off to `⟦n2⟧` `⟦c1⟧`, not',
     );
+  });
+
+  it('chips a cited ticket in place of its key', () => {
+    const ticket: RecordRef = {
+      ref: 'r1',
+      kind: 'work_item',
+      id: 'w1',
+      title: 'Rate limit login',
+      key: 'DEV-12',
+      source: 'jira',
+      status: 'In Progress',
+      href: '/board?board=b1&item=DEV-12',
+    };
+
+    expect(
+      answerMarkdown(message('assistant', 'DEV-12 [r1] does, [r2] is gone.', [], [], [ticket])),
+    )
+      .toBe('`⟦r1⟧` does, is gone.');
   });
 
   it('turns references into chips, taking the name written before them', () => {

@@ -1,4 +1,4 @@
-// mirrors the backend schemas (app/onboarding, app/connectors, app/workspaces)
+// mirrors the backend schemas (app/onboarding, app/connectors, app/workspaces, app/slack)
 
 import type {
   ConnectionStatus as TrackerStatus,
@@ -105,3 +105,12 @@ export const USAGE_LIMIT_KIND = {
 export type UsageLimitKind = (typeof USAGE_LIMIT_KIND)[keyof typeof USAGE_LIMIT_KIND];
 
 export type UsageLimit = { kind: UsageLimitKind; used: number; limit: number; resets_at: string };
+
+/** When the Slack bot posts its daily digest of unsettled questions and decisions found. */
+export type SlackDigest = {
+  enabled: boolean;
+  /** 24-hour time of day, e.g. "10:00" */
+  time: string;
+  /** IANA zone; null until an admin saves one, and the digest runs in UTC meanwhile */
+  time_zone: string | null;
+};

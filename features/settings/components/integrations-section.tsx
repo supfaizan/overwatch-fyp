@@ -44,6 +44,7 @@ import {
 } from '../hooks';
 import type { Connection, Target } from '../types';
 import { SettingsSection } from './settings-layout';
+import SlackDigest from './slack-digest';
 import { ConnectionStatusIcon, SyncStatusIcon } from './status-icon';
 
 // what a tracker's OAuth callback reports, e.g. ?jira=connected
@@ -268,6 +269,7 @@ const CATEGORY_COPY: Record<
     label: 'Chat',
     target: 'channel',
     syncs: false,
+    outdated: 'to post a daily digest in its channels',
     disconnect: 'We stop reading its channels. You can reconnect at any time.',
     targetLabel: (target) => {
       return target.name ?? target.key;
@@ -309,6 +311,9 @@ function ConnectorCard({ connection }: { connection: Connection }) {
   const { provider, name, category, status, can_write, outdated, external_account, targets } =
     connection;
   const copy = CATEGORY_COPY[category];
+  // a grant that can't write (when this connector writes at all), else one older than what it now does
+  const reconnectReason = (!can_write && copy.reconnect) || (outdated && copy.outdated)
+    || undefined;
   const connect = useStartAuthorization();
   const disconnect = useDisconnect(name);
   const sync = useSyncNow(name);
@@ -383,7 +388,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           </Button>
         ))}
     >
-      {isAdmin && connected && (!can_write || outdated) && copy.reconnect && (
+      {isAdmin && connected && reconnectReason && (
         <div className="border-t border-border p-4">
           <Banner
             type="warning"
@@ -399,7 +404,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
               </Button>
             }
           >
-            Reconnect {name} {can_write ? copy.outdated : copy.reconnect}.
+            Reconnect {name} {reconnectReason}.
           </Banner>
         </div>
       )}
@@ -444,6 +449,7 @@ function ConnectorCard({ connection }: { connection: Connection }) {
           )}
         </ItemList>
       )}
+      {isAdmin && connected && category === CONNECTOR_CATEGORY.chat && <SlackDigest />}
     </IntegrationCard>
   );
 }

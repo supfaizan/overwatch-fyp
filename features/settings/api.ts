@@ -7,7 +7,7 @@ import type {
   Invite,
   InviteCreated,
   InviteRole,
-  SlackDigest,
+  SlackDigestSettings,
   SyncTarget,
   Target,
   UsageLimit,
@@ -103,9 +103,9 @@ export const getUsageLimits = () => {
 };
 
 export const getSlackDigest = () => {
-  return api.get<SlackDigest>('/slack/digest');
+  return api.get<SlackDigestSettings>('/slack/digest');
 };
 
-export const updateSlackDigest = (changes: Partial<SlackDigest>) => {
-  return api.patch<SlackDigest>('/slack/digest', changes);
+export const updateSlackDigest = (changes: Partial<SlackDigestSettings>) => {
+  return api.patch<SlackDigestSettings>('/slack/digest', changes);
 };

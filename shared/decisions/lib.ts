@@ -69,8 +69,8 @@ export function localToday(): string {
   return new Date().toLocaleDateString('en-CA');
 }
 
-/** Where a piece of evidence opens in the app: its page, or its item on the board it's on. */
-/** Where the app opens the quoted source; null for a chat conversation, which only opens at its source. */
+/** Where a piece of evidence opens in the app: its page, or its item on the board it's on; null for a chat
+ * conversation, which only opens at its source. */
 export function evidenceHref(evidence: Evidence): string | null {
   if (evidence.kind === EVIDENCE_KIND.document) {
     return `/documents/${evidence.ref_id}`;

@@ -270,7 +270,8 @@ const CATEGORY_COPY: Record<
     target: 'channel',
     syncs: false,
     outdated: 'to post a daily digest in its channels',
-    disconnect: 'We stop reading its channels. You can reconnect at any time.',
+    disconnect:
+      'We stop reading its channels and delete the chat we were holding, except conversations a decision quotes. You can reconnect at any time.',
     targetLabel: (target) => {
       return target.name ?? target.key;
     },
@@ -496,8 +497,8 @@ function AddTarget(
         <SelectContent>
           {options.map((option) => {
             return (
-              <SelectItem key={option.key} value={option.key}>
-                {label(option)}
+              <SelectItem key={option.key} value={option.key} disabled={Boolean(option.hint)}>
+                {option.hint ? `${label(option)} (${option.hint})` : label(option)}
               </SelectItem>
             );
           })}

@@ -21,7 +21,8 @@ export type SyncTarget = {
 };
 
 /** A project (list, board) or docs space an account can sync; `id` is the key people know it by. */
-export type Target = { key: string; name: string | null; id: string | null };
+/** `hint` says why it can't be added yet, e.g. a Slack channel the app hasn't been invited to. */
+export type Target = { key: string; name: string | null; id: string | null; hint?: string | null };
 
 /** A connector (Jira, Confluence, ...) and this workspace's state for it. */
 export type Connection = {
@@ -107,7 +108,7 @@ export type UsageLimitKind = (typeof USAGE_LIMIT_KIND)[keyof typeof USAGE_LIMIT_
 export type UsageLimit = { kind: UsageLimitKind; used: number; limit: number; resets_at: string };
 
 /** When the Slack bot posts its daily digest of unsettled questions and decisions found. */
-export type SlackDigest = {
+export type SlackDigestSettings = {
   enabled: boolean;
   /** 24-hour time of day, e.g. "10:00" */
   time: string;

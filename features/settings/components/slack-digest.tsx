@@ -1,5 +1,7 @@
 'use client';
 
+import Banner from '@/shared/components/banner';
+import Button from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/shared/components/select';
 import Skeleton from '@/shared/components/skeleton';
@@ -15,7 +17,7 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
  * - Until a time zone is saved the digest runs in UTC, so the first admin to open this saves theirs.
  */
 export default function SlackDigest() {
-  const digest = useSlackDigest(true);
+  const digest = useSlackDigest();
   const change = useUpdateSlackDigest();
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zones = useMemo(() => {
@@ -34,6 +36,27 @@ export default function SlackDigest() {
     }
   }, [digest.data, savedZone, browserZone, mutate]);
 
+  if (digest.isError) {
+    return (
+      <div className="border-t border-border p-4">
+        <Banner
+          type="error"
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                return digest.refetch();
+              }}
+            >
+              Retry
+            </Button>
+          }
+        >
+          Couldn't load the daily digest settings.
+        </Banner>
+      </div>
+    );
+  }
   if (!digest.data) {
     return (
       <div className="border-t border-border p-4">
@@ -65,6 +88,7 @@ export default function SlackDigest() {
         <span className="font-medium">Posted at</span>
         <div className="flex items-center gap-2">
           <Input
+            key={time}
             type="time"
             size="sm"
             aria-label="Digest time"

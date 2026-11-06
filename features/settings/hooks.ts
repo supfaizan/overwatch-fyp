@@ -200,8 +200,8 @@ export const useResendInvite = () => {
   );
 };
 
-export const useSlackDigest = (enabled: boolean) => {
-  return useQuery({ queryKey: keys.slackDigest, queryFn: settingsApi.getSlackDigest, enabled });
+export const useSlackDigest = () => {
+  return useQuery({ queryKey: keys.slackDigest, queryFn: settingsApi.getSlackDigest });
 };
 
 export const useUpdateSlackDigest = () => {

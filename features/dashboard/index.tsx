@@ -29,7 +29,8 @@ const DIAGRAM_OPTIONS = [
 
 /**
  * The architecture dashboard for `?repo=owner/name`, else the last repo used, else the first with a graph.
- * `?chat=open` opens the chat beside it (⌘K links here); `?diagram=tree` draws the folder tree, not the web.
+ * `?chat=open` opens the chat beside it (⌘K links here), or on its own while no repo is connected;
+ * `?diagram=tree` draws the folder tree, not the web.
  */
 export default function Dashboard() {
   const router = useRouter();
@@ -82,9 +83,11 @@ export default function Dashboard() {
     if (!repos.data) {
       return;
     }
-    // nothing to show yet: onboarding knows which step comes next
+    // nothing to show yet: onboarding knows which step comes next, unless it's the chat that was asked for
     if (!repoName) {
-      router.replace('/onboarding');
+      if (!chatOpen) {
+        router.replace('/onboarding');
+      }
       return;
     }
     saveLastRepo(userId, workspaceId, repoName);
@@ -94,7 +97,17 @@ export default function Dashboard() {
       params.set('repo', repoName);
       router.replace(`${pathname}?${params}`);
     }
-  }, [repos.data, repoName, requested, searchParams, pathname, userId, workspaceId, router]);
+  }, [
+    repos.data,
+    repoName,
+    requested,
+    chatOpen,
+    searchParams,
+    pathname,
+    userId,
+    workspaceId,
+    router,
+  ]);
 
   // open folders belong to one repo's ids
   useEffect(() => {
@@ -122,22 +135,30 @@ export default function Dashboard() {
     );
   }
   if (!repoName) {
-    return <Spinner className="mx-auto mt-10 size-6 text-muted" />;
+    // no repository yet: the chat still answers from the workspace
+    return repos.data && chatOpen
+      ? (
+        <div className="h-full overflow-hidden rounded-md border border-border">
+          <ChatPanel repo={null} />
+        </div>
+      )
+      : <Spinner className="mx-auto mt-10 size-6 text-muted" />;
   }
 
   return (
     <div className="flex h-full flex-col gap-2">
-      <header className="flex items-center gap-2">
-        <h1 className="flex-1 truncate font-mono text-sm font-medium">{repoName}</h1>
+      {/* top-aligned: the Ask button's raised edge hangs below its box, level with the switch's bottom */}
+      <header className="flex items-start gap-2">
+        <h1 className="flex-1 self-center truncate font-mono text-sm font-medium">{repoName}</h1>
         <SegmentedButton
           aria-label="Diagram"
-          size="sm"
           options={DIAGRAM_OPTIONS}
           value={diagram}
           onValueChange={setDiagram}
         />
         <Button
           size="sm"
+          className="text-sm"
           variant={chatOpen ? 'secondary' : 'primary'}
           aria-pressed={chatOpen}
           onClick={() => {

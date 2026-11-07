@@ -7,9 +7,9 @@ type ChatSessionState = {
   setCurrent: (key: string, id: string | null) => void;
 };
 
-/** Whose chat on which repo: a conversation belongs to one person in one workspace. */
-export const conversationKey = (userId: string, workspaceId: string, repo: string) => {
-  return `${userId}:${workspaceId}:${repo}`;
+/** Whose chat on which repo (none for the workspace alone): a conversation belongs to one person in one workspace. */
+export const conversationKey = (userId: string, workspaceId: string, repo: string | null) => {
+  return `${userId}:${workspaceId}:${repo ?? ''}`;
 };
 
 /**

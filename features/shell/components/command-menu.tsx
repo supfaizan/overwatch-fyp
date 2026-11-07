@@ -228,12 +228,12 @@ export default function CommandMenu(
           })}
           {/* features/dashboard opens its chat for this param; the URL is the contract between the two */}
           <CommandItem
-            keywords={['chat', 'ai', 'question', 'ask']}
+            keywords={['chat', 'ai', 'question', 'ask', 'tickets']}
             onSelect={run(() => {
               return router.push('/dashboard?chat=open');
             })}
           >
-            <ChatCircleDots weight="fill" className="text-accent-blue" /> Ask about this repository
+            <ChatCircleDots weight="fill" className="text-accent-blue" /> Ask AI
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Repositories">

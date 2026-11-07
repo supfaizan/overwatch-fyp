@@ -87,6 +87,10 @@ export const useAvailableTargets = (provider: string) => {
     queryFn: () => {
       return settingsApi.getAvailableTargets(provider);
     },
+    // what's available changes outside Bearings (the bot invited to a Slack channel, a new Jira
+    // project): check again whenever the admin comes back to this tab
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 };
 export const useAddTarget = () => {

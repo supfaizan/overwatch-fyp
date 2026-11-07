@@ -55,6 +55,12 @@ const OUTCOMES: Record<string, () => void> = {
   denied: () => {
     return toast.error('Authorization was cancelled.');
   },
+  // the account (a Slack workspace) already belongs to another Bearings workspace
+  taken: () => {
+    return toast.error(
+      'That account is already connected to another Bearings workspace. Disconnect it there first.',
+    );
+  },
   error: () => {
     return toast.error("Couldn't connect. Please try again.");
   },

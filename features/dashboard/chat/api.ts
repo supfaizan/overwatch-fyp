@@ -7,6 +7,8 @@ import type {
   Conversation,
   ConversationSummary,
   MentionCandidate,
+  Proposal,
+  ProposalFields,
   SourceFile,
 } from './types';
 
@@ -41,14 +43,23 @@ export async function askStream(
   throw new ApiError('The answer was cut off. Try again.', 502, 'stream_ended');
 }
 
-export const getConversations = (repoFullName: string) => {
+/** One repo's conversations, or those about the workspace alone. */
+export const getConversations = (repoFullName: string | null) => {
   return api.get<ConversationSummary[]>('/chat/conversations', {
-    params: { repo_full_name: repoFullName },
+    params: repoFullName ? { repo_full_name: repoFullName } : {},
   });
 };
 
 export const getConversation = (id: string) => {
   return api.get<Conversation>(`/chat/conversations/${encodeURIComponent(id)}`);
+};
+
+export const applyProposal = (id: string, fields: ProposalFields) => {
+  return api.post<Proposal>(`/chat/proposals/${encodeURIComponent(id)}/apply`, fields);
+};
+
+export const cancelProposal = (id: string) => {
+  return api.post<Proposal>(`/chat/proposals/${encodeURIComponent(id)}/cancel`);
 };
 
 export const deleteConversation = (id: string) => {

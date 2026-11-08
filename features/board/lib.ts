@@ -240,6 +240,8 @@ export const COLOR_CLASSES: Record<ColumnColor, { edge: string; dot: string; tag
 /** The board's address params: which board is shown, and which item is open. */
 export const BOARD_PARAM = 'board';
 export const ITEM_PARAM = 'item';
+/** Opens the New item dialog, e.g. `/board?new=1`. */
+export const NEW_PARAM = 'new';
 
 /** The address that opens an item on its board, e.g. `https://app/board?board=b1&item=KAN-43`. */
 export function itemLink(base: string, boardId: string, key: string): string {

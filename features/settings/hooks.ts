@@ -18,6 +18,7 @@ const keys = {
     return ['usage', days, timeZone] as const;
   },
   usageLimits: ['usage', 'limits'] as const,
+  slackDigest: [...queryKeys.connections, 'slack', 'digest'] as const,
 };
 const showError = (error: ApiError) => {
   return toast.error(error.message);
@@ -86,6 +87,10 @@ export const useAvailableTargets = (provider: string) => {
     queryFn: () => {
       return settingsApi.getAvailableTargets(provider);
     },
+    // what's available changes outside Bearings (the bot invited to a Slack channel, a new Jira
+    // project): check again whenever the admin comes back to this tab
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 };
 export const useAddTarget = () => {
@@ -197,4 +202,19 @@ export const useResendInvite = () => {
       return `Invite sent again to ${invite.email}.`;
     },
   );
+};
+
+export const useSlackDigest = () => {
+  return useQuery({ queryKey: keys.slackDigest, queryFn: settingsApi.getSlackDigest });
+};
+
+export const useUpdateSlackDigest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.updateSlackDigest,
+    onSuccess: (digest) => {
+      queryClient.setQueryData(keys.slackDigest, digest);
+    },
+    onError: showError,
+  });
 };

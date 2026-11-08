@@ -7,6 +7,7 @@ import type {
   Invite,
   InviteCreated,
   InviteRole,
+  SlackDigestSettings,
   SyncTarget,
   Target,
   UsageLimit,
@@ -99,4 +100,12 @@ export const getUsage = (days: number, timeZone: string) => {
 
 export const getUsageLimits = () => {
   return api.get<{ limits: UsageLimit[] }>('/usage/limits');
+};
+
+export const getSlackDigest = () => {
+  return api.get<SlackDigestSettings>('/slack/digest');
+};
+
+export const updateSlackDigest = (changes: Partial<SlackDigestSettings>) => {
+  return api.patch<SlackDigestSettings>('/slack/digest', changes);
 };

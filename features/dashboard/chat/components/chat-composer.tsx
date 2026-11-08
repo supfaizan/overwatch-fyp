@@ -15,7 +15,8 @@ const MAX_QUESTION_CHARS = 2_000;
 const MENTION_SEARCH_DELAY_MS = 150;
 
 type ChatComposerProps = {
-  repo: string;
+  /** null asks about the workspace alone, with nothing to @-mention */
+  repo: string | null;
   pending: boolean;
   /** resolves once the answer is in; the question comes back to the box if it rejects */
   onSend: (question: string, mentionedNodeIds: string[]) => Promise<unknown>;
@@ -45,7 +46,7 @@ export default function ChatComposer({ repo, pending, onSend, onStop }: ChatComp
       return clearTimeout(timer);
     };
   }, [term]);
-  const candidates = useMentionCandidates(repo, term === null ? null : searchTerm);
+  const candidates = useMentionCandidates(repo ?? '', repo && term !== null ? searchTerm : null);
   const options = open ? (candidates.data ?? []) : [];
   const question = text.trim();
 
@@ -166,14 +167,16 @@ export default function ChatComposer({ repo, pending, onSend, onStop }: ChatComp
       )}
       <TextArea
         ref={input}
-        aria-label="Ask about this repository"
+        aria-label={repo ? 'Ask about this repository' : 'Ask about this workspace'}
         role="combobox"
         aria-expanded={options.length > 0}
         aria-controls={listId}
         aria-activedescendant={options.length > 0
           ? `${listId}-${Math.min(active, options.length - 1)}`
           : undefined}
-        placeholder="Ask about the code. Type @ to mention a file or symbol."
+        placeholder={repo
+          ? 'Ask about the code. Type @ to mention a file or symbol.'
+          : 'Ask about the tickets on your boards.'}
         rows={2}
         maxLength={MAX_QUESTION_CHARS}
         className="min-h-0 resize-none"

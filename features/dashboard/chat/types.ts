@@ -38,6 +38,53 @@ type FlowStep = {
 /** A question back, asked only when the question could mean different things. */
 export type ClarifyingQuestion = { question: string; options: string[] };
 
+/** A workspace record an answer cites with `[rN]`: a ticket, page or decision, as it was when the answer was written. */
+export type RecordRef = {
+  /** the `rN` used inline in the answer */
+  ref: string;
+  kind: 'work_item' | 'document' | 'decision';
+  id: string;
+  title: string;
+  /** a ticket's key, like DEV-12; null for pages and decisions */
+  key: string | null;
+  /** the tracker or docs source it's from, or `native`; null for a decision */
+  source: string | null;
+  status: string | null;
+  /** where the app opens it */
+  href: string;
+};
+
+/** A drafted ticket, page or decision as the asker approves it, edits included. */
+export type ProposalFields = {
+  title: string;
+  /** a ticket's description, a page's text or a decision's background, in Markdown */
+  body: string;
+  /** a decision's statement; empty for the others */
+  statement: string;
+  /** the board a ticket goes on; null for the others */
+  board_id: string | null;
+};
+
+/** A ticket, page or decision the AI drafted; it exists only once the asker approves it. */
+export type Proposal = {
+  id: string;
+  kind: RecordRef['kind'];
+  fields: ProposalFields;
+  /** the boards a ticket can go on; empty for pages and decisions */
+  boards: { id: string; name: string }[];
+  status: 'pending' | 'applying' | 'applied' | 'cancelled' | 'expired';
+  /** what was created, once approved */
+  result: { kind: RecordRef['kind']; id: string; title: string; href: string } | null;
+  expires_at: string;
+};
+
+/** A button under an answer, from what its lookups found: connect a tracker, create a ticket. */
+export type ChatAction = {
+  kind: 'connect_tracker' | 'create_ticket';
+  label: string;
+  href: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';
@@ -51,6 +98,11 @@ export type ChatMessage = {
   follow_ups: string[];
   /** a question back instead of an answer; null almost always */
   ask: ClarifyingQuestion | null;
+  /** workspace records the answer cites; empty for questions */
+  records: RecordRef[];
+  actions: ChatAction[];
+  /** what the answer drafted for the asker to approve; empty almost always */
+  proposals: Proposal[];
   /** false when the answer was refused or the graph couldn't answer it */
   grounded: boolean;
   created_at: string;
@@ -58,7 +110,8 @@ export type ChatMessage = {
 
 export type ConversationSummary = {
   id: string;
-  repo_full_name: string;
+  /** null for a conversation about the workspace alone */
+  repo_full_name: string | null;
   title: string;
   message_count: number;
   created_at: string;
@@ -68,7 +121,8 @@ export type ConversationSummary = {
 export type Conversation = ConversationSummary & { messages: ChatMessage[] };
 
 export type AskBody = {
-  repo_full_name: string;
+  /** omitted to ask about the workspace alone */
+  repo_full_name?: string;
   question: string;
   conversation_id?: string;
   focused_node_id?: string;

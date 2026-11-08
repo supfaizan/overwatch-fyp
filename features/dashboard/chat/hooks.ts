@@ -1,22 +1,29 @@
 'use client';
 
 import { ApiError } from '@/shared/api/envelope';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import * as chatApi from './api';
-import type { AskBody, AskResult, Conversation } from './types';
+import type { AskBody, AskResult, Conversation, Proposal, ProposalFields } from './types';
 
 /** Characters typed after `@` before the graph is searched (the backend's minimum). */
 export const MIN_MENTION_TERM = 2;
 
 const keys = {
-  conversations: (repo: string) => {
+  conversations: (repo: string | null) => {
     return ['chat', 'conversations', repo] as const;
   },
   conversation: (id: string) => {
     return ['chat', 'conversation', id] as const;
   },
+  anyConversation: ['chat', 'conversation'] as const,
   mentions: (repo: string, term: string) => {
     return ['chat', 'mentions', repo, term] as const;
   },
@@ -25,7 +32,7 @@ const keys = {
   },
 };
 
-export const useConversations = (repo: string) => {
+export const useConversations = (repo: string | null) => {
   return useQuery({
     queryKey: keys.conversations(repo),
     queryFn: () => {
@@ -114,7 +121,7 @@ export function useAskStream() {
           return { ...conversation, messages: [...(cached?.messages ?? []), question, answer] };
         });
         void queryClient.invalidateQueries({
-          queryKey: keys.conversations(conversation.repo_full_name),
+          queryKey: keys.conversations(body.repo_full_name ?? null),
         });
         return result;
       } catch (caught) {
@@ -148,7 +155,7 @@ export function useAskStream() {
   return { ask, stop, reset, draft, error, pending: draft !== null };
 }
 
-export function useDeleteConversation(repo: string) {
+export function useDeleteConversation(repo: string | null) {
   const queryClient = useQueryClient();
   return useMutation<null, ApiError, string>({
     mutationFn: chatApi.deleteConversation,
@@ -176,9 +183,8 @@ export const useMentionCandidates = (repo: string, term: string | null) => {
   });
 };
 
-/** A cited file as of the commit it was cited at; a commit never changes, so it's fetched once. */
-export const useSource = (repo: string, path: string, commitSha: string) => {
-  return useQuery({
+const sourceQuery = (repo: string, path: string, commitSha: string) => {
+  return queryOptions({
     queryKey: keys.source(repo, path, commitSha),
     queryFn: () => {
       return chatApi.getSource(repo, path, commitSha);
@@ -187,3 +193,42 @@ export const useSource = (repo: string, path: string, commitSha: string) => {
     retry: false,
   });
 };
+
+/** A file as of a commit; a commit never changes, so it's fetched once. */
+export const useSource = (repo: string, path: string, commitSha: string) => {
+  return useQuery(sourceQuery(repo, path, commitSha));
+};
+
+/** Starts fetching a file before it's opened, e.g. while its node is pointed at. */
+export const usePrefetchSource = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (repo: string, path: string, commitSha: string) => {
+      void queryClient.prefetchQuery(sourceQuery(repo, path, commitSha));
+    },
+    [queryClient],
+  );
+};
+
+/** Create what an answer drafted, with the asker's edits; the conversation is read again to show the result. */
+export function useApplyProposal() {
+  const queryClient = useQueryClient();
+  return useMutation<Proposal, ApiError, { id: string; fields: ProposalFields }>({
+    mutationFn: ({ id, fields }) => {
+      return chatApi.applyProposal(id, fields);
+    },
+    onSettled: () => {
+      return queryClient.invalidateQueries({ queryKey: keys.anyConversation });
+    },
+  });
+}
+
+export function useCancelProposal() {
+  const queryClient = useQueryClient();
+  return useMutation<Proposal, ApiError, string>({
+    mutationFn: chatApi.cancelProposal,
+    onSettled: () => {
+      return queryClient.invalidateQueries({ queryKey: keys.anyConversation });
+    },
+  });
+}

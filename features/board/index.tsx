@@ -88,6 +88,7 @@ import {
   itemLink,
   laneOf,
   moveItem,
+  NEW_PARAM,
   NO_LANE,
   orderLanes,
   parseZoneId,
@@ -291,6 +292,22 @@ export default function Board() {
     params.delete(ITEM_PARAM);
     router.replace(`${pathname}?${params}`, { scroll: false });
   }, [missing, activeKey, router, pathname]);
+  // `?new=1`, from the AI chat's "Create a ticket", opens the New item dialog once
+  const wantsNew = searchParams.has(NEW_PARAM) && Boolean(board);
+  const canCreate = Boolean(board?.editable);
+  useEffect(() => {
+    if (!wantsNew) {
+      return;
+    }
+    if (canCreate) {
+      setCreating(Date.now());
+    } else {
+      toast.error('New items can’t be added to this board.');
+    }
+    const params = new URLSearchParams(window.location.search);
+    params.delete(NEW_PARAM);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  }, [wantsNew, canCreate, router, pathname]);
 
   // a tracker board that has never synced has nothing to show until its first sync lands
   const firstSync = Boolean(syncTarget && !syncTarget.last_synced_at && boardSync.syncing);

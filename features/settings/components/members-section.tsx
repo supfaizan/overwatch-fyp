@@ -27,10 +27,9 @@ import {
   useRevokeInvite,
   useUpdateMember,
 } from '../hooks';
+import { ROLE_LABELS } from '../lib';
 import { type Invite, INVITE_KIND, type InviteKind, type InviteRole } from '../types';
 import { SettingsSection } from './settings-layout';
-
-const ROLE_LABELS: Record<Role, string> = { owner: 'Owner', admin: 'Admin', member: 'Member' };
 
 export default function MembersSection() {
   const workspace = useCurrentWorkspace();

@@ -15,7 +15,14 @@ import {
 } from '@/shared/decisions/types';
 import { cn } from '@/shared/lib/cn';
 import { timeAgo } from '@/shared/lib/time';
-import { ArrowSquareOut, FileText, Ticket, Trash, Warning } from '@phosphor-icons/react/ssr';
+import {
+  ArrowSquareOut,
+  ChatsCircle,
+  FileText,
+  Ticket,
+  Trash,
+  Warning,
+} from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { groupEvidence, type SourceGroup } from '../lib';
 
@@ -24,7 +31,11 @@ export const sourceCardId = (sourceId: string) => {
   return `source-${sourceId}`;
 };
 
-const KIND_ICONS = { [EVIDENCE_KIND.workItem]: Ticket, [EVIDENCE_KIND.document]: FileText };
+const KIND_ICONS = {
+  [EVIDENCE_KIND.workItem]: Ticket,
+  [EVIDENCE_KIND.document]: FileText,
+  [EVIDENCE_KIND.chatThread]: ChatsCircle,
+};
 
 type SourcesEvidenceProps = {
   decision: Decision;

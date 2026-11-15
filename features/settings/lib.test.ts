@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { filledTicks, formatCost, formatTokens, meterTone, usageBuckets } from './lib';
+import {
+  AI_CLIENT,
+  aiClientSetup,
+  filledTicks,
+  formatCost,
+  formatTokens,
+  meterTone,
+  usageBuckets,
+} from './lib';
 import type { UsageSummary } from './types';
 
 describe('formatTokens', () => {
@@ -93,5 +101,39 @@ describe('filledTicks', () => {
       filledTicks(25, 20, 20),
       filledTicks(5, 0, 20),
     ]).toEqual([0, 4, 19, 20, 20, 20]);
+  });
+});
+
+describe('aiClientSetup', () => {
+  const url = 'https://mcp.example.com/mcp';
+  const token = 'bwp_secret';
+
+  it('gives Claude Code one command with the address and the token as a header', () => {
+    expect(aiClientSetup(AI_CLIENT.claudeCode, url, token).text).toBe(
+      'claude mcp add --transport http bearings https://mcp.example.com/mcp --header "Authorization: Bearer bwp_secret"',
+    );
+  });
+
+  it('gives Gemini CLI settings that parse as JSON', () => {
+    const settings = JSON.parse(aiClientSetup(AI_CLIENT.geminiCli, url, token).text);
+
+    expect(settings.mcpServers.bearings).toEqual({
+      httpUrl: url,
+      headers: { Authorization: 'Bearer bwp_secret' },
+    });
+  });
+
+  it('keeps the token out of the Codex config file, in an environment variable', () => {
+    const [config, profile] = aiClientSetup(AI_CLIENT.codex, url, token).text.split('\n\n');
+
+    expect(config).toContain('bearer_token_env_var = "BEARINGS_MCP_TOKEN"');
+    expect(config).not.toContain(token);
+    expect(profile).toContain('export BEARINGS_MCP_TOKEN="bwp_secret"');
+  });
+
+  it('gives any other tool the address and the header', () => {
+    expect(aiClientSetup(AI_CLIENT.other, url, token).text).toBe(
+      'URL: https://mcp.example.com/mcp\nHeader: Authorization: Bearer bwp_secret',
+    );
   });
 });

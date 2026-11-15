@@ -11,6 +11,7 @@ const GROUPS = [
     pages: [
       { href: '/settings/profile', label: 'Profile' },
       { href: '/settings/preferences', label: 'Preferences' },
+      { href: '/settings/ai-tools', label: 'AI tools' },
     ],
   },
   {

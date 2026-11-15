@@ -71,6 +71,10 @@ export const suggestDecisions = (body: { kind: EvidenceKind; ref_id: string }) =
 export const dismissSuggestion = (id: string) => {
   return api.post<null>(`/decisions/${id}/dismiss`);
 };
+/** "Not a decision" for several AI drafts at once; ones settled or gone meanwhile are skipped. */
+export const dismissSuggestions = (ids: string[]) => {
+  return api.post<{ dismissed: number }>('/decisions/dismiss', { ids });
+};
 
 export const getCheckSettings = () => {
   return api.get<CheckSettings>('/decisions/checks');

@@ -3,15 +3,22 @@
 import Banner from '@/shared/components/banner';
 import Button from '@/shared/components/button';
 import Card from '@/shared/components/card';
+import Checkbox from '@/shared/components/checkbox';
 import { Input } from '@/shared/components/input';
 import SegmentedButton from '@/shared/components/segmented-button';
 import Skeleton from '@/shared/components/skeleton';
 import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
-import { useDecisionPages, useInboxCounts } from '@/shared/decisions/hooks';
-import { hasBrokenEvidence, localToday, STATUS_LABELS, STATUS_TAGS } from '@/shared/decisions/lib';
+import { useDecisionPages, useDismissSuggestions, useInboxCounts } from '@/shared/decisions/hooks';
+import {
+  hasBrokenEvidence,
+  isAwaitingReview,
+  localToday,
+  STATUS_LABELS,
+  STATUS_TAGS,
+} from '@/shared/decisions/lib';
 import RecordDecisionDialog from '@/shared/decisions/record-decision-dialog';
-import { type Decision, INBOX_TAB, type InboxTab } from '@/shared/decisions/types';
+import { type Decision, DECISION_ORIGIN, INBOX_TAB, type InboxTab } from '@/shared/decisions/types';
 import { timeAgo } from '@/shared/lib/time';
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
 import {
@@ -52,10 +59,29 @@ export default function DecisionsInbox() {
   const [recording, setRecording] = useState(false);
   const overview = useUpdateOverview();
   const counts = useInboxCounts();
+  const [fromTools, setFromTools] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const dismiss = useDismissSuggestions();
   // a search looks through every tab
-  const decisions = useDecisionPages(
-    query ? { q: query } : { tab, today: localToday() },
-  );
+  const decisions = useDecisionPages({
+    ...(query ? { q: query } : { tab, today: localToday() }),
+    ...(fromTools && { origin: DECISION_ORIGIN.agent }),
+  });
+  // only what's still listed can be dismissed
+  const chosen = selected.filter((id) => {
+    return decisions.decisions.some((decision) => {
+      return decision.id === id;
+    });
+  });
+  const toggle = (id: string) => {
+    return setSelected((ids) => {
+      return ids.includes(id)
+        ? ids.filter((other) => {
+          return other !== id;
+        })
+        : [...ids, id];
+    });
+  };
 
   return (
     <div className="h-full overflow-y-auto">
@@ -104,17 +130,60 @@ export default function DecisionsInbox() {
             value={tab}
             onValueChange={setTab}
           />
-          <Input
-            aria-label="Search decisions"
-            placeholder="Search"
-            prefix={<MagnifyingGlass aria-hidden />}
-            className="w-full sm:w-64"
-            value={search}
-            onChange={(e) => {
-              return setSearch(e.target.value);
-            }}
-          />
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <Button
+              aria-pressed={fromTools}
+              variant={fromTools ? 'primary' : 'secondary'}
+              onClick={() => {
+                return setFromTools((on) => {
+                  return !on;
+                });
+              }}
+            >
+              <Robot aria-hidden />
+              From AI tools
+            </Button>
+            <Input
+              aria-label="Search decisions"
+              placeholder="Search"
+              prefix={<MagnifyingGlass aria-hidden />}
+              className="w-full sm:w-64"
+              value={search}
+              onChange={(e) => {
+                return setSearch(e.target.value);
+              }}
+            />
+          </div>
         </div>
+        {chosen.length > 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-2 text-sm">
+            <span>{chosen.length} selected</span>
+            <span className="flex gap-2">
+              <Button
+                size="sm"
+                variant="tertiary"
+                onClick={() => {
+                  return setSelected([]);
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                size="sm"
+                loading={dismiss.isPending}
+                onClick={() => {
+                  return dismiss.mutate(chosen, {
+                    onSuccess: () => {
+                      return setSelected([]);
+                    },
+                  });
+                }}
+              >
+                Not decisions
+              </Button>
+            </span>
+          </div>
+        )}
         {decisions.isPending && <Skeleton className="h-48 w-full" />}
         {decisions.isError && (
           <Banner
@@ -138,7 +207,14 @@ export default function DecisionsInbox() {
             <Card className="p-0">
               <ul className="divide-y divide-border">
                 {decisions.decisions.map((decision) => {
-                  return <DecisionRow key={decision.id} decision={decision} />;
+                  return (
+                    <DecisionRow
+                      key={decision.id}
+                      decision={decision}
+                      selected={chosen.includes(decision.id)}
+                      onToggle={toggle}
+                    />
+                  );
                 })}
               </ul>
               {decisions.hasNextPage && (
@@ -199,12 +275,29 @@ function LoadMore({ loading, onLoadMore }: { loading: boolean; onLoadMore: () =>
   );
 }
 
-function DecisionRow({ decision }: { decision: Decision }) {
+function DecisionRow(
+  { decision, selected, onToggle }: {
+    decision: Decision;
+    selected: boolean;
+    onToggle: (id: string) => void;
+  },
+) {
   return (
-    <li>
+    <li className="flex items-start">
+      {/* only an AI draft nobody settled can be dismissed, so only those can be picked */}
+      {isAwaitingReview(decision) && (
+        <Checkbox
+          className="mt-3.5 ml-4"
+          aria-label={`Select ${decision.title}`}
+          checked={selected}
+          onCheckedChange={() => {
+            return onToggle(decision.id);
+          }}
+        />
+      )}
       <Link
         href={`/decisions/${decision.id}`}
-        className="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-fill-hover focus-visible:outline-2 focus-visible:outline-primary"
+        className="flex min-w-0 flex-1 flex-col gap-1 px-4 py-3 transition-colors hover:bg-fill-hover focus-visible:outline-2 focus-visible:outline-primary"
       >
         <span className="flex items-start justify-between gap-3">
           <span className="min-w-0 truncate text-sm font-medium">

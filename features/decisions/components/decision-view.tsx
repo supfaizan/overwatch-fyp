@@ -17,7 +17,7 @@ import {
   useDismissSuggestion,
   useUpdateDecision,
 } from '@/shared/decisions/hooks';
-import { STATUS_LABELS, STATUS_TAGS } from '@/shared/decisions/lib';
+import { isAwaitingReview, STATUS_LABELS, STATUS_TAGS } from '@/shared/decisions/lib';
 import {
   type Decision,
   DECISION_ORIGIN,
@@ -30,12 +30,13 @@ import { cn } from '@/shared/lib/cn';
 import { timeAgo } from '@/shared/lib/time';
 import { displayName } from '@/shared/session/lib';
 import { useWorkspaceMembers } from '@/shared/workspaces/hooks';
-import { CaretDown, CaretLeft, Sparkle } from '@phosphor-icons/react/ssr';
+import { CaretDown, CaretLeft, Robot, Sparkle } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type ComponentProps, type ReactNode, useEffect, useRef, useState } from 'react';
 import DiscussionPane from '../discussion/components/discussion-pane';
 import { citationsToCode } from '../lib';
+import CaptureDetails from './capture-details';
 import CitationChip from './citation-chip';
 import SourcesEvidence from './sources-evidence';
 import SupersedeDialog from './supersede-dialog';
@@ -129,6 +130,12 @@ function DecisionDetails({ decision }: { decision: Decision }) {
               Suggested by AI
             </Tag>
           )}
+          {decision.capture && (
+            <Tag variant="primary">
+              <Robot aria-hidden />
+              Via {decision.capture.client}
+            </Tag>
+          )}
         </div>
         {/* keyed by the saved text, so a change saved elsewhere replaces the draft */}
         <InlineTitleInput
@@ -160,6 +167,7 @@ function DecisionDetails({ decision }: { decision: Decision }) {
         </Banner>
       )}
       <StatusActions decision={decision} />
+      {decision.capture && <CaptureDetails capture={decision.capture} />}
 
       <details open className="group rounded-lg border border-border">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg p-4 text-sm font-semibold hover:bg-fill-hover focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
@@ -412,9 +420,8 @@ function StatusActions({ decision }: { decision: Decision }) {
   const router = useRouter();
   const change = useChangeStatus();
   const dismiss = useDismissSuggestion();
-  // an AI suggestion waiting for review is dismissed rather than rejected, so it isn't kept
-  const reviewing = decision.origin === DECISION_ORIGIN.suggested
-    && decision.status === DECISION_STATUS.proposed;
+  // an AI suggestion or an AI tool's record waiting for review is dismissed rather than rejected, so it isn't kept
+  const reviewing = isAwaitingReview(decision);
   const [note, setNote] = useState('');
   const [superseding, setSuperseding] = useState(false);
 

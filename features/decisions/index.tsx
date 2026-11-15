@@ -14,7 +14,14 @@ import RecordDecisionDialog from '@/shared/decisions/record-decision-dialog';
 import { type Decision, INBOX_TAB, type InboxTab } from '@/shared/decisions/types';
 import { timeAgo } from '@/shared/lib/time';
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
-import { BookOpenText, MagnifyingGlass, Plus, Quotes, Warning } from '@phosphor-icons/react/ssr';
+import {
+  BookOpenText,
+  MagnifyingGlass,
+  Plus,
+  Quotes,
+  Robot,
+  Warning,
+} from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -200,7 +207,10 @@ function DecisionRow({ decision }: { decision: Decision }) {
         className="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-fill-hover focus-visible:outline-2 focus-visible:outline-primary"
       >
         <span className="flex items-start justify-between gap-3">
-          <span className="min-w-0 truncate text-sm font-medium">{decision.title}</span>
+          <span className="min-w-0 truncate text-sm font-medium">
+            {decision.key && <span className="mr-2 font-normal text-muted">{decision.key}</span>}
+            {decision.title}
+          </span>
           <Tag variant={STATUS_TAGS[decision.status]}>{STATUS_LABELS[decision.status]}</Tag>
         </span>
         <span className="line-clamp-2 text-sm text-muted">{decision.statement}</span>
@@ -214,6 +224,12 @@ function DecisionRow({ decision }: { decision: Decision }) {
             <span className="flex items-center gap-1 text-warning-strong">
               <Warning aria-hidden />
               {hasBrokenEvidence(decision) ? 'Evidence changed' : 'New contradiction'}
+            </span>
+          )}
+          {decision.capture && (
+            <span className="flex items-center gap-1">
+              <Robot aria-hidden />
+              via {decision.capture.client}
             </span>
           )}
           <span>Updated {timeAgo(decision.updated_at)}</span>

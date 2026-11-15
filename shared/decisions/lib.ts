@@ -2,6 +2,8 @@ import {
   CHECK_MATCH,
   type CheckInterval,
   type Decision,
+  DECISION_ORIGIN,
+  DECISION_STATUS,
   type DecisionStatus,
   type Evidence,
   EVIDENCE_KIND,
@@ -58,6 +60,11 @@ const BROKEN: EvidenceState[] = [EVIDENCE_STATE.quoteMissing, EVIDENCE_STATE.sou
 /** Whether the evidence's source no longer says what it was quoted for. */
 export function isBroken(evidence: Evidence): boolean {
   return BROKEN.includes(evidence.state);
+}
+
+/** Drafted by AI and not settled yet: it can be dismissed as "not a decision" rather than rejected and kept. */
+export function isAwaitingReview(decision: Pick<Decision, 'origin' | 'status'>): boolean {
+  return decision.origin !== DECISION_ORIGIN.manual && decision.status === DECISION_STATUS.proposed;
 }
 
 export function hasBrokenEvidence(decision: Decision): boolean {

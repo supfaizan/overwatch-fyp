@@ -158,3 +158,23 @@ export const AI_AGENT_RULES = [
   '- Search first so nothing is recorded twice. Never put secrets or personal data in a record.',
   '- What you record is a proposal for the team to review: never call it decided.',
 ].join('\n');
+
+/** Where each assistant that signs in (no token to paste) takes the server's address. */
+export const AI_SIGN_IN_STEPS: { name: string; steps: string }[] = [
+  {
+    name: 'Claude',
+    steps: 'Settings > Connectors > Add custom connector, then paste the address.',
+  },
+  {
+    name: 'ChatGPT',
+    steps: 'Settings > Apps & Connectors > add a custom MCP server, then paste the address.',
+  },
+  {
+    name: 'Gemini',
+    steps: 'Settings > Connected apps > add a custom connector, then paste the address.',
+  },
+  {
+    name: 'Claude Code',
+    steps: 'Run `claude mcp add --transport http bearings <address>`, then `/mcp` to sign in.',
+  },
+];

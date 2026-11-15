@@ -16,8 +16,21 @@ import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
 import { Copy, Key, X } from '@phosphor-icons/react/ssr';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
-import { useAiTools, useCreateAiToolToken, useRevokeAiTool, useUpdateAiTool } from '../hooks';
-import { AI_AGENT_RULES, AI_CLIENT, AI_CLIENT_LABELS, type AiClient, aiClientSetup } from '../lib';
+import {
+  useAiTools,
+  useAiToolSetup,
+  useCreateAiToolToken,
+  useRevokeAiTool,
+  useUpdateAiTool,
+} from '../hooks';
+import {
+  AI_AGENT_RULES,
+  AI_CLIENT,
+  AI_CLIENT_LABELS,
+  AI_SIGN_IN_STEPS,
+  type AiClient,
+  aiClientSetup,
+} from '../lib';
 import { AI_TOOL_SCOPE, type AiTool, type AiToolCreated } from '../types';
 import { SettingsSection } from './settings-layout';
 
@@ -48,10 +61,41 @@ export default function AiToolsSection() {
       title="AI tools"
       description="Connect your coding agent so it reads your team's decisions before it works, and records new ones for the team to review."
     >
+      <SignIn />
       <Connect workspaceName={workspace.name} />
       <Rules />
       <Connected />
     </SettingsSection>
+  );
+}
+
+/** For tools that sign in: they only need the address, and ask for the workspace on the way. */
+function SignIn() {
+  const setup = useAiToolSetup();
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <div>
+        <p className="text-sm font-medium">Connect by signing in</p>
+        <p className="text-sm text-muted">
+          Give the tool this address. It sends you back here to choose a workspace and approve.
+          Whether a plan allows custom connectors is up to each assistant.
+        </p>
+      </div>
+      {setup.data
+        ? <Snippet text={setup.data.url} what="Address" />
+        : <Skeleton className="h-10 w-full" />}
+      <ul className="flex flex-col gap-1 text-sm">
+        {AI_SIGN_IN_STEPS.map(({ name, steps }) => {
+          return (
+            <li key={name}>
+              <span className="font-medium">{name}:</span>{' '}
+              <span className="text-muted">{steps}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }
 
@@ -79,11 +123,10 @@ function Connect({ workspaceName }: { workspaceName: string }) {
   return (
     <Card className="flex flex-col gap-4">
       <div>
-        <p className="text-sm font-medium">Connect a tool to {workspaceName}</p>
+        <p className="text-sm font-medium">Or connect with a token, to {workspaceName}</p>
         <p className="text-sm text-muted">
-          A connection works in this workspace only. To use another workspace, switch to it and
-          connect again. Claude, ChatGPT and Gemini in the browser connect by signing in, which is
-          coming next.
+          A token works in this workspace only. To use another workspace, switch to it and create
+          another.
         </p>
       </div>
       <form onSubmit={submit} className="flex flex-col gap-3">

@@ -130,3 +130,7 @@ export const updateAiTool = ({ id, askFirst }: { id: string; askFirst: boolean }
 export const revokeAiTool = (id: string) => {
   return api.delete<null>(`/ai-tools/${id}`);
 };
+
+export const getAiToolSetup = () => {
+  return api.get<{ url: string }>('/ai-tools/setup');
+};

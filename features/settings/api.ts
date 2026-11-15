@@ -2,6 +2,7 @@ import { api } from '@/shared/api/client';
 import type { ConnectedRepo } from '@/shared/repos/types';
 import type { Role, Workspace } from '@/shared/workspaces/types';
 import type {
+  AiRecordingSettings,
   AiTool,
   AiToolCreated,
   Connection,
@@ -14,6 +15,7 @@ import type {
   Target,
   UsageLimit,
   UsageSummary,
+  WorkspaceAiTool,
 } from './types';
 
 export const getConnectionStatus = () => {
@@ -133,4 +135,21 @@ export const revokeAiTool = (id: string) => {
 
 export const getAiToolSetup = () => {
   return api.get<{ url: string }>('/ai-tools/setup');
+};
+
+export const getWorkspaceAiTools = () => {
+  return api.get<WorkspaceAiTool[]>('/ai-tools/workspace');
+};
+export const revokeWorkspaceAiTool = (id: string) => {
+  return api.delete<null>(`/ai-tools/workspace/${id}`);
+};
+export const getAiRecording = () => {
+  return api.get<AiRecordingSettings>('/ai-tools/recording');
+};
+export const setAiRecording = (enabled: boolean) => {
+  return api.request<AiRecordingSettings>({
+    method: 'PUT',
+    url: '/ai-tools/recording',
+    data: { recording_enabled: enabled },
+  });
 };

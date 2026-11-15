@@ -259,3 +259,23 @@ export const useUpdateAiTool = () => {
 export const useRevokeAiTool = () => {
   return useAiToolMutation(settingsApi.revokeAiTool, 'Disconnected.');
 };
+
+export const useWorkspaceAiTools = (enabled: boolean) => {
+  return useQuery({
+    queryKey: [...keys.aiTools, 'workspace'] as const,
+    queryFn: settingsApi.getWorkspaceAiTools,
+    enabled,
+  });
+};
+export const useRevokeWorkspaceAiTool = () => {
+  return useAiToolMutation(settingsApi.revokeWorkspaceAiTool, 'Disconnected.');
+};
+export const useAiRecording = () => {
+  return useQuery({
+    queryKey: [...keys.aiTools, 'recording'] as const,
+    queryFn: settingsApi.getAiRecording,
+  });
+};
+export const useSetAiRecording = () => {
+  return useAiToolMutation(settingsApi.setAiRecording);
+};

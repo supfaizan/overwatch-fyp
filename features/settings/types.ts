@@ -129,3 +129,9 @@ export type AiTool = {
 
 /** `token` is shown once; `url` is the address the tool connects to. */
 export type AiToolCreated = AiTool & { token: string; url: string };
+
+/** A member's connected tool, as the workspace's admins see it. */
+export type WorkspaceAiTool = AiTool & { user_id: string };
+
+/** Whether AI tools may record in the workspace; reading is always allowed. */
+export type AiRecordingSettings = { recording_enabled: boolean };

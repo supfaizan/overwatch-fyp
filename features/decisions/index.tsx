@@ -73,6 +73,8 @@ export default function DecisionsInbox() {
       return decision.id === id;
     });
   });
+  // shown whenever a draft is listed, so ticking the first one doesn't push the list down
+  const draftsListed = decisions.decisions.some(isAwaitingReview);
   const toggle = (id: string) => {
     return setSelected((ids) => {
       return ids.includes(id)
@@ -155,13 +157,16 @@ export default function DecisionsInbox() {
             />
           </div>
         </div>
-        {chosen.length > 0 && (
+        {draftsListed && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-2 text-sm">
-            <span>{chosen.length} selected</span>
+            {chosen.length > 0
+              ? <span>{chosen.length} selected</span>
+              : <span className="text-muted">Tick drafts to dismiss them together</span>}
             <span className="flex gap-2">
               <Button
                 size="sm"
                 variant="tertiary"
+                disabled={chosen.length === 0}
                 onClick={() => {
                   return setSelected([]);
                 }}
@@ -170,6 +175,7 @@ export default function DecisionsInbox() {
               </Button>
               <Button
                 size="sm"
+                disabled={chosen.length === 0}
                 loading={dismiss.isPending}
                 onClick={() => {
                   return dismiss.mutate(chosen, {

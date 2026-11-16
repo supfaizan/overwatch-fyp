@@ -13,6 +13,8 @@ import Tag from '@/shared/components/tag';
 import Tooltip from '@/shared/components/tooltip';
 import { timeAgo } from '@/shared/lib/time';
 import { useCurrentWorkspace } from '@/shared/workspaces/hooks';
+import { hasRole } from '@/shared/workspaces/lib';
+import { ROLE } from '@/shared/workspaces/types';
 import { Copy, Key, X } from '@phosphor-icons/react/ssr';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
@@ -32,6 +34,7 @@ import {
   aiClientSetup,
 } from '../lib';
 import { AI_TOOL_SCOPE, type AiTool, type AiToolCreated } from '../types';
+import AiToolsAdmin from './ai-tools-admin';
 import { SettingsSection } from './settings-layout';
 
 const CLIENTS = (Object.values(AI_CLIENT) as AiClient[]).map((value) => {
@@ -65,6 +68,7 @@ export default function AiToolsSection() {
       <Connect workspaceName={workspace.name} />
       <Rules />
       <Connected />
+      <AiToolsAdmin isAdmin={hasRole(workspace.role, ROLE.admin)} />
     </SettingsSection>
   );
 }
@@ -105,7 +109,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
   const [label, setLabel] = useState('');
   const [askFirst, setAskFirst] = useState(true);
   const [readOnly, setReadOnly] = useState(false);
-  const [created, setCreated] = useState<{ tool: AiToolCreated; client: AiClient } | null>(null);
+  const [created, setCreated] = useState<AiToolCreated | null>(null);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -113,7 +117,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
       { label: label.trim() || AI_CLIENT_LABELS[client], readOnly, askFirst },
       {
         onSuccess: (tool) => {
-          setCreated({ tool, client });
+          setCreated(tool);
           setLabel('');
         },
       },
@@ -181,7 +185,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
           <Key /> Create connection
         </Button>
       </form>
-      {created && <Setup tool={created.tool} client={created.client} />}
+      {created && <Setup tool={created} client={client} />}
     </Card>
   );
 }

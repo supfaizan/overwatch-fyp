@@ -146,7 +146,14 @@ export type InboxTab = (typeof INBOX_TAB)[keyof typeof INBOX_TAB];
 export type InboxCounts = Record<InboxTab, number>;
 
 /** `today` is the viewer's ISO date, which review dates are compared with. */
-export type DecisionFilters = { tab?: InboxTab; today?: string; q?: string; ref_id?: string };
+export type DecisionFilters = {
+  tab?: InboxTab;
+  today?: string;
+  q?: string;
+  ref_id?: string;
+  /** only those drafted this way, e.g. `agent` for what connected AI tools recorded */
+  origin?: DecisionOrigin;
+};
 
 export type DecisionPage = { decisions: Decision[]; total: number; offset: number };
 

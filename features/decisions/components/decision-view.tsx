@@ -449,10 +449,18 @@ function StatusActions({ decision }: { decision: Decision }) {
       {reviewing && (
         <p className="flex items-start gap-2 text-sm">
           <Sparkle aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
-          <span>
-            Drafted by AI{cited.length > 0 && ` from ${cited.join(', ')}`}. The pros, cons and
-            example are its reading of the sources: check them before accepting.
-          </span>
+          {decision.capture
+            ? (
+              <span>
+                Recorded through an AI tool and not reviewed yet: check it before accepting.
+              </span>
+            )
+            : (
+              <span>
+                Drafted by AI{cited.length > 0 && ` from ${cited.join(', ')}`}. The pros, cons and
+                example are its reading of the sources: check them before accepting.
+              </span>
+            )}
         </p>
       )}
       <Input

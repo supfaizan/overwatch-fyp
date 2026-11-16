@@ -151,6 +151,20 @@ export const useDismissSuggestion = () => {
   });
 };
 
+export const useDismissSuggestions = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ dismissed: number }, ApiError, string[]>({
+    mutationFn: decisionsApi.dismissSuggestions,
+    onSuccess: ({ dismissed }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.decisions });
+      toast.success(`Dismissed ${dismissed}; they won't come back.`);
+    },
+    onError: (error) => {
+      return toast.error(error.message);
+    },
+  });
+};
+
 export const useCheckSettings = () => {
   return useQuery({ queryKey: keys.checks, queryFn: decisionsApi.getCheckSettings });
 };

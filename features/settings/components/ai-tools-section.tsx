@@ -109,7 +109,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
   const [label, setLabel] = useState('');
   const [askFirst, setAskFirst] = useState(true);
   const [readOnly, setReadOnly] = useState(false);
-  const [created, setCreated] = useState<{ tool: AiToolCreated; client: AiClient } | null>(null);
+  const [created, setCreated] = useState<AiToolCreated | null>(null);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -117,7 +117,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
       { label: label.trim() || AI_CLIENT_LABELS[client], readOnly, askFirst },
       {
         onSuccess: (tool) => {
-          setCreated({ tool, client });
+          setCreated(tool);
           setLabel('');
         },
       },
@@ -185,7 +185,7 @@ function Connect({ workspaceName }: { workspaceName: string }) {
           <Key /> Create connection
         </Button>
       </form>
-      {created && <Setup tool={created.tool} client={created.client} />}
+      {created && <Setup tool={created} client={client} />}
     </Card>
   );
 }

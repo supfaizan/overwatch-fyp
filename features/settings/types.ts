@@ -106,3 +106,26 @@ export type SlackDigestSettings = {
   /** IANA zone; null until an admin saves one, and the digest runs in UTC meanwhile */
   time_zone: string | null;
 };
+
+/** What a connected AI tool may do: read the workspace's decisions, and record new ones for review. */
+export const AI_TOOL_SCOPE = { read: 'decisions:read', record: 'decisions:record' } as const;
+export type AiToolScope = (typeof AI_TOOL_SCOPE)[keyof typeof AI_TOOL_SCOPE];
+
+/** An AI tool the member connected over MCP; it reads and records in one workspace only. */
+export type AiTool = {
+  id: string;
+  label: string;
+  workspace_id: string;
+  workspace_name: string;
+  scopes: AiToolScope[];
+  /** It asks before recording anything, unless the person asked for it. */
+  ask_first: boolean;
+  token_prefix: string | null;
+  created_at: string;
+  last_used_at: string | null;
+  records_count: number;
+  expires_at: string | null;
+};
+
+/** `token` is shown once; `url` is the address the tool connects to. */
+export type AiToolCreated = AiTool & { token: string; url: string };

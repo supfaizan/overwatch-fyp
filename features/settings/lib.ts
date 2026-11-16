@@ -83,3 +83,78 @@ export function filledTicks(used: number, limit: number, ticks: number): number 
   }
   return Math.min(ticks, Math.floor((used / limit) * ticks));
 }
+
+/** The coding agents a personal token is set up for, in the order they're offered. */
+export const AI_CLIENT = {
+  claudeCode: 'claude_code',
+  codex: 'codex',
+  geminiCli: 'gemini_cli',
+  other: 'other',
+} as const;
+export type AiClient = (typeof AI_CLIENT)[keyof typeof AI_CLIENT];
+
+export const AI_CLIENT_LABELS: Record<AiClient, string> = {
+  claude_code: 'Claude Code',
+  codex: 'Codex',
+  gemini_cli: 'Gemini CLI',
+  other: 'Other',
+};
+
+// the name the server gets in the tool's own configuration
+const SERVER_NAME = 'bearings';
+const TOKEN_VARIABLE = 'BEARINGS_MCP_TOKEN';
+
+/** What to run or paste to connect a tool: where it goes, and the text itself. */
+export type AiClientSetup = { where: string; text: string };
+
+/** Setup for each tool, with the token in place so it's copied once and never typed. */
+export const aiClientSetup = (client: AiClient, url: string, token: string): AiClientSetup => {
+  if (client === AI_CLIENT.claudeCode) {
+    return {
+      where: 'Run in your terminal',
+      text:
+        `claude mcp add --transport http ${SERVER_NAME} ${url} --header "Authorization: Bearer ${token}"`,
+    };
+  }
+  if (client === AI_CLIENT.codex) {
+    return {
+      where: `Add to ~/.codex/config.toml, and set ${TOKEN_VARIABLE} in your shell profile`,
+      text: [
+        `[mcp_servers.${SERVER_NAME}]`,
+        `url = "${url}"`,
+        `bearer_token_env_var = "${TOKEN_VARIABLE}"`,
+        '',
+        `# in your shell profile:`,
+        `# export ${TOKEN_VARIABLE}="${token}"`,
+      ].join('\n'),
+    };
+  }
+  if (client === AI_CLIENT.geminiCli) {
+    return {
+      where: 'Add to ~/.gemini/settings.json',
+      text: JSON.stringify(
+        {
+          mcpServers: {
+            [SERVER_NAME]: { httpUrl: url, headers: { Authorization: `Bearer ${token}` } },
+          },
+        },
+        null,
+        2,
+      ),
+    };
+  }
+  return {
+    where: 'Any tool that connects to a remote MCP server over HTTP',
+    text: `URL: ${url}\nHeader: Authorization: Bearer ${token}`,
+  };
+};
+
+/** Rules for an agent's instructions file, so it reads decisions first and offers to record new ones. */
+export const AI_AGENT_RULES = [
+  '## Decisions (Bearings)',
+  '- Before starting a task, call the Bearings `start_task` tool with what the task is about, and follow the accepted decisions it returns.',
+  '- When we settle a choice others should know about (architecture, API shape, data model, a library, a product rule, a trade-off), ask me whether to record it, then call `record_decision` with my own words.',
+  '- Record questions we leave unsettled as `open_question`.',
+  '- Search first so nothing is recorded twice. Never put secrets or personal data in a record.',
+  '- What you record is a proposal for the team to review: never call it decided.',
+].join('\n');

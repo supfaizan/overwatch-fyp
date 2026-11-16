@@ -2,6 +2,8 @@ import { api } from '@/shared/api/client';
 import type { ConnectedRepo } from '@/shared/repos/types';
 import type { Role, Workspace } from '@/shared/workspaces/types';
 import type {
+  AiTool,
+  AiToolCreated,
   Connection,
   ConnectionStatus,
   Invite,
@@ -108,4 +110,23 @@ export const getSlackDigest = () => {
 
 export const updateSlackDigest = (changes: Partial<SlackDigestSettings>) => {
   return api.patch<SlackDigestSettings>('/slack/digest', changes);
+};
+
+export const getAiTools = () => {
+  return api.get<AiTool[]>('/ai-tools');
+};
+export const createAiToolToken = (
+  { label, readOnly, askFirst }: { label: string; readOnly: boolean; askFirst: boolean },
+) => {
+  return api.post<AiToolCreated>('/ai-tools/tokens', {
+    label,
+    read_only: readOnly,
+    ask_first: askFirst,
+  });
+};
+export const updateAiTool = ({ id, askFirst }: { id: string; askFirst: boolean }) => {
+  return api.patch<AiTool>(`/ai-tools/${id}`, { ask_first: askFirst });
+};
+export const revokeAiTool = (id: string) => {
+  return api.delete<null>(`/ai-tools/${id}`);
 };

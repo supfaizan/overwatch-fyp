@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evidenceHref, matchLabel } from './lib';
+import { evidenceHref, isAwaitingReview, matchLabel } from './lib';
 import type { Evidence } from './types';
 
 const evidence = (overrides: Partial<Evidence> = {}): Evidence => {
@@ -40,5 +40,16 @@ describe('matchLabel', () => {
     expect(matchLabel({ reason: 'mentioned', detail: 'DEV-12' })).toBe('mentions DEV-12');
     expect(matchLabel({ reason: 'linked', detail: null })).toBe('linked to a quoted item');
     expect(matchLabel({ reason: 'similar', detail: '0.71' })).toBe('similar in meaning');
+  });
+});
+
+describe('isAwaitingReview', () => {
+  it('holds for a proposal the AI or a connected AI tool drafted, until someone settles it', () => {
+    expect([
+      isAwaitingReview({ origin: 'suggested', status: 'proposed' }),
+      isAwaitingReview({ origin: 'agent', status: 'proposed' }),
+      isAwaitingReview({ origin: 'agent', status: 'accepted' }),
+      isAwaitingReview({ origin: 'manual', status: 'proposed' }),
+    ]).toEqual([true, true, false, false]);
   });
 });

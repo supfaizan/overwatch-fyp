@@ -8,8 +8,13 @@ export const DECISION_STATUS = {
 } as const;
 export type DecisionStatus = (typeof DECISION_STATUS)[keyof typeof DECISION_STATUS];
 
-/** Who drafted a decision: a person, or the AI (then it waits as `proposed` until someone settles it). */
-export const DECISION_ORIGIN = { manual: 'manual', suggested: 'suggested' } as const;
+/** Who drafted a decision: a person, the AI here, or an AI tool someone connected (the last two wait as
+ * `proposed` until someone settles them). */
+export const DECISION_ORIGIN = {
+  manual: 'manual',
+  suggested: 'suggested',
+  agent: 'agent',
+} as const;
 export type DecisionOrigin = (typeof DECISION_ORIGIN)[keyof typeof DECISION_ORIGIN];
 
 /** What evidence quotes: a board item, a docs page, or a chat conversation (a Slack thread, opened in Slack). */
@@ -78,8 +83,28 @@ export type Evidence = Required<NewEvidence> & {
 
 export type HistoryEntry = { status: DecisionStatus; by: string; at: string; note: string | null };
 
+/** How an AI tool came to record a decision. `client` is the connection's name; the rest is what the tool reported. */
+export type DecisionCapture = {
+  client: string;
+  /** the person asked for it to be recorded, or agreed when the tool asked */
+  user_approved: boolean;
+  user_words: string | null;
+  agent_model: string | null;
+  ticket: string | null;
+  code: {
+    repo: string | null;
+    branch: string | null;
+    commit: string | null;
+    files: string[];
+    pr_url: string | null;
+  } | null;
+  recorded_at: string;
+};
+
 export type Decision = {
   id: string;
+  /** its short id in the workspace ("D-31"); null for one recorded before decisions were numbered */
+  key: string | null;
   title: string;
   statement: string;
   context_md: string | null;
@@ -96,6 +121,8 @@ export type Decision = {
   history: HistoryEntry[];
   /** accepted, but its evidence broke or was contradicted since it was settled: it's in Needs you */
   needs_attention: boolean;
+  /** set on a decision an AI tool recorded */
+  capture: DecisionCapture | null;
   created_by: string;
   created_at: string;
   updated_at: string;

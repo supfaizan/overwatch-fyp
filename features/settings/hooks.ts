@@ -19,6 +19,7 @@ const keys = {
   },
   usageLimits: ['usage', 'limits'] as const,
   slackDigest: [...queryKeys.connections, 'slack', 'digest'] as const,
+  aiTools: ['ai-tools'] as const,
 };
 const showError = (error: ApiError) => {
   return toast.error(error.message);
@@ -217,4 +218,36 @@ export const useUpdateSlackDigest = () => {
     },
     onError: showError,
   });
+};
+
+export const useAiTools = () => {
+  return useQuery({ queryKey: keys.aiTools, queryFn: settingsApi.getAiTools });
+};
+
+/** A change to the member's connected AI tools: refreshes the list. */
+function useAiToolMutation<TArg, TResult>(
+  mutationFn: (arg: TArg) => Promise<TResult>,
+  success?: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<TResult, ApiError, TArg>({
+    mutationFn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: keys.aiTools });
+      if (success) {
+        toast.success(success);
+      }
+    },
+    onError: showError,
+  });
+}
+
+export const useCreateAiToolToken = () => {
+  return useAiToolMutation(settingsApi.createAiToolToken);
+};
+export const useUpdateAiTool = () => {
+  return useAiToolMutation(settingsApi.updateAiTool);
+};
+export const useRevokeAiTool = () => {
+  return useAiToolMutation(settingsApi.revokeAiTool, 'Disconnected.');
 };

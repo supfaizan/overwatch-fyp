@@ -220,6 +220,14 @@ export const useUpdateSlackDigest = () => {
   });
 };
 
+export const useAiToolSetup = () => {
+  return useQuery({
+    queryKey: [...keys.aiTools, 'setup'] as const,
+    queryFn: settingsApi.getAiToolSetup,
+    staleTime: Infinity,
+  });
+};
+
 export const useAiTools = () => {
   return useQuery({ queryKey: keys.aiTools, queryFn: settingsApi.getAiTools });
 };
